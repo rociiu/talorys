@@ -2,7 +2,7 @@ import { startContainer, stopContainer, isContainerRunning } from "./container";
 import { getComputerState, disconnectAutomation, type ComputerState } from "./automation";
 
 export type ControlMode = "ai_running" | "user_controlling";
-export type SessionStatus = "idle" | "running" | "stopped";
+export type SessionStatus = "idle" | "running" | "paused" | "completed" | "stopped";
 
 export interface ActionLogEntry {
   timestamp: string;
@@ -10,6 +10,13 @@ export interface ActionLogEntry {
   input?: unknown;
   result?: string;
   screenshot?: string;
+}
+
+export interface StateTransitionEntry {
+  from: SessionStatus;
+  to: SessionStatus;
+  timestamp: string;
+  reason?: string;
 }
 
 export interface SessionInfo {
@@ -23,7 +30,7 @@ export interface SessionInfo {
   history: ActionLogEntry[];
 }
 
-class ComputerStateManager {
+export class ComputerStateManager {
   private sessionId: string | null = null;
   private status: SessionStatus = "idle";
   private controlMode: ControlMode = "ai_running";
@@ -32,8 +39,13 @@ class ComputerStateManager {
   private currentUrl = "about:blank";
   private currentTitle = "";
   private history: ActionLogEntry[] = [];
+  private transitionHistory: StateTransitionEntry[] = [];
   private idleTimer: NodeJS.Timeout | null = null;
   private activeActionController: AbortController | null = null;
+  private listeners = new Set<(info: SessionInfo) => void>();
+
+  private startingPromise: Promise<SessionInfo> | null = null;
+  private stoppingPromise: Promise<void> | null = null;
 
   private readonly IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -41,9 +53,82 @@ class ComputerStateManager {
     this.resetTimer();
   }
 
+  reset() {
+    this.status = "idle";
+    this.sessionId = null;
+    this.controlMode = "ai_running";
+    this.createdAt = null;
+    this.lastActivityAt = null;
+    this.currentUrl = "about:blank";
+    this.currentTitle = "";
+    this.history = [];
+    this.transitionHistory = [];
+    this.activeActionController = null;
+    this.notifyListeners();
+  }
+
+  canTransitionTo(target: SessionStatus): boolean {
+    switch (this.status) {
+      case "idle":
+        return target === "running";
+      case "running":
+        return target === "paused" || target === "completed" || target === "stopped" || target === "running";
+      case "paused":
+        return target === "running" || target === "completed" || target === "stopped" || target === "paused";
+      case "completed":
+        return target === "running" || target === "completed";
+      case "stopped":
+        return target === "running" || target === "stopped";
+      default:
+        return false;
+    }
+  }
+
+  private notifyListeners() {
+    const info = this.getInfo();
+    for (const listener of this.listeners) {
+      try {
+        listener(info);
+      } catch {}
+    }
+  }
+
+  private setStatus(newStatus: SessionStatus, reason?: string) {
+    const from = this.status;
+    this.status = newStatus;
+    this.transitionHistory.push({
+      from,
+      to: newStatus,
+      timestamp: new Date().toISOString(),
+      reason,
+    });
+    this.notifyListeners();
+  }
+
+  onStateChange(listener: (info: SessionInfo) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  getTransitionHistory(): StateTransitionEntry[] {
+    return [...this.transitionHistory];
+  }
+
+  getStatus(): SessionStatus {
+    return this.status;
+  }
+
   beginAction(): AbortSignal {
-    if (this.controlMode === "user_controlling") {
+    if (this.status !== "running") {
+      throw new Error("Computer session is not running.");
+    }
+    if (this.controlMode === "user_controlling" || this.status === "paused") {
       throw new Error("COMPUTER_LOCKED_USER_CONTROLLING");
+    }
+    if (this.activeActionController !== null) {
+      throw new Error("ACTION_IN_PROGRESS_LOCKED");
     }
     this.activeActionController = new AbortController();
     return this.activeActionController.signal;
@@ -53,6 +138,22 @@ class ComputerStateManager {
     this.activeActionController = null;
   }
 
+  forceUnlock() {
+    if (this.activeActionController) {
+      this.activeActionController.abort("force_unlock");
+      this.activeActionController = null;
+    }
+  }
+
+  destroy() {
+    if (this.idleTimer) {
+      clearInterval(this.idleTimer);
+      this.idleTimer = null;
+    }
+    this.forceUnlock();
+    this.listeners.clear();
+  }
+
   private resetTimer() {
     if (this.idleTimer) clearInterval(this.idleTimer);
     this.idleTimer = setInterval(() => {
@@ -60,7 +161,7 @@ class ComputerStateManager {
     }, 60_000);
   }
 
-  private async checkIdle() {
+  async checkIdle() {
     if (this.status !== "running" || !this.lastActivityAt) return;
     const idleTime = Date.now() - new Date(this.lastActivityAt).getTime();
     if (idleTime > this.IDLE_TIMEOUT_MS) {
@@ -79,34 +180,116 @@ class ComputerStateManager {
       return this.getInfo();
     }
 
-    await startContainer();
-    this.sessionId = `cs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    this.status = "running";
-    this.controlMode = "ai_running";
-    this.createdAt = new Date().toISOString();
-    this.lastActivityAt = this.createdAt;
-    this.history = [];
-    this.currentUrl = "https://www.google.co.kr";
-    this.currentTitle = "Google";
+    if (this.startingPromise) {
+      return this.startingPromise;
+    }
 
-    this.logAction("session.start", undefined, "Sandbox computer session initialized");
-    return this.getInfo();
+    this.startingPromise = (async () => {
+      try {
+        await startContainer();
+        this.sessionId = `cs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+        this.setStatus("running", "session_start");
+        this.controlMode = "ai_running";
+        this.createdAt = new Date().toISOString();
+        this.lastActivityAt = this.createdAt;
+        this.history = [];
+        this.currentUrl = "https://www.google.co.kr";
+        this.currentTitle = "Google";
+
+        this.logAction("session.start", undefined, "Sandbox computer session initialized");
+        return this.getInfo();
+      } finally {
+        this.startingPromise = null;
+      }
+    })();
+
+    return this.startingPromise;
   }
 
   async stop(): Promise<void> {
+    if (this.stoppingPromise) {
+      return this.stoppingPromise;
+    }
+
+    this.stoppingPromise = (async () => {
+      try {
+        if (this.activeActionController) {
+          this.activeActionController.abort("session_stop");
+          this.activeActionController = null;
+        }
+        await disconnectAutomation();
+        await stopContainer();
+        this.setStatus("stopped", "session_stop");
+        this.sessionId = null;
+        this.touch();
+      } finally {
+        this.stoppingPromise = null;
+      }
+    })();
+
+    return this.stoppingPromise;
+  }
+
+  async pause(): Promise<SessionInfo> {
+    if (this.status === "paused") {
+      return this.getInfo();
+    }
+    if (this.status !== "running") {
+      throw new Error("Computer session is not running.");
+    }
+    this.controlMode = "user_controlling";
+    this.setStatus("paused", "user_paused");
     if (this.activeActionController) {
-      this.activeActionController.abort("session_stop");
+      this.activeActionController.abort("user_paused");
+      this.activeActionController = null;
+    }
+    this.touch();
+    this.logAction("session.pause", undefined, "Session paused by user or policy.");
+    return this.getInfo();
+  }
+
+  async resume(): Promise<{ info: SessionInfo; state: ComputerState }> {
+    if (this.status !== "paused") {
+      throw new Error("Computer session is not paused.");
+    }
+    this.controlMode = "ai_running";
+    this.setStatus("running", "session_resumed");
+    this.touch();
+
+    let state: ComputerState;
+    try {
+      state = await getComputerState(true);
+      this.currentUrl = state.url;
+      this.currentTitle = state.title;
+    } catch {
+      state = { url: this.currentUrl, title: this.currentTitle, textSnippet: "" };
+    }
+
+    this.logAction("session.resume", undefined, "Session resumed.", state.screenshotBase64);
+    return { info: this.getInfo(), state };
+  }
+
+  async complete(): Promise<SessionInfo> {
+    if (this.status !== "running" && this.status !== "paused") {
+      throw new Error("Computer session is not active.");
+    }
+    if (this.activeActionController) {
+      this.activeActionController.abort("session_completed");
       this.activeActionController = null;
     }
     await disconnectAutomation();
     await stopContainer();
-    this.status = "stopped";
+    this.setStatus("completed", "session_completed");
     this.sessionId = null;
     this.touch();
+    this.logAction("session.complete", undefined, "Session completed successfully.");
+    return this.getInfo();
   }
 
   async takeControl(): Promise<SessionInfo> {
-    if (this.status !== "running") throw new Error("Computer session is not running.");
+    if (this.status !== "running" && this.status !== "paused") {
+      throw new Error("Computer session is not running.");
+    }
     this.controlMode = "user_controlling";
     // Safely abort any in-flight AI command immediately to eliminate race conditions
     if (this.activeActionController) {
@@ -116,11 +299,14 @@ class ComputerStateManager {
     }
     this.touch();
     this.logAction("control.take", undefined, "User took manual interactive control. Any in-flight AI action aborted.");
+    this.notifyListeners();
     return this.getInfo();
   }
 
   async returnControl(): Promise<{ info: SessionInfo; state: ComputerState }> {
-    if (this.status !== "running") throw new Error("Computer session is not running.");
+    if (this.status !== "running" && this.status !== "paused") {
+      throw new Error("Computer session is not running.");
+    }
     this.controlMode = "ai_running";
     this.touch();
 
@@ -135,7 +321,37 @@ class ComputerStateManager {
     }
 
     this.logAction("control.return", undefined, "User returned control to AI.", state.screenshotBase64);
+    this.notifyListeners();
     return { info: this.getInfo(), state };
+  }
+
+  async enterSafeState(reason: string): Promise<void> {
+    if (this.activeActionController) {
+      this.activeActionController.abort(`safe_state:${reason}`);
+      this.activeActionController = null;
+    }
+    try {
+      await disconnectAutomation();
+      await stopContainer();
+    } catch {}
+    this.setStatus("stopped", `safe_state:${reason}`);
+    this.sessionId = null;
+    this.touch();
+    this.logAction("safe_state.enter", undefined, `Entered safe state due to: ${reason}`);
+  }
+
+  async reapZombies(): Promise<number> {
+    let reaped = 0;
+    if (this.status === "stopped" || this.status === "idle") {
+      try {
+        const running = await isContainerRunning();
+        if (running) {
+          await stopContainer();
+          reaped++;
+        }
+      } catch {}
+    }
+    return reaped;
   }
 
   logAction(action: string, input?: unknown, result?: string, screenshot?: string) {

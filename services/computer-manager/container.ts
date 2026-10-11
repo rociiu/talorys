@@ -16,13 +16,37 @@ export interface ContainerInfo {
   cdpPort: number;
 }
 
+export interface ContainerDriver {
+  isContainerRunning(): Promise<boolean>;
+  stopContainer(): Promise<void>;
+  startContainer(): Promise<ContainerInfo>;
+  execInContainer(cmd: string[]): Promise<{ stdout: string; stderr: string }>;
+}
+
+/** Check if the sandbox container exists in any state */
+export async function containerExists(): Promise<boolean> {
+  try {
+    const { stdout } = await execFileAsync("docker", [
+      "ps",
+      "-a",
+      "--filter",
+      `name=^/${CONTAINER_NAME}$`,
+      "--format",
+      "{{.ID}}",
+    ]);
+    return stdout.trim().length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** Check if the sandbox container is currently running */
-export async function isContainerRunning(): Promise<boolean> {
+export async function defaultIsContainerRunning(): Promise<boolean> {
   try {
     const { stdout } = await execFileAsync("docker", [
       "ps",
       "--filter",
-      `name=${CONTAINER_NAME}`,
+      `name=^/${CONTAINER_NAME}$`,
       "--filter",
       "status=running",
       "--format",
@@ -34,18 +58,25 @@ export async function isContainerRunning(): Promise<boolean> {
   }
 }
 
-/** Stop and remove the sandbox container if running */
-export async function stopContainer(): Promise<void> {
+/** Stop and remove the sandbox container if running, waiting until fully released */
+export async function defaultStopContainer(): Promise<void> {
   try {
     await execFileAsync("docker", ["rm", "-f", CONTAINER_NAME]);
   } catch {
     // Ignore error if not running
   }
+
+  // Ensure name is fully released by docker daemon
+  for (let i = 0; i < 10; i++) {
+    const exists = await containerExists();
+    if (!exists) break;
+    await new Promise((r) => setTimeout(r, 100));
+  }
 }
 
 /** Start the sandbox container and wait until VNC and CDP are ready */
-export async function startContainer(): Promise<ContainerInfo> {
-  const running = await isContainerRunning();
+export async function defaultStartContainer(): Promise<ContainerInfo> {
+  const running = await defaultIsContainerRunning();
   if (running) {
     return {
       running: true,
@@ -55,8 +86,8 @@ export async function startContainer(): Promise<ContainerInfo> {
     };
   }
 
-  // Ensure any existing dead container is removed
-  await stopContainer();
+  // Ensure any existing dead container is completely removed
+  await defaultStopContainer();
 
   const args = [
     "run",
@@ -75,7 +106,21 @@ export async function startContainer(): Promise<ContainerInfo> {
     IMAGE_NAME,
   ];
 
-  const { stdout } = await execFileAsync("docker", args);
+  let stdout = "";
+  try {
+    const res = await execFileAsync("docker", args);
+    stdout = res.stdout;
+  } catch (runErr: any) {
+    // Self-healing: if name conflict happened, force rm and retry once
+    if (runErr?.message?.includes("Conflict") || runErr?.message?.includes("already in use")) {
+      await defaultStopContainer();
+      const retryRes = await execFileAsync("docker", args);
+      stdout = retryRes.stdout;
+    } else {
+      throw runErr;
+    }
+  }
+
   const id = stdout.trim();
 
   // Wait for VNC and CDP to become responsive (up to 20 seconds)
@@ -95,7 +140,7 @@ export async function startContainer(): Promise<ContainerInfo> {
   }
 
   if (!ready) {
-    await stopContainer();
+    await defaultStopContainer();
     throw new Error("Failed to initialize sandbox desktop: CDP port did not respond in time.");
   }
 
@@ -109,6 +154,47 @@ export async function startContainer(): Promise<ContainerInfo> {
 }
 
 /** Execute xdotool or other commands inside the sandbox container */
-export async function execInContainer(cmd: string[]): Promise<{ stdout: string; stderr: string }> {
+export async function defaultExecInContainer(cmd: string[]): Promise<{ stdout: string; stderr: string }> {
   return execFileAsync("docker", ["exec", "-u", "computer", CONTAINER_NAME, ...cmd]);
+}
+
+// Pluggable container driver (defaults to real docker operations)
+let activeDriver: ContainerDriver = {
+  isContainerRunning: defaultIsContainerRunning,
+  stopContainer: defaultStopContainer,
+  startContainer: defaultStartContainer,
+  execInContainer: defaultExecInContainer,
+};
+
+export function setContainerDriver(driver: ContainerDriver | null): void {
+  if (driver) {
+    activeDriver = driver;
+  } else {
+    activeDriver = {
+      isContainerRunning: defaultIsContainerRunning,
+      stopContainer: defaultStopContainer,
+      startContainer: defaultStartContainer,
+      execInContainer: defaultExecInContainer,
+    };
+  }
+}
+
+export function getContainerDriver(): ContainerDriver {
+  return activeDriver;
+}
+
+export async function isContainerRunning(): Promise<boolean> {
+  return activeDriver.isContainerRunning();
+}
+
+export async function stopContainer(): Promise<void> {
+  return activeDriver.stopContainer();
+}
+
+export async function startContainer(): Promise<ContainerInfo> {
+  return activeDriver.startContainer();
+}
+
+export async function execInContainer(cmd: string[]): Promise<{ stdout: string; stderr: string }> {
+  return activeDriver.execInContainer(cmd);
 }
