@@ -26,7 +26,7 @@ async function toApiError(res: Response): Promise<ApiError> {
     /* non-JSON error */
   }
   const code = body.error?.code ?? (res.status === 401 ? "UNAUTHORIZED" : "INTERNAL_ERROR");
-  const message = body.error?.message ?? (res.status >= 500 ? "Talorys is temporarily unavailable." : `Request failed (${res.status})`);
+  const message = body.error?.message ?? (res.status >= 500 ? "Talorys 서비스를 일시적으로 사용할 수 없습니다." : `요청에 실패했습니다 (${res.status})`);
   return new ApiError(res.status, code, message, body.error?.details);
 }
 

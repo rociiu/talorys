@@ -8,11 +8,11 @@ import { useNotifications, useSettings } from "../hooks/queries";
 import { cn } from "../lib/utils";
 
 const NAV = [
-  { to: "/chat", label: "Chat", icon: MessageSquare },
-  { to: "/memory", label: "Memory", icon: Brain },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/notes", label: "Notes", icon: NotebookPen },
-  { to: "/automations", label: "Automations", icon: CalendarClock },
+  { to: "/chat", label: "대화", icon: MessageSquare },
+  { to: "/memory", label: "기억", icon: Brain },
+  { to: "/tasks", label: "할 일", icon: CheckSquare },
+  { to: "/notes", label: "메모", icon: NotebookPen },
+  { to: "/automations", label: "자동화", icon: CalendarClock },
 ] as const;
 
 export function AppShell() {
@@ -29,7 +29,7 @@ export function AppShell() {
     <button type="button"
       onClick={() => setNotifOpen(true)}
       className="relative rounded-lg p-2 text-fg-muted transition-colors hover:bg-muted hover:text-fg"
-      aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
+      aria-label={`알림${unread ? ` (${unread}개 읽지 않음)` : ""}`}
     >
       <Bell className="h-[18px] w-[18px]" />
       {unread > 0 && (
@@ -51,7 +51,7 @@ export function AppShell() {
           </div>
           {bell}
         </div>
-        <nav className="flex-1 space-y-0.5 px-3 py-2" aria-label="Main">
+        <nav className="flex-1 space-y-0.5 px-3 py-2" aria-label="메인 메뉴">
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -79,14 +79,14 @@ export function AppShell() {
             }
           >
             <Settings className="h-4 w-4" />
-            Settings
+            설정
           </NavLink>
           <button type="button"
             onClick={() => void logout()}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition-colors hover:bg-muted hover:text-fg"
           >
             <LogOut className="h-4 w-4" />
-            Lock
+            잠금
           </button>
         </div>
       </aside>
@@ -100,7 +100,7 @@ export function AppShell() {
           </div>
           <div className="flex items-center">
             {bell}
-            <NavLink to="/settings" className="rounded-lg p-2 text-fg-muted hover:bg-muted" aria-label="Settings">
+            <NavLink to="/settings" className="rounded-lg p-2 text-fg-muted hover:bg-muted" aria-label="설정">
               <Settings className="h-[18px] w-[18px]" />
             </NavLink>
           </div>
@@ -112,7 +112,7 @@ export function AppShell() {
 
         {/* Mobile bottom navigation */}
         <nav
-          aria-label="Main"
+          aria-label="하단 메뉴"
           className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         >
           {NAV.map(({ to, label, icon: Icon }) => (
@@ -124,7 +124,7 @@ export function AppShell() {
               }
             >
               <Icon className="h-5 w-5" />
-              {label === "Automations" ? "Schedules" : label}
+              {label}
             </NavLink>
           ))}
         </nav>

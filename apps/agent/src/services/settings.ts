@@ -5,7 +5,7 @@ import { ValidationError } from "../api/errors";
 
 export const DEFAULT_SETTINGS: Settings = {
   agentName: "Talorys",
-  timezone: "UTC",
+  timezone: "Asia/Seoul",
   theme: "system",
   model: DEFAULT_MODEL,
   temperature: 0.4,

@@ -54,7 +54,7 @@ export const taskTools = [
       due: localDate.optional(),
       project: z.string().max(200).optional().describe("Project name or id"),
     }),
-    label: (i) => `Adding task “${i.title}”`,
+    label: (i) => `할 일 “${i.title}” 추가 중`,
     execute: (i, ctx) => {
       const task = ctx.services.tasks.create({
         title: i.title,
@@ -78,7 +78,7 @@ export const taskTools = [
       query: z.string().max(200).optional(),
       limit: z.number().int().min(1).max(50).optional(),
     }),
-    label: (i) => `Checking ${i.view ?? "open"} tasks`,
+    label: () => `할 일 목록 확인 중`,
     execute: (i, ctx) => {
       const bounds = localDayBounds(ctx.timezone);
       const view = i.view ?? "open";
@@ -107,7 +107,7 @@ export const taskTools = [
       due: localDate.nullable().optional(),
       project: z.string().max(200).nullable().optional(),
     }),
-    label: (i) => `Updating task “${i.task}”`,
+    label: (i) => `할 일 “${i.task}” 수정 중`,
     execute: (i, ctx) => {
       const task = resolveTask(i.task, ctx);
       const updated = ctx.services.tasks.update(task.id, {
@@ -127,7 +127,7 @@ export const taskTools = [
     permission: "write",
     maxCallsPerTurn: 10,
     input: z.object({ task: z.string().min(1).describe("Task id or exact/partial title") }),
-    label: (i) => `Completing “${i.task}”`,
+    label: (i) => `할 일 “${i.task}” 완료 처리 중`,
     execute: (i, ctx) => {
       const task = resolveTask(i.task, ctx);
       const done = ctx.services.tasks.complete(task.id);
@@ -141,10 +141,10 @@ export const taskTools = [
     permission: "destructive",
     maxCallsPerTurn: 3,
     input: z.object({ task: z.string().min(1).describe("Task id or exact/partial title") }),
-    label: (i) => `Proposing to delete “${i.task}”`,
+    label: (i) => `할 일 “${i.task}” 삭제 제안 중`,
     prepare: (i, ctx) => {
       const task = resolveTask(i.task, ctx);
-      return { targetId: task.id, summary: `Delete task ${quoteTitle(task.title)}` };
+      return { targetId: task.id, summary: `할 일 ${quoteTitle(task.title)} 삭제` };
     },
     commit: (id, ctx) => {
       const task = ctx.services.tasks.get(id);

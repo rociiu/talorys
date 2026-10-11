@@ -15,7 +15,7 @@ export const reminderTools = [
       at: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/).optional(),
       in_minutes: z.number().int().min(1).max(60 * 24 * 365).optional(),
     }),
-    label: (i) => `Setting reminder “${i.message}”`,
+    label: (i) => `미리 알림 “${i.message}” 설정 중`,
     execute: async (i, ctx) => {
       let at = i.at;
       if (!at && i.in_minutes) at = toLocalMinute(new Date(Date.now() + i.in_minutes * 60_000 + 59_000), ctx.timezone);
@@ -46,7 +46,7 @@ export const reminderTools = [
       message: z.string().max(2000).optional().describe("Reminder text or AI prompt"),
       schedule: scheduleSpecSchema,
     }),
-    label: (i) => `Scheduling “${i.name}”`,
+    label: (i) => `자동화 “${i.name}” 예약 중`,
     execute: async (i, ctx) => {
       const a = await ctx.services.automations.create({
         name: i.name,
@@ -64,7 +64,7 @@ export const reminderTools = [
     permission: "read",
     maxCallsPerTurn: 2,
     input: z.object({}),
-    label: () => `Checking schedules`,
+    label: () => `일정 확인 중`,
     execute: (_i, ctx) => ({
       automations: ctx.services.automations.list().map((a) => ({
         id: a.id,
@@ -82,11 +82,11 @@ export const reminderTools = [
     permission: "destructive",
     maxCallsPerTurn: 3,
     input: z.object({ id: z.string().min(1) }),
-    label: () => `Proposing to cancel a schedule`,
+    label: () => `일정 취소 제안 중`,
     prepare: (i, ctx) => {
       const a = ctx.services.automations.get(i.id);
       if (!a) throw new ToolError("Automation not found.");
-      return { targetId: a.id, summary: `Cancel ${a.kind === "reminder" ? "reminder" : "automation"} ${quoteTitle(a.name)}` };
+      return { targetId: a.id, summary: `${a.kind === "reminder" ? "미리 알림" : "자동화"} ${quoteTitle(a.name)} 취소` };
     },
     commit: async (id, ctx) => {
       const a = ctx.services.automations.get(id);
@@ -100,7 +100,7 @@ export const reminderTools = [
     permission: "write",
     maxCallsPerTurn: 1,
     input: z.object({ title: z.string().min(1).max(200), body: z.string().min(1).max(4000) }),
-    label: () => `Sending a notification`,
+    label: () => `알림 전송 중`,
     execute: (i, ctx) => {
       const n = ctx.services.notifications.create({ title: i.title, body: i.body });
       return { notified: n.id };

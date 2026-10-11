@@ -30,7 +30,7 @@ interface ReindexReport {
 }
 
 const DEFAULT_CAP = 500;
-const EMBEDDERS: Record<SemanticStatus["embedder"], string> = { "workers-ai": "Workers AI", mock: "Mock (local dev)", none: "Not available" };
+const EMBEDDERS: Record<SemanticStatus["embedder"], string> = { "workers-ai": "Workers AI", mock: "Mock (로컬 개발)", none: "사용 불가" };
 
 function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
@@ -72,16 +72,16 @@ export function SemanticRecallCard() {
   useEffect(() => setModel(savedModel), [savedModel]);
 
   const saveConfig = useApiMutation((patch: Partial<SemanticConfig>) => api<{ config: SemanticConfig }>("/semantic/config", { method: "PUT", body: patch }), {
-    success: (r) => (r.config.enabled ? "Semantic recall settings saved" : "Semantic recall turned off"),
+    success: (r) => (r.config.enabled ? "의미 기반 기억 검색 설정이 저장되었습니다." : "의미 기반 기억 검색이 비활성화되었습니다."),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["semantic"] }),
   });
   const reindex = useApiMutation(() => api<ReindexReport>("/semantic/reindex", { method: "POST" }), {
     invalidate: [["semantic"]],
-    success: (r) => `Reindexed: ${r.embedded} embedded, ${r.pending} pending`,
+    success: (r) => `재색인 완료: ${r.embedded}개 임베딩, ${r.pending}개 대기`,
   });
   const wipe = useApiMutation(() => api("/semantic/data", { method: "DELETE", body: { confirm: "DELETE" } }), {
     invalidate: [["semantic"]],
-    success: "Semantic data deleted",
+    success: "의미 데이터가 삭제되었습니다.",
     onSuccess: () => setConfirmDelete(false),
   });
 
@@ -92,25 +92,25 @@ export function SemanticRecallCard() {
   const s = status.data;
   const stats: [string, string][] = s
     ? [
-        ["Embedder", EMBEDDERS[s.embedder] ?? s.embedder],
-        ["Vectors", String(s.vectors)],
-        ["Pending", String(s.pending)],
-        ["Embeddings today", `${s.embeddings_today} / ${s.cap}`],
+        ["임베더", EMBEDDERS[s.embedder] ?? s.embedder],
+        ["벡터 수", String(s.vectors)],
+        ["대기 중", String(s.pending)],
+        ["오늘 임베딩 사용량", `${s.embeddings_today} / ${s.cap}`],
       ]
-    : [["Status", "Loading…"]];
+    : [["상태", "로딩 중…"]];
   const busy = reindex.isPending || wipe.isPending;
 
   return (
     <section className="space-y-2">
-      <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-fg-subtle">Semantic memory recall</h2>
+      <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-fg-subtle">의미 기반 기억 검색</h2>
       <Card>
         <div className="divide-y divide-border">
-          <Row label="Semantic memory recall" hint={`Finds memories by meaning using Workers AI embeddings, up to ${savedCap} per day. Off by default.`}>
+          <Row label="의미 기반 기억 검색" hint={`Workers AI 임베딩을 사용하여 의미 단위로 기억을 검색합니다 (일 최대 ${savedCap}회). 기본적으로 비활성화되어 있습니다.`}>
             <div className="flex justify-end">
               <Switch
                 checked={enabled}
                 onChange={(v) => saveConfig.mutate({ enabled: v })}
-                label="Semantic memory recall"
+                label="의미 기반 기억 검색"
                 disabled={config.isLoading || saveConfig.isPending}
               />
             </div>
@@ -127,7 +127,7 @@ export function SemanticRecallCard() {
                   <ErrorNotice error={status.error} onRetry={() => void status.refetch()} />
                 </div>
               ) : (
-                <div role="group" aria-label="Semantic recall status" className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+                <div role="group" aria-label="의미 기반 검색 상태" className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
                   {stats.map(([label, value]) => (
                     <div key={label} className="bg-surface px-5 py-4">
                       <p className="text-xs text-fg-subtle">{label}</p>
@@ -138,7 +138,7 @@ export function SemanticRecallCard() {
                   ))}
                 </div>
               )}
-              <Row label="Embedding model" hint="Default: @cf/baai/bge-m3. Must be a Workers AI text embedding model.">
+              <Row label="임베딩 모델" hint="기본값: @cf/baai/bge-m3. Workers AI 텍스트 임베딩 모델이어야 합니다.">
                 <form
                   className="flex gap-2"
                   onSubmit={(e) => {
@@ -146,13 +146,13 @@ export function SemanticRecallCard() {
                     if (model.trim() !== savedModel) saveConfig.mutate({ model: model.trim() });
                   }}
                 >
-                  <Input value={model} onChange={(e) => setModel(e.target.value)} aria-label="Embedding model id" className="font-mono text-xs" />
+                  <Input value={model} onChange={(e) => setModel(e.target.value)} aria-label="임베딩 모델 id" className="font-mono text-xs" />
                   <Button type="submit" variant="outline" disabled={!model.trim() || model.trim() === savedModel}>
-                    Save
+                    저장
                   </Button>
                 </form>
               </Row>
-              <Row label="Max embeddings per day" hint="Separate from the AI request cap. Recall falls back to keywords when spent.">
+              <Row label="일일 최대 임베딩 수" hint="AI 요청 한도와 별도로 계산됩니다. 한도 소진 시 키워드 검색으로 전환됩니다.">
                 <form
                   className="flex gap-2"
                   onSubmit={(e) => {
@@ -160,23 +160,23 @@ export function SemanticRecallCard() {
                     submitCap();
                   }}
                 >
-                  <Input type="number" min={1} max={10_000} step={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} onBlur={submitCap} aria-label="Max embeddings per day" />
+                  <Input type="number" min={1} max={10_000} step={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} onBlur={submitCap} aria-label="일일 최대 임베딩 수" />
                   <Button type="submit" variant="outline" disabled={!validCap || cap === savedCap} loading={saveConfig.isPending}>
-                    Save
+                    저장
                   </Button>
                 </form>
               </Row>
-              <Row label="Reindex" hint="Re-embeds every memory. Uses the daily embedding budget.">
+              <Row label="인덱스 재구성" hint="모든 기억을 다시 임베딩합니다. 일일 임베딩 예산이 소모됩니다.">
                 <Button variant="outline" className="w-full justify-center" loading={reindex.isPending} disabled={busy} onClick={() => reindex.mutate(undefined)}>
-                  <RefreshCw className="h-4 w-4" /> Reindex
+                  <RefreshCw className="h-4 w-4" /> 재색인
                 </Button>
               </Row>
             </>
           )}
           {config.data?.ever_enabled && (
-            <Row label="Delete semantic data" hint="Removes the search index and turns the feature off. Your memories are kept.">
+            <Row label="의미 데이터 삭제" hint="검색 인덱스를 제거하고 기능을 끕니다. 저장된 기억은 유지됩니다.">
               <Button variant="outline" className="w-full justify-center text-danger" disabled={busy} onClick={() => setConfirmDelete(true)}>
-                <Trash2 className="h-4 w-4" /> Delete semantic data
+                <Trash2 className="h-4 w-4" /> 의미 데이터 삭제
               </Button>
             </Row>
           )}
@@ -184,9 +184,9 @@ export function SemanticRecallCard() {
       </Card>
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete semantic data?"
-        message="Removes the search index and turns the feature off. Your memories are kept."
-        confirmLabel="Delete"
+        title="의미 데이터를 삭제할까요?"
+        message="검색 인덱스를 제거하고 기능을 끕니다. 저장된 기억은 유지됩니다."
+        confirmLabel="삭제"
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => wipe.mutate(undefined)}
         loading={wipe.isPending}

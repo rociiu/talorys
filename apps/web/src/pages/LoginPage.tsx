@@ -35,9 +35,9 @@ export function LoginPage({ configured }: { configured: boolean }) {
       if (err instanceof ApiError && err.code === "RATE_LIMITED") {
         const seconds = (err.details as { retry_after?: number } | undefined)?.retry_after ?? 60;
         setRetryAt(Date.now() + seconds * 1000);
-        setError("Too many attempts. For your security, sign-in is paused.");
+        setError("로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도하세요.");
       } else {
-        setError(err instanceof Error ? err.message : "Could not sign in.");
+        setError(err instanceof Error ? err.message : "로그인할 수 없습니다.");
       }
       setPassword("");
       inputRef.current?.focus();
@@ -52,18 +52,18 @@ export function LoginPage({ configured }: { configured: boolean }) {
         <div className="mb-10 flex flex-col items-center text-center">
           <Logo className="h-12 w-12" />
           <h1 className="mt-5 text-2xl font-semibold tracking-tight">Talorys</h1>
-          <p className="mt-1.5 text-sm text-fg-muted">Your personal AI agent. Your own cloud.</p>
+          <p className="mt-1.5 text-sm text-fg-muted">나만의 개인 AI 에이전트. 프라이빗 클라우드.</p>
         </div>
 
         {!configured ? (
           <div role="alert" className="rounded-lg border border-border bg-surface p-4 text-sm leading-6 text-fg-muted">
-            This deployment has no owner password configured yet. Run <code className="rounded bg-muted px-1">npx create-talorys@latest</code>{" "}
-            again to finish setup.
+            아직 마스터 비밀번호가 설정되지 않았습니다. <code className="rounded bg-muted px-1">npx create-talorys@latest</code>{" "}
+            명령을 다시 실행하여 설정을 완료하세요.
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3" noValidate>
             <label htmlFor="password" className="sr-only">
-              Password
+              비밀번호
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
@@ -73,7 +73,7 @@ export function LoginPage({ configured }: { configured: boolean }) {
                 type={show ? "text" : "password"}
                 autoComplete="current-password"
                 autoFocus
-                placeholder="Owner password"
+                placeholder="마스터 비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 aria-invalid={!!error}
@@ -84,13 +84,13 @@ export function LoginPage({ configured }: { configured: boolean }) {
                 type="button"
                 onClick={() => setShow((s) => !s)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-fg-subtle hover:text-fg"
-                aria-label={show ? "Hide password" : "Show password"}
+                aria-label={show ? "비밀번호 숨기기" : "비밀번호 표시"}
               >
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <Button type="submit" className="h-12 w-full justify-center rounded-xl text-[15px]" loading={pending} disabled={!password || waitSeconds > 0}>
-              {waitSeconds > 0 ? `Try again in ${waitSeconds}s` : "Unlock"}
+              {waitSeconds > 0 ? `${waitSeconds}초 후 다시 시도` : "잠금 해제"}
             </Button>
             {error && (
               <p id="login-error" role="alert" className="text-center text-sm text-danger">
@@ -101,7 +101,7 @@ export function LoginPage({ configured }: { configured: boolean }) {
         )}
 
         <p className="mt-10 text-center text-xs leading-5 text-fg-subtle">
-          Forgot your password? Reset it from your computer with
+          비밀번호를 잊으셨나요? 터미널에서 다음 명령으로 재설정할 수 있습니다:
           <br />
           <code className="rounded bg-muted px-1">npx create-talorys@latest reset-password</code>
         </p>

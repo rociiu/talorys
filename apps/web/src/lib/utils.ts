@@ -19,7 +19,7 @@ export function relativeTime(iso: string | null | undefined): string {
   for (const [unit, ms] of units) {
     if (abs >= ms) return rtf.format(Math.round(diff / ms), unit);
   }
-  return diff < 0 ? "just now" : "in a moment";
+  return diff < 0 ? "방금 전" : "잠시 후";
 }
 
 /** Formats an instant in the owner's timezone. */

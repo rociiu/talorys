@@ -104,7 +104,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
     switch (a.kind) {
       case "reminder": {
         // Simple reminders never use AI.
-        s.notifications.create({ title: "Reminder", body: a.message || a.name, automation_id: a.id });
+        s.notifications.create({ title: "미리 알림", body: a.message || a.name, automation_id: a.id });
         return { status: "success", result: "Reminder delivered" };
       }
       case "task_digest": {
@@ -115,11 +115,11 @@ export class TalorysAgent extends Agent<Env, AgentState> {
         );
         const open = s.tasks.list({ status: "open", limit: 200 }).length;
         const line = (t: { title: string; due_at: string | null; priority: string }) =>
-          `- ${t.title}${t.due_at ? ` (due ${formatLocal(t.due_at, settings.timezone)})` : ""}${t.priority === "high" || t.priority === "urgent" ? ` · ${t.priority}` : ""}`;
+          `- ${t.title}${t.due_at ? ` (기한: ${formatLocal(t.due_at, settings.timezone)})` : ""}${t.priority === "high" || t.priority === "urgent" ? ` · ${t.priority}` : ""}`;
         const parts = [
-          overdue.length ? `**Overdue (${overdue.length})**\n${overdue.map(line).join("\n")}` : "",
-          today.length ? `**Due today (${today.length})**\n${today.map(line).join("\n")}` : "",
-          `${open} open task(s) in total.`,
+          overdue.length ? `**기한 초과 (${overdue.length})**\n${overdue.map(line).join("\n")}` : "",
+          today.length ? `**오늘 마감 (${today.length})**\n${today.map(line).join("\n")}` : "",
+          `총 ${open}개의 미완료 할 일이 있습니다.`,
         ].filter(Boolean);
         if (a.message) parts.unshift(a.message);
         s.notifications.create({ title: a.name, body: parts.join("\n\n"), automation_id: a.id });
@@ -129,7 +129,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
         if (!s.usage.canRunScheduledAi(settings.limits)) {
           s.notifications.create({
             title: a.name,
-            body: "Skipped: the daily budget for scheduled AI runs was reached. Adjust it in Settings → AI.",
+            body: "실행 건너뜀: 예약된 AI 작업의 일일 한도에 도달했습니다. 설정 → AI 탭에서 한도를 조정할 수 있습니다.",
             automation_id: a.id,
           });
           return { status: "skipped", result: "Scheduled AI budget reached" };

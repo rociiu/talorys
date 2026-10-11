@@ -44,10 +44,10 @@ export class AutomationService {
   async create(input: { name: string; kind: AutomationKind; message: string; schedule: ScheduleSpec; enabled: boolean }): Promise<Automation> {
     const schedule = scheduleSpecSchema.parse(input.schedule);
     if ((input.kind === "reminder" || input.kind === "agent_prompt") && !input.message.trim()) {
-      throw new ValidationError(input.kind === "reminder" ? "A reminder needs a message." : "An AI automation needs a prompt.");
+      throw new ValidationError(input.kind === "reminder" ? "미리 알림에는 메시지가 필요합니다." : "AI 자동화에는 프롬프트가 필요합니다.");
     }
     const first = computeNextRun(schedule, this.tz(), new Date());
-    if (!first) throw new ValidationError("That time is in the past. Choose a future time.");
+    if (!first) throw new ValidationError("과거 시간은 설정할 수 없습니다. 미래 시간을 선택하세요.");
     const automation = this.repo.create({ ...input, schedule });
     this.activity.record("automation.created", `Created automation “${automation.name}”`);
     return automation.enabled ? this.arm(automation) : automation;

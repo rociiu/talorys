@@ -93,8 +93,8 @@ export function toJsonc(config: Record<string, unknown>): string {
 
 export function detectTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
   } catch {
-    return "UTC";
+    return "Asia/Seoul";
   }
 }

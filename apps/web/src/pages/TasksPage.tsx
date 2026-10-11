@@ -70,9 +70,15 @@ export default function TasksPage() {
   const projectName = (id: string | null) => projects.data?.find((p) => p.id === id)?.name;
   const nowIso = new Date().toISOString();
 
+  const TAB_LABELS: Record<Tab, string> = {
+    today: "오늘",
+    upcoming: "예정",
+    completed: "완료",
+  };
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-      <PageHeader title="Tasks" description="Works with or without AI. Talorys can also manage these from chat." />
+      <PageHeader title="할 일" description="AI 없이도 동작하며, 대화를 통해 관리할 수도 있습니다." />
 
       <div role="tablist" className="mb-5 flex gap-1 rounded-lg bg-muted p-1">
         {(["today", "upcoming", "completed"] as Tab[]).map((t) => (
@@ -82,11 +88,11 @@ export default function TasksPage() {
             aria-selected={tab === t}
             onClick={() => setTab(t)}
             className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors",
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               tab === t ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
-            {t}
+            {TAB_LABELS[t]}
             <span className="ml-1.5 text-xs text-fg-subtle">{sections[t].length}</span>
           </button>
         ))}
@@ -97,13 +103,13 @@ export default function TasksPage() {
           <Input
             value={quick}
             onChange={(e) => setQuick(e.target.value)}
-            placeholder={tab === "today" ? "Add a task for today" : "Add a task"}
+            placeholder={tab === "today" ? "오늘 할 일 추가" : "할 일 추가"}
             maxLength={300}
-            aria-label="New task title"
+            aria-label="새 할 일 제목"
           />
-          <Button type="submit" loading={create.isPending} disabled={!quick.trim()} aria-label="Add task">
+          <Button type="submit" loading={create.isPending} disabled={!quick.trim()} aria-label="할 일 추가">
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add</span>
+            <span className="hidden sm:inline">추가</span>
           </Button>
         </form>
       )}
@@ -115,8 +121,8 @@ export default function TasksPage() {
           <Spinner />
         </div>
       ) : list.length === 0 ? (
-        <EmptyState icon={<CheckCircle2 className="h-9 w-9" />} title={tab === "completed" ? "Nothing completed yet" : "All clear"}>
-          {tab === "today" ? "Nothing due today. Enjoy the calm, or plan ahead." : tab === "upcoming" ? "No upcoming tasks." : "Completed tasks will appear here."}
+        <EmptyState icon={<CheckCircle2 className="h-9 w-9" />} title={tab === "completed" ? "완료된 항목이 없습니다" : "모든 할 일을 마쳤습니다"}>
+          {tab === "today" ? "오늘 예정된 할 일이 없습니다." : tab === "upcoming" ? "예정된 할 일이 없습니다." : "완료된 할 일이 여기에 표시됩니다."}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
@@ -127,7 +133,7 @@ export default function TasksPage() {
                 <button type="button"
                   onClick={() => toggle.mutate(t)}
                   className="mt-0.5 text-fg-subtle transition-colors hover:text-accent"
-                  aria-label={t.status === "done" ? `Mark “${t.title}” as not done` : `Complete “${t.title}”`}
+                  aria-label={t.status === "done" ? `“${t.title}” 미완료로 변경` : `“${t.title}” 완료로 표시`}
                 >
                   {t.status === "done" ? (
                     <CheckCircle2 className="h-5 w-5 text-accent" />
@@ -143,7 +149,7 @@ export default function TasksPage() {
                     {t.due_at && (
                       <span className={cn("inline-flex items-center gap-1", overdue && "font-medium text-danger")}>
                         <CalendarDays className="h-3 w-3" />
-                        {overdue ? "Overdue · " : ""}
+                        {overdue ? "지연 · " : ""}
                         {formatDue(t.due_at, tz)}
                       </span>
                     )}
@@ -152,9 +158,9 @@ export default function TasksPage() {
                   </div>
                 </button>
                 {(t.priority === "high" || t.priority === "urgent") && t.status !== "done" && (
-                  <Badge tone={PRIORITY_TONE[t.priority]} className="mt-0.5 capitalize">
+                  <Badge tone={PRIORITY_TONE[t.priority]} className="mt-0.5">
                     <Flag className="mr-1 h-3 w-3" />
-                    {t.priority}
+                    {t.priority === "urgent" ? "긴급" : "높음"}
                   </Badge>
                 )}
               </li>
@@ -201,34 +207,41 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
           project_id: form.project_id || null,
         },
       }),
-    { invalidate: [keys.tasks], success: "Task saved", onSuccess: close },
+    { invalidate: [keys.tasks], success: "할 일이 저장되었습니다.", onSuccess: close },
   );
   const remove = useApiMutation(() => api(`/tasks/${task!.id}`, { method: "DELETE" }), {
     invalidate: [keys.tasks],
-    success: "Task deleted",
+    success: "할 일이 삭제되었습니다.",
     onSuccess: () => {
       setConfirmDelete(false);
       close();
     },
   });
 
+  const PRIORITY_LABELS: Record<TaskPriority, string> = {
+    low: "낮음",
+    medium: "보통",
+    high: "높음",
+    urgent: "긴급",
+  };
+
   return (
     <>
       <Dialog
         open={!!task && !confirmDelete}
         onClose={close}
-        title="Edit task"
+        title="할 일 수정"
         footer={
           <div className="flex w-full justify-between">
             <Button variant="ghost" className="text-danger" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash2 className="h-4 w-4" /> 삭제
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={close}>
-                Cancel
+                취소
               </Button>
               <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!form.title.trim()}>
-                Save
+                저장
               </Button>
             </div>
           </div>
@@ -236,28 +249,28 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
       >
         <div className="space-y-4">
           <div>
-            <Label htmlFor="task-title">Title</Label>
+            <Label htmlFor="task-title">제목</Label>
             <Input id="task-title" value={form.title} maxLength={300} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
           <div>
-            <Label htmlFor="task-desc">Notes</Label>
+            <Label htmlFor="task-desc">메모</Label>
             <Textarea id="task-desc" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="task-status">Status</Label>
+              <Label htmlFor="task-status">상태</Label>
               <Select id="task-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Task["status"] })}>
-                <option value="todo">To do</option>
-                <option value="in_progress">In progress</option>
-                <option value="done">Done</option>
+                <option value="todo">할 일</option>
+                <option value="in_progress">진행 중</option>
+                <option value="done">완료</option>
               </Select>
             </div>
             <div>
-              <Label htmlFor="task-priority">Priority</Label>
+              <Label htmlFor="task-priority">우선순위</Label>
               <Select id="task-priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as TaskPriority })}>
                 {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p} className="capitalize">
-                    {p}
+                  <option key={p} value={p}>
+                    {PRIORITY_LABELS[p]}
                   </option>
                 ))}
               </Select>
@@ -266,16 +279,16 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="task-due" hint={tz}>
-                Due
+                마감일시
               </Label>
               <Input id="task-due" type="datetime-local" value={form.due} onChange={(e) => setForm({ ...form, due: e.target.value })} />
             </div>
             <div>
-              <Label htmlFor="task-project" hint="Optional">
-                Project
+              <Label htmlFor="task-project" hint="선택 사항">
+                프로젝트
               </Label>
               <Select id="task-project" value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
-                <option value="">None</option>
+                <option value="">선택 안 함</option>
                 {projects.data?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -288,8 +301,8 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
       </Dialog>
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete task?"
-        message={`“${task?.title}” will be permanently deleted.`}
+        title="할 일을 삭제할까요?"
+        message={`“${task?.title}” 항목이 영구적으로 삭제됩니다.`}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => remove.mutate(undefined)}
         loading={remove.isPending}

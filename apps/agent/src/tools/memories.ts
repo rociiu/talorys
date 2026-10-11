@@ -13,7 +13,7 @@ export const memoryTools = [
       content: z.string().min(3).max(1000),
       category: z.enum(MEMORY_CATEGORIES).optional(),
     }),
-    label: () => `Saving to memory`,
+    label: () => `기억에 저장 중`,
     execute: (i, ctx) => {
       const memory = ctx.services.memories.create({ content: i.content, category: i.category ?? "other", source: "agent" });
       ctx.services.activity.record("memory.created", `Agent remembered: ${memory.content}`);
@@ -26,7 +26,7 @@ export const memoryTools = [
     permission: "read",
     maxCallsPerTurn: 3,
     input: z.object({ query: z.string().min(1).max(200) }),
-    label: (i) => `Recalling “${i.query}”`,
+    label: (i) => `“${i.query}” 기억 떠올리는 중`,
     execute: (i, ctx) => ({
       memories: ctx.services.memories.search(i.query, 10).map((m) => ({ id: m.id, content: m.content, category: m.category })),
     }),
@@ -37,7 +37,7 @@ export const memoryTools = [
     permission: "write",
     maxCallsPerTurn: 3,
     input: z.object({ id: z.string().min(1), content: z.string().min(3).max(1000), category: z.enum(MEMORY_CATEGORIES).optional() }),
-    label: () => `Updating a memory`,
+    label: () => `기억 수정 중`,
     execute: (i, ctx) => {
       if (!ctx.services.memories.get(i.id)) throw new ToolError("Memory not found.");
       const m = ctx.services.memories.update(i.id, { content: i.content, category: i.category });
@@ -50,11 +50,11 @@ export const memoryTools = [
     permission: "destructive",
     maxCallsPerTurn: 3,
     input: z.object({ id: z.string().min(1) }),
-    label: () => `Proposing to forget a memory`,
+    label: () => `기억 삭제 제안 중`,
     prepare: (i, ctx) => {
       const m = ctx.services.memories.get(i.id);
       if (!m) throw new ToolError("Memory not found.");
-      return { targetId: m.id, summary: `Forget memory ${quoteTitle(m.content)}` };
+      return { targetId: m.id, summary: `기억 ${quoteTitle(m.content)} 삭제` };
     },
     commit: (id, ctx) => {
       const m = ctx.services.memories.get(id);

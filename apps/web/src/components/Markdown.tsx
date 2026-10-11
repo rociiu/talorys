@@ -20,7 +20,7 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
             });
           }}
           className="rounded-md border border-border bg-surface p-1 text-fg-subtle opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus:opacity-100"
-          aria-label="Copy code"
+          aria-label="코드 복사"
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
@@ -45,7 +45,7 @@ const components: Components = {
     </a>
   ),
   // Never load remote images from model output (privacy + exfiltration defence).
-  img: ({ alt }) => <span className="text-fg-subtle">[image: {alt}]</span>,
+  img: ({ alt }) => <span className="text-fg-subtle">[이미지: {alt}]</span>,
 };
 
 /** Task list items with clickable checkboxes; `line` is the 0-based source line. */
@@ -53,7 +53,7 @@ function taskComponents(onToggleTask: (line: number) => void): Components {
   return {
     ...components,
     input: ({ checked, type }) =>
-      type === "checkbox" ? <input type="checkbox" checked={!!checked} readOnly aria-label={checked ? "Mark as not done" : "Mark as done"} /> : null,
+      type === "checkbox" ? <input type="checkbox" checked={!!checked} readOnly aria-label={checked ? "완료 해제" : "완료로 표시"} /> : null,
     li: ({ node, className, children }) => {
       const line = (node?.position?.start.line ?? 0) - 1;
       const isTask = className?.includes("task-list-item");

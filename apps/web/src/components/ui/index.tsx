@@ -104,7 +104,7 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cn("h-5 w-5 animate-spin text-fg-subtle", className)} aria-label="Loading" />;
+  return <Loader2 className={cn("h-5 w-5 animate-spin text-fg-subtle", className)} aria-label="로딩 중" />;
 }
 
 export function EmptyState({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
@@ -131,13 +131,13 @@ export function PageHeader({ title, description, actions }: { title: string; des
 }
 
 export function ErrorNotice({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const message = error instanceof Error ? error.message : "Something went wrong.";
+  const message = error instanceof Error ? error.message : "오류가 발생했습니다.";
   return (
     <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
       <span>{message}</span>
       {onRetry && (
         <button type="button" className="shrink-0 font-medium underline underline-offset-2" onClick={onRetry}>
-          Retry
+          다시 시도
         </button>
       )}
     </div>
@@ -190,7 +190,7 @@ export function Dialog({
         <div className="animate-slide-up">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <h2 className="text-base font-semibold">{title}</h2>
-            <button type="button" onClick={onClose} className="rounded-md p-1 text-fg-subtle hover:bg-muted hover:text-fg" aria-label="Close">
+            <button type="button" onClick={onClose} className="rounded-md p-1 text-fg-subtle hover:bg-muted hover:text-fg" aria-label="닫기">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -206,7 +206,7 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "Delete",
+  confirmLabel = "삭제",
   onConfirm,
   onCancel,
   loading,
@@ -227,7 +227,7 @@ export function ConfirmDialog({
       footer={
         <>
           <Button variant="ghost" onClick={onCancel}>
-            Cancel
+            취소
           </Button>
           <Button variant="danger" onClick={onConfirm} loading={loading}>
             {confirmLabel}

@@ -8,6 +8,8 @@ You help your owner organize information, remember important details, manage tas
 
 You are practical, thoughtful, and concise.
 
+Always respond in natural, polite Korean unless the owner explicitly requests another language.
+
 You have access to tools for managing the owner's personal information and scheduled activities.
 
 Use tools when they are necessary.
@@ -25,14 +27,14 @@ export const SAFETY_RULES = `Rules:
 - Deleting or cancelling anything only proposes it: the owner approves or declines each proposal with a button in the app. Never ask them to type a confirmation, and never say something was deleted unless an approval note says it was done.
 - You cannot browse the web, run code, send email or access accounts. Say so if asked.
 - Dates you pass to tools are local to the owner's timezone (YYYY-MM-DD or YYYY-MM-DDTHH:MM).
-- Format answers in Markdown. Keep them short unless asked for detail.`;
+- Format answers in Markdown. Respond in natural Korean. Keep them short and concise unless asked for detail.`;
 
 export const AUTO_MEMORY_RULE = `- When the owner shares a clearly lasting preference or important personal fact, you may save it with the remember tool. Do not save trivia or one-off details.`;
 
 export const EXPLICIT_MEMORY_RULE = `- Only save memories when the owner explicitly asks you to remember something.`;
 
 export const SCHEDULED_RUN_PROMPT = `This is an automated scheduled run, not a live chat. The owner is not present.
-Complete the requested routine using read-only tools, then reply with the result in at most 200 words. Your reply is delivered to the owner's notification center.`;
+Complete the requested routine using read-only tools, then reply with the result in natural Korean in at most 200 words. Your reply is delivered to the owner's notification center.`;
 
 export interface PromptContext {
   agentName: string;
@@ -45,7 +47,7 @@ export interface PromptContext {
 }
 
 export function buildSystemPrompt(ctx: PromptContext): string {
-  const localNow = new Intl.DateTimeFormat("en-US", {
+  const localNow = new Intl.DateTimeFormat("ko-KR", {
     timeZone: ctx.timezone,
     dateStyle: "full",
     timeStyle: "short",

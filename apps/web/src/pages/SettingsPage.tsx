@@ -11,7 +11,7 @@ import { api, ApiError } from "../lib/api";
 import { applyTheme } from "../lib/theme";
 import { cn, relativeTime } from "../lib/utils";
 
-const TABS = ["General", "AI", "Privacy", "Security", "About"] as const;
+const TABS = ["일반", "AI", "개인정보", "보안", "정보"] as const;
 type Tab = (typeof TABS)[number];
 
 function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
@@ -38,11 +38,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("General");
+  const [tab, setTab] = useState<Tab>("일반");
   const { data: settings, isLoading, error, refetch } = useSettings();
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-      <PageHeader title="Settings" />
+      <PageHeader title="설정" />
       <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border" role="tablist">
         {TABS.map((t) => (
           <button type="button"
@@ -67,11 +67,11 @@ export default function SettingsPage() {
         </div>
       ) : (
         <div className="space-y-8 animate-fade-in">
-          {tab === "General" && <GeneralTab settings={settings} />}
+          {tab === "일반" && <GeneralTab settings={settings} />}
           {tab === "AI" && <AiTab settings={settings} />}
-          {tab === "Privacy" && <PrivacyTab />}
-          {tab === "Security" && <SecurityTab />}
-          {tab === "About" && <AboutTab />}
+          {tab === "개인정보" && <PrivacyTab />}
+          {tab === "보안" && <SecurityTab />}
+          {tab === "정보" && <AboutTab />}
         </div>
       )}
     </div>
@@ -81,7 +81,7 @@ export default function SettingsPage() {
 function useSaveSettings() {
   const qc = useQueryClient();
   return useApiMutation((patch: Partial<Omit<Settings, "limits">> & { limits?: Partial<Limits> }) => api<{ settings: Settings }>("/settings", { method: "PATCH", body: patch }), {
-    success: "Settings saved",
+    success: "설정이 저장되었습니다.",
     onSuccess: (r) => {
       qc.setQueryData(keys.settings, r.settings);
       void qc.invalidateQueries({ queryKey: ["session"] });
@@ -95,9 +95,11 @@ function GeneralTab({ settings }: { settings: Settings }) {
   const [name, setName] = useState(settings.agentName);
   const zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [settings.timezone];
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const THEME_LABELS: Record<string, string> = { system: "시스템", light: "라이트", dark: "다크" };
+
   return (
-    <Section title="General">
-      <Row label="Agent name" hint="How your assistant introduces itself.">
+    <Section title="일반">
+      <Row label="에이전트 이름" hint="에이전트의 호칭입니다.">
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -105,25 +107,25 @@ function GeneralTab({ settings }: { settings: Settings }) {
             if (name.trim() && name !== settings.agentName) save.mutate({ agentName: name.trim() });
           }}
         >
-          <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} aria-label="Agent name" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} aria-label="에이전트 이름" />
           <Button type="submit" variant="outline" disabled={!name.trim() || name === settings.agentName}>
-            Save
+            저장
           </Button>
         </form>
       </Row>
       <Row
-        label="Timezone"
+        label="시간대"
         hint={
           settings.timezone !== browserTz ? (
             <button type="button" className="text-accent underline-offset-2 hover:underline" onClick={() => save.mutate({ timezone: browserTz })}>
-              Use this device's timezone ({browserTz})
+              이 기기의 시간대 사용 ({browserTz})
             </button>
           ) : (
-            "Used for due dates and schedules. Changing it re-schedules automations."
+            "마감일과 일정 계산에 사용됩니다. 변경 시 자동화 일정이 재설정됩니다."
           )
         }
       >
-        <Select value={settings.timezone} onChange={(e) => save.mutate({ timezone: e.target.value })} aria-label="Timezone">
+        <Select value={settings.timezone} onChange={(e) => save.mutate({ timezone: e.target.value })} aria-label="시간대">
           {(zones.includes(settings.timezone) ? zones : [settings.timezone, ...zones]).map((z) => (
             <option key={z} value={z}>
               {z}
@@ -131,7 +133,7 @@ function GeneralTab({ settings }: { settings: Settings }) {
           ))}
         </Select>
       </Row>
-      <Row label="Theme">
+      <Row label="테마">
         <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
           {(
             [
@@ -147,12 +149,12 @@ function GeneralTab({ settings }: { settings: Settings }) {
                 save.mutate({ theme: value });
               }}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium capitalize",
+                "flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium",
                 settings.theme === value ? "bg-surface shadow-sm" : "text-fg-muted",
               )}
             >
               <Icon className="h-3.5 w-3.5" />
-              {value}
+              {THEME_LABELS[value] ?? value}
             </button>
           ))}
         </div>
@@ -162,12 +164,12 @@ function GeneralTab({ settings }: { settings: Settings }) {
 }
 
 const LIMIT_FIELDS: { key: keyof Limits; label: string; hint: string }[] = [
-  { key: "maxOutputTokens", label: "Max output tokens", hint: "Upper bound for each AI reply." },
-  { key: "maxContextTokens", label: "Max context tokens", hint: "Recent history sent to the model. Older messages are summarized." },
-  { key: "maxToolCalls", label: "Max tool calls per request", hint: "0 disables tools entirely." },
-  { key: "maxAgentIterations", label: "Max reasoning steps", hint: "Model round-trips per request." },
-  { key: "maxAiRequestsPerDay", label: "Max AI requests per day", hint: "Hard daily cap enforced by Talorys." },
-  { key: "maxScheduledAiRunsPerDay", label: "Max scheduled AI runs per day", hint: "Budget for AI routines. Reminders never use AI." },
+  { key: "maxOutputTokens", label: "최대 출력 토큰", hint: "AI 응답 1회당 상한 토큰 수입니다." },
+  { key: "maxContextTokens", label: "최대 컨텍스트 토큰", hint: "모델에 전송되는 최근 대화 분량입니다. 이전 대화는 요약됩니다." },
+  { key: "maxToolCalls", label: "요청당 최대 도구 호출 수", hint: "0으로 설정하면 도구 사용이 비활성화됩니다." },
+  { key: "maxAgentIterations", label: "최대 추론 단계", hint: "요청 1회당 모델 왕복 횟수입니다." },
+  { key: "maxAiRequestsPerDay", label: "일일 최대 AI 요청 수", hint: "Talorys가 강제하는 일일 최대 한도입니다." },
+  { key: "maxScheduledAiRunsPerDay", label: "일일 최대 예약 AI 실행 수", hint: "AI 루틴 예산입니다. 일반 미리 알림은 AI를 사용하지 않습니다." },
 ];
 
 function AiTab({ settings }: { settings: Settings }) {
@@ -179,8 +181,8 @@ function AiTab({ settings }: { settings: Settings }) {
   const dirtyLimits = JSON.stringify(limits) !== JSON.stringify(settings.limits) || temperature !== settings.temperature;
   return (
     <>
-      <Section title="Model">
-        <Row label="Workers AI model" hint="Default: @cf/zai-org/glm-4.7-flash. Must support tool calling.">
+      <Section title="모델">
+        <Row label="Workers AI 모델" hint="기본값: @cf/zai-org/glm-4.7-flash. 도구 호출(Tool Calling)을 지원해야 합니다.">
           <form
             className="flex gap-2"
             onSubmit={(e) => {
@@ -188,33 +190,33 @@ function AiTab({ settings }: { settings: Settings }) {
               if (model !== settings.model) save.mutate({ model: model.trim() });
             }}
           >
-            <Input value={model} onChange={(e) => setModel(e.target.value)} aria-label="Model id" className="font-mono text-xs" />
+            <Input value={model} onChange={(e) => setModel(e.target.value)} aria-label="모델 ID" className="font-mono text-xs" />
             <Button type="submit" variant="outline" disabled={model === settings.model}>
-              Save
+              저장
             </Button>
           </form>
         </Row>
-        <Row label="Learn from conversations" hint="Let Talorys save clearly lasting preferences without being asked. Off = only explicit “remember …”.">
+        <Row label="대화에서 학습" hint="에이전트가 요청받지 않아도 지속적인 선호 사항을 기억합니다. 끄면 명시적인 기억 요청만 저장합니다.">
           <div className="flex justify-end">
-            <Switch checked={settings.autoMemory} onChange={(v) => save.mutate({ autoMemory: v })} label="Learn from conversations" />
+            <Switch checked={settings.autoMemory} onChange={(v) => save.mutate({ autoMemory: v })} label="대화에서 학습" />
           </div>
         </Row>
-        <Row label="Demo mode" hint="Replaces Workers AI with a simple offline responder. Useful when your AI quota is exhausted. Never enabled automatically.">
+        <Row label="데모 모드" hint="Workers AI 대신 오프라인 응답기를 사용합니다. AI 할당량이 소진되었을 때 유용합니다.">
           <div className="flex justify-end">
-            <Switch checked={settings.demoMode} onChange={(v) => save.mutate({ demoMode: v })} label="Demo mode" />
+            <Switch checked={settings.demoMode} onChange={(v) => save.mutate({ demoMode: v })} label="데모 모드" />
           </div>
         </Row>
       </Section>
 
-      <Section title="Generation & execution limits">
-        <Row label="Temperature" hint="Lower is more focused and predictable.">
+      <Section title="생성 및 실행 한도">
+        <Row label="창의성 (Temperature)" hint="낮을수록 집중되고 일관된 응답을 제공합니다.">
           <div className="flex items-center gap-3">
-            <input type="range" min={0} max={1.5} step={0.1} value={temperature} onChange={(e) => setTemperature(Number(e.target.value))} className="flex-1 accent-[var(--accent)]" aria-label="Temperature" />
+            <input type="range" min={0} max={1.5} step={0.1} value={temperature} onChange={(e) => setTemperature(Number(e.target.value))} className="flex-1 accent-[var(--accent)]" aria-label="창의성 (Temperature)" />
             <span className="w-8 text-right text-sm tabular-nums">{temperature.toFixed(1)}</span>
           </div>
         </Row>
         {LIMIT_FIELDS.map((f) => (
-          <Row key={f.key} label={f.label} hint={`${f.hint} Max ${LIMIT_CEILINGS[f.key]}.`}>
+          <Row key={f.key} label={f.label} hint={`${f.hint} (최대 ${LIMIT_CEILINGS[f.key]})`}>
             <Input
               type="number"
               min={0}
@@ -234,15 +236,15 @@ function AiTab({ settings }: { settings: Settings }) {
               setTemperature(settings.temperature);
             }}
           >
-            Reset
+            초기화
           </Button>
           <Button disabled={!dirtyLimits} loading={save.isPending} onClick={() => save.mutate({ limits, temperature })}>
-            Save limits
+            한도 저장
           </Button>
         </div>
       </Section>
 
-      <Section title="Usage">
+      <Section title="사용량">
         {usage.isLoading || !usage.data ? (
           <div className="flex justify-center p-6">
             <Spinner />
@@ -251,10 +253,10 @@ function AiTab({ settings }: { settings: Settings }) {
           <>
             <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
               {[
-                ["AI requests today", `${usage.data.today.ai_requests} / ${usage.data.limits.maxAiRequestsPerDay}`],
-                ["Tokens today (est.)", (usage.data.today.input_tokens_estimate + usage.data.today.output_tokens_estimate).toLocaleString()],
-                ["Tool calls today", String(usage.data.today.tool_calls)],
-                ["Scheduled AI runs", `${usage.data.today.scheduled_ai_runs} / ${usage.data.limits.maxScheduledAiRunsPerDay}`],
+                ["오늘 AI 요청", `${usage.data.today.ai_requests} / ${usage.data.limits.maxAiRequestsPerDay}`],
+                ["오늘 토큰 (추정)", (usage.data.today.input_tokens_estimate + usage.data.today.output_tokens_estimate).toLocaleString()],
+                ["오늘 도구 호출", String(usage.data.today.tool_calls)],
+                ["예약 AI 실행", `${usage.data.today.scheduled_ai_runs} / ${usage.data.limits.maxScheduledAiRunsPerDay}`],
               ].map(([label, value]) => (
                 <div key={label} className="bg-surface px-5 py-4">
                   <p className="text-xs text-fg-subtle">{label}</p>
@@ -262,18 +264,18 @@ function AiTab({ settings }: { settings: Settings }) {
                 </div>
               ))}
             </div>
-            <Row label="Last 7 days" hint="Local estimates measured by Talorys.">
+            <Row label="최근 7일" hint="Talorys 자체 측정 추정치입니다.">
               <p className="text-right text-sm tabular-nums text-fg-muted">
-                {usage.data.last_7_days.ai_requests} requests · {usage.data.last_7_days.ai_errors} errors
+                {usage.data.last_7_days.ai_requests}회 요청 · {usage.data.last_7_days.ai_errors}건 오류
               </p>
             </Row>
             <div className="px-5 py-4 text-xs leading-5 text-fg-subtle">
               <Badge tone="warning" className="mb-2">
-                Estimates, not billing data
+                과금 데이터가 아닌 추정치입니다
               </Badge>
               <p>{usage.data.note}</p>
               <a href={usage.data.dashboard_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-accent hover:underline">
-                Open Workers AI usage in the Cloudflare dashboard <ExternalLink className="h-3 w-3" />
+                Cloudflare 대시보드에서 Workers AI 사용량 확인 <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           </>
@@ -294,7 +296,7 @@ function PrivacyTab() {
     (what: "history" | "memories") => api(what === "history" ? "/conversations" : "/memories", { method: "DELETE", body: { confirm: "DELETE" } }),
     {
       invalidate: [["conversations"], ["memories"]],
-      success: (r) => `Deleted ${(r as { deleted: number }).deleted} item(s)`,
+      success: (r) => `${(r as { deleted: number }).deleted}개 항목을 삭제했습니다.`,
       onSuccess: () => setConfirm(null),
     },
   );
@@ -302,13 +304,13 @@ function PrivacyTab() {
   async function onImport(file: File) {
     setImporting(true);
     try {
-      if (file.size > 25 * 1024 * 1024) throw new Error("Backup file is larger than 25 MB.");
+      if (file.size > 25 * 1024 * 1024) throw new Error("백업 파일 크기는 25MB 이하여야 합니다.");
       const json = JSON.parse(await file.text());
       const r = await api<{ imported: Record<string, number> }>("/import", { method: "POST", body: json });
-      toast(`Imported ${Object.entries(r.imported).map(([k, v]) => `${v} ${k}`).join(", ")}`);
+      toast(`${Object.entries(r.imported).map(([k, v]) => `${k} ${v}개`).join(", ")} 가져오기 완료`);
       await qc.invalidateQueries();
     } catch (error) {
-      toast(error instanceof SyntaxError ? "That file is not valid JSON." : errorMessage(error), "error");
+      toast(error instanceof SyntaxError ? "올바른 JSON 파일이 아닙니다." : errorMessage(error), "error");
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -317,39 +319,39 @@ function PrivacyTab() {
 
   return (
     <>
-      <Section title="Your data">
+      <Section title="데이터 관리">
         <div className="px-5 py-4 text-sm leading-6 text-fg-muted">
-          Everything Talorys stores lives in a Durable Object in your own Cloudflare account. Nothing is sent to the Talorys developers. Messages are processed by Cloudflare Workers AI when you chat.
+          Talorys가 저장하는 모든 데이터는 사용자의 Cloudflare 계정 내 Durable Object에 보관됩니다. 외부 개발자에게 어떤 정보도 전송되지 않으며, 대화 메시지는 Cloudflare Workers AI를 통해 처리됩니다.
         </div>
-        <Row label="Export data" hint="Conversations, memories, tasks, notes, projects, settings and automations as talorys-backup.json. Sessions and credentials are never exported.">
+        <Row label="데이터 내보내기" hint="대화, 기억, 할 일, 메모, 프로젝트, 설정, 자동화 데이터를 talorys-backup.json 파일로 내보냅니다. 세션 및 인증 정보는 내보내지 않습니다.">
           <a href="/api/export" download="talorys-backup.json" className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium hover:bg-subtle">
-            <Download className="h-4 w-4" /> Download backup
+            <Download className="h-4 w-4" /> 백업 다운로드
           </a>
         </Row>
-        <Row label="Import data" hint="Merges a backup into your data. Existing items with the same id are updated; nothing is deleted.">
+        <Row label="데이터 가져오기" hint="백업 데이터를 기존 데이터와 병합합니다. 동일한 ID를 가진 기존 항목은 갱신되며, 삭제되는 항목은 없습니다.">
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => e.target.files?.[0] && void onImport(e.target.files[0])} />
           <Button variant="outline" className="w-full justify-center" loading={importing} onClick={() => fileRef.current?.click()}>
-            <Upload className="h-4 w-4" /> Choose backup file
+            <Upload className="h-4 w-4" /> 백업 파일 선택
           </Button>
         </Row>
       </Section>
-      <Section title="Danger zone">
-        <Row label="Delete conversation history" hint="Permanently deletes all conversations and messages.">
+      <Section title="위험 구역">
+        <Row label="대화 기록 삭제" hint="모든 대화 및 메시지를 영구적으로 삭제합니다.">
           <Button variant="outline" className="w-full justify-center text-danger" onClick={() => setConfirm("history")}>
-            Delete history
+            기록 삭제
           </Button>
         </Row>
-        <Row label="Clear memories" hint="Talorys forgets everything it learned about you.">
+        <Row label="기억 초기화" hint="Talorys가 학습하고 저장한 모든 기억을 지웁니다.">
           <Button variant="outline" className="w-full justify-center text-danger" onClick={() => setConfirm("memories")}>
-            Clear memories
+            기억 초기화
           </Button>
         </Row>
       </Section>
       <ConfirmDialog
         open={!!confirm}
-        title={confirm === "history" ? "Delete all conversations?" : "Clear all memories?"}
-        message="This cannot be undone. Consider exporting a backup first."
-        confirmLabel={confirm === "history" ? "Delete all" : "Clear all"}
+        title={confirm === "history" ? "모든 대화를 삭제할까요?" : "모든 기억을 초기화할까요?"}
+        message="이 작업은 되돌릴 수 없습니다. 필요 시 먼저 백업을 다운로드하세요."
+        confirmLabel={confirm === "history" ? "모두 삭제" : "모두 초기화"}
         onCancel={() => setConfirm(null)}
         onConfirm={() => confirm && clear.mutate(confirm)}
         loading={clear.isPending}
@@ -368,28 +370,28 @@ function SecurityTab() {
   const strength = next ? checkPasswordStrength(next) : null;
   const change = useApiMutation(() => api("/auth/password", { method: "POST", body: { current_password: current, new_password: next } }), {
     invalidate: [keys.sessions],
-    success: "Password changed. Other devices were signed out.",
+    success: "비밀번호가 변경되었습니다. 다른 기기에서 로그아웃되었습니다.",
     onSuccess: () => {
       setCurrent("");
       setNext("");
       setConfirmNext("");
     },
   });
-  const revoke = useApiMutation((id: string) => api(`/auth/sessions/${id}`, { method: "DELETE" }), { invalidate: [keys.sessions], success: "Session signed out" });
+  const revoke = useApiMutation((id: string) => api(`/auth/sessions/${id}`, { method: "DELETE" }), { invalidate: [keys.sessions], success: "세션이 로그아웃되었습니다." });
   const revokeOthers = useApiMutation(() => api("/auth/sessions/revoke-others", { method: "POST", body: {} }), {
     invalidate: [keys.sessions],
-    success: "Signed out other sessions",
+    success: "다른 세션들을 모두 로그아웃했습니다.",
   });
   useEffect(() => setFormError(change.error instanceof ApiError ? change.error.message : null), [change.error]);
 
   return (
     <>
-      <Section title="Change password">
+      <Section title="비밀번호 변경">
         <form
           className="space-y-4 px-5 py-4"
           onSubmit={(e) => {
             e.preventDefault();
-            if (next !== confirmNext) return setFormError("New passwords do not match.");
+            if (next !== confirmNext) return setFormError("새 비밀번호가 일치하지 않습니다.");
             if (strength) return setFormError(strength);
             setFormError(null);
             change.mutate(undefined);
@@ -397,29 +399,29 @@ function SecurityTab() {
         >
           <input type="text" autoComplete="username" value="owner" readOnly hidden />
           <div>
-            <Label htmlFor="pw-current">Current password</Label>
+            <Label htmlFor="pw-current">현재 비밀번호</Label>
             <Input id="pw-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="pw-new">New password</Label>
+              <Label htmlFor="pw-new">새 비밀번호</Label>
               <Input id="pw-new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
-              {next && <p className={cn("mt-1 text-xs", strength ? "text-warning" : "text-success")}>{strength ?? "Strong enough"}</p>}
+              {next && <p className={cn("mt-1 text-xs", strength ? "text-warning" : "text-success")}>{strength ?? "사용 가능한 비밀번호입니다"}</p>}
             </div>
             <div>
-              <Label htmlFor="pw-confirm">Confirm new password</Label>
+              <Label htmlFor="pw-confirm">새 비밀번호 확인</Label>
               <Input id="pw-confirm" type="password" autoComplete="new-password" value={confirmNext} onChange={(e) => setConfirmNext(e.target.value)} />
             </div>
           </div>
           {formError && <p className="text-sm text-danger">{formError}</p>}
           <div className="flex justify-end">
             <Button type="submit" loading={change.isPending} disabled={!current || !next || !confirmNext}>
-              Change password
+              비밀번호 변경
             </Button>
           </div>
         </form>
       </Section>
-      <Section title="Active sessions">
+      <Section title="활성 세션">
         {sessions.isLoading ? (
           <div className="flex justify-center p-6">
             <Spinner />
@@ -429,15 +431,15 @@ function SecurityTab() {
             <div key={s.id} className="flex items-center justify-between gap-3 px-5 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm">
-                  {describeAgent(s.user_agent)} {s.current && <Badge tone="accent">This device</Badge>}
+                  {describeAgent(s.user_agent)} {s.current && <Badge tone="accent">현재 기기</Badge>}
                 </p>
                 <p className="text-xs text-fg-subtle">
-                  Signed in {relativeTime(s.created_at)} · active {relativeTime(s.last_seen_at)}
+                  로그인: {relativeTime(s.created_at)} · 최근 활동: {relativeTime(s.last_seen_at)}
                 </p>
               </div>
               {!s.current && (
                 <Button variant="ghost" size="sm" onClick={() => revoke.mutate(s.id)}>
-                  Sign out
+                  로그아웃
                 </Button>
               )}
             </div>
@@ -445,53 +447,52 @@ function SecurityTab() {
         )}
         <div className="flex flex-wrap justify-end gap-2 px-5 py-3">
           <Button variant="outline" size="sm" onClick={() => revokeOthers.mutate(undefined)} loading={revokeOthers.isPending}>
-            Sign out other sessions
+            다른 세션 모두 로그아웃
           </Button>
           <Button variant="secondary" size="sm" onClick={() => void logout()}>
-            <LogOut className="h-3.5 w-3.5" /> Lock this device
+            <LogOut className="h-3.5 w-3.5" /> 현재 기기 잠금
           </Button>
         </div>
       </Section>
       <p className="px-1 text-xs leading-5 text-fg-subtle">
-        Forgot your password? On your computer, run <code className="rounded bg-muted px-1">npx create-talorys@latest reset-password</code> in your Talorys
-        directory. This signs out every device.
+        비밀번호를 잊으셨나요? 터미널에서 <code className="rounded bg-muted px-1">npx create-talorys@latest reset-password</code> 명령을 실행하세요. 모든 기기에서 즉시 로그아웃됩니다.
       </p>
     </>
   );
 }
 
 function describeAgent(ua: string): string {
-  const browser = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+  const browser = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "브라우저";
   const os = /iPhone|iPad/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Mac OS X/.test(ua) ? "macOS" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : "";
-  return os ? `${browser} on ${os}` : browser;
+  return os ? `${os} 환경의 ${browser}` : browser;
 }
 
 function AboutTab() {
   const info = useSystemInfo();
   return (
-    <Section title="About Talorys">
-      <Row label="Version">
+    <Section title="Talorys 정보">
+      <Row label="버전">
         <p className="text-right font-mono text-sm">{info.data?.deployed_version ?? TALORYS_VERSION}</p>
       </Row>
-      <Row label="Deployment" hint="Your own Cloudflare account. Pages frontend → service binding → private Worker → Durable Object.">
+      <Row label="배포 환경" hint="사용자 고유 Cloudflare 계정. Pages 프론트엔드 → 서비스 바인딩 → 비공개 Worker → Durable Object">
         <div className="space-y-1 text-right text-xs text-fg-muted">
           {info.data ? (
             <>
-              <p>Installation: <span className="font-mono">{info.data.installation_id ?? "local"}</span></p>
-              <p>Schema v{info.data.schema_version} · {info.data.environment}</p>
-              <p>AI: {info.data.ai_provider === "workers-ai" ? "Cloudflare Workers AI" : info.data.ai_provider === "mock" ? "Demo responder" : "Not available"}</p>
+              <p>설치 ID: <span className="font-mono">{info.data.installation_id ?? "local"}</span></p>
+              <p>스키마 v{info.data.schema_version} · {info.data.environment}</p>
+              <p>AI: {info.data.ai_provider === "workers-ai" ? "Cloudflare Workers AI" : info.data.ai_provider === "mock" ? "데모 응답기" : "사용 불가"}</p>
             </>
           ) : (
             <Spinner className="ml-auto h-4 w-4" />
           )}
         </div>
       </Row>
-      <Row label="Source code" hint="Free and open source under the MIT license.">
+      <Row label="소스 코드" hint="MIT 라이선스 기반의 무료 오픈소스입니다.">
         <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center justify-end gap-1 text-sm text-accent hover:underline">
           GitHub <ExternalLink className="h-3.5 w-3.5" />
         </a>
       </Row>
-      <Row label="Update" hint="Run in your Talorys directory. Your data is preserved.">
+      <Row label="업데이트" hint="Talorys 디렉터리에서 실행하세요. 기존 데이터는 안전하게 보존됩니다.">
         <code className="block rounded bg-muted px-2 py-1 text-right text-xs">npx create-talorys@latest update</code>
       </Row>
     </Section>

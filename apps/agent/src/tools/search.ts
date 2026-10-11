@@ -9,7 +9,7 @@ export const searchTools = [
     permission: "read",
     maxCallsPerTurn: 2,
     input: z.object({ query: z.string().min(1).max(200) }),
-    label: (i) => `Searching for “${i.query}”`,
+    label: (i) => `“${i.query}” 검색 중`,
     execute: (i, ctx) => {
       const s = ctx.services;
       return {

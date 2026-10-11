@@ -7,18 +7,18 @@ import { api } from "../lib/api";
 import { cn, formatDateTime, relativeTime } from "../lib/utils";
 
 const KIND_META: Record<AutomationKind, { label: string; icon: typeof Bell; hint: string }> = {
-  reminder: { label: "Reminder", icon: Bell, hint: "Shows your message in the notification center. No AI used." },
-  task_digest: { label: "Task digest", icon: ListChecks, hint: "Summarizes overdue and due-today tasks. No AI used." },
-  agent_prompt: { label: "AI routine", icon: Bot, hint: "Runs a prompt with read-only tools. Uses Workers AI and counts toward the daily scheduled-AI budget." },
+  reminder: { label: "미리 알림", icon: Bell, hint: "알림 센터에 메시지를 표시합니다 (AI 미사용)." },
+  task_digest: { label: "할 일 요약", icon: ListChecks, hint: "오늘 마감 및 지연된 할 일을 요약합니다 (AI 미사용)." },
+  agent_prompt: { label: "AI 루틴", icon: Bot, hint: "읽기 전용 도구로 프롬프트를 자동 실행합니다 (Workers AI 사용)." },
 };
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function AutomationsPage() {
   const { data, isLoading, error, refetch } = useAutomations();
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Automation | null>(null);
-  const tz = data?.timezone ?? "UTC";
+  const tz = data?.timezone ?? "Asia/Seoul";
 
   const toggle = useApiMutation(
     (a: Automation) => api(`/automations/${a.id}`, { method: "PATCH", body: { enabled: !a.enabled } }),
@@ -26,7 +26,7 @@ export default function AutomationsPage() {
   );
   const remove = useApiMutation((id: string) => api(`/automations/${id}`, { method: "DELETE" }), {
     invalidate: [keys.automations],
-    success: "Schedule deleted",
+    success: "일정이 삭제되었습니다.",
     onSuccess: () => setDeleting(null),
   });
 
@@ -53,23 +53,23 @@ export default function AutomationsPage() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate font-medium">{a.name}</p>
-            {a.status === "failed" && <Badge tone="danger">Last run failed</Badge>}
-            {a.status === "completed" && <Badge>Completed</Badge>}
-            {a.status === "running" && <Badge tone="accent">Running</Badge>}
+            {a.status === "failed" && <Badge tone="danger">최근 실행 실패</Badge>}
+            {a.status === "completed" && <Badge>완료됨</Badge>}
+            {a.status === "running" && <Badge tone="accent">실행 중</Badge>}
           </div>
           <p className="mt-0.5 text-sm text-fg-muted">{a.schedule_description}</p>
           <p className="mt-0.5 text-xs text-fg-subtle">
-            {a.next_run && a.enabled ? `Next: ${formatDateTime(a.next_run, tz)}` : a.status === "completed" ? "Finished" : a.enabled ? "Not scheduled" : "Paused"}
-            {a.last_run && ` · Last run ${relativeTime(a.last_run)}`}
-            {a.run_count > 0 && ` · ${a.run_count} run${a.run_count === 1 ? "" : "s"}`}
+            {a.next_run && a.enabled ? `다음: ${formatDateTime(a.next_run, tz)}` : a.status === "completed" ? "완료됨" : a.enabled ? "예약되지 않음" : "일시 중지됨"}
+            {a.last_run && ` · 최근 실행 ${relativeTime(a.last_run)}`}
+            {a.run_count > 0 && ` · ${a.run_count}회 실행`}
           </p>
           {a.last_error && <p className="mt-1 text-xs text-danger">{a.last_error}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {a.status !== "completed" && (
-            <Switch checked={a.enabled} onChange={() => toggle.mutate(a)} label={a.enabled ? `Pause ${a.name}` : `Resume ${a.name}`} />
+            <Switch checked={a.enabled} onChange={() => toggle.mutate(a)} label={a.enabled ? `${a.name} 일시 중지` : `${a.name} 재개`} />
           )}
-          <Button variant="ghost" size="icon" onClick={() => setDeleting(a)} aria-label={`Delete ${a.name}`}>
+          <Button variant="ghost" size="icon" onClick={() => setDeleting(a)} aria-label={`${a.name} 삭제`}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -80,11 +80,11 @@ export default function AutomationsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
       <PageHeader
-        title="Automations"
-        description={<>Reminders and routines run inside your Cloudflare account, even when this page is closed. Times use {tz}.</>}
+        title="자동화"
+        description={<>미리 알림과 루틴은 브라우저를 닫아도 정해진 시간에 실행됩니다. (기준 시간대: {tz})</>}
         actions={
           <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4" /> New
+            <Plus className="h-4 w-4" /> 추가
           </Button>
         }
       />
@@ -98,16 +98,16 @@ export default function AutomationsPage() {
       ) : !data?.automations.length && !data?.runs.length ? (
         <EmptyState
           icon={<CalendarClock className="h-9 w-9" />}
-          title="No automations yet"
-          action={<Button variant="outline" onClick={() => setCreating(true)}>Create a reminder</Button>}
+          title="등록된 자동화가 없습니다"
+          action={<Button variant="outline" onClick={() => setCreating(true)}>미리 알림 만들기</Button>}
         >
-          Try asking in chat: “Remind me tomorrow at 9 AM to exercise” or “Every Friday, review my unfinished tasks.”
+          대화창에서 “내일 오전 9시에 운동하라고 알려줘” 또는 “매주 금요일에 남은 할 일 검토해줘”와 같이 요청할 수 있습니다.
         </EmptyState>
       ) : (
         <div className="space-y-8">
           {upcoming.length > 0 && (
             <section>
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">Upcoming</h2>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">예정된 실행</h2>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {upcoming.map((a) => (
                   <div key={a.id} className="min-w-44 rounded-xl border border-border bg-surface px-4 py-3">
@@ -121,7 +121,7 @@ export default function AutomationsPage() {
           )}
           {active.length > 0 && (
             <section>
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">Active schedules</h2>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">활성 일정</h2>
               <Card>
                 <ul className="divide-y divide-border">{active.map(row)}</ul>
               </Card>
@@ -129,16 +129,16 @@ export default function AutomationsPage() {
           )}
           {inactive.length > 0 && (
             <section>
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">Paused & completed</h2>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">일시 중지 및 완료됨</h2>
               <Card>
                 <ul className="divide-y divide-border">{inactive.map(row)}</ul>
               </Card>
             </section>
           )}
           <section>
-            <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">Recent executions</h2>
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">최근 실행 기록</h2>
             {!data?.runs.length ? (
-              <p className="text-sm text-fg-subtle">Nothing has run yet.</p>
+              <p className="text-sm text-fg-subtle">아직 실행된 기록이 없습니다.</p>
             ) : (
               <Card>
                 <ul className="divide-y divide-border">
@@ -147,11 +147,11 @@ export default function AutomationsPage() {
                       <div className="min-w-0">
                         <p className="truncate font-medium">{r.automation_name}</p>
                         <p className={cn("truncate text-xs", r.status === "error" ? "text-danger" : "text-fg-subtle")}>
-                          {r.error ?? r.result ?? (r.status === "running" ? "Running…" : "")}
+                          {r.error ?? r.result ?? (r.status === "running" ? "실행 중…" : "")}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <Badge tone={r.status === "success" ? "success" : r.status === "error" ? "danger" : "neutral"}>{r.status}</Badge>
+                        <Badge tone={r.status === "success" ? "success" : r.status === "error" ? "danger" : "neutral"}>{r.status === "success" ? "성공" : r.status === "error" ? "오류" : r.status}</Badge>
                         <p className="mt-0.5 text-xs text-fg-subtle">{relativeTime(r.started_at)}</p>
                       </div>
                     </li>
@@ -162,7 +162,7 @@ export default function AutomationsPage() {
           </section>
           {!!data?.failed_runs.length && (
             <section>
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-danger">Failed executions</h2>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-danger">실행 실패 기록</h2>
               <Card>
                 <ul className="divide-y divide-border">
                   {data.failed_runs.map((r) => (
@@ -183,8 +183,9 @@ export default function AutomationsPage() {
       <AutomationForm open={creating} onClose={() => setCreating(false)} tz={tz} />
       <ConfirmDialog
         open={!!deleting}
-        title="Delete schedule?"
-        message={`“${deleting?.name}” will stop running and be removed.`}
+        title="일정을 삭제할까요?"
+        message={`“${deleting?.name}” 일정이 삭제되고 더 이상 실행되지 않습니다.`}
+        confirmLabel="삭제"
         onCancel={() => setDeleting(null)}
         onConfirm={() => deleting && remove.mutate(deleting.id)}
         loading={remove.isPending}
@@ -232,7 +233,7 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
     () => api("/automations", { method: "POST", body: { name: name.trim() || message.trim().slice(0, 80) || KIND_META[kind].label, kind, message, schedule } }),
     {
       invalidate: [keys.automations],
-      success: "Scheduled",
+      success: "일정이 등록되었습니다.",
       onSuccess: () => {
         reset();
         onClose();
@@ -245,14 +246,14 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
     <Dialog
       open={open}
       onClose={onClose}
-      title="New automation"
+      title="새 자동화"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            취소
           </Button>
           <Button onClick={() => create.mutate(undefined)} loading={create.isPending} disabled={needsMessage && !message.trim()}>
-            Create
+            생성
           </Button>
         </>
       }
@@ -278,56 +279,56 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
         </div>
         <p className="text-xs text-fg-subtle">{KIND_META[kind].hint}</p>
         <div>
-          <Label htmlFor="auto-name" hint="Optional">
-            Name
+          <Label htmlFor="auto-name" hint="선택 사항">
+            이름
           </Label>
-          <Input id="auto-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} placeholder={kind === "task_digest" ? "Morning priorities" : "Exercise"} />
+          <Input id="auto-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} placeholder={kind === "task_digest" ? "아침 우선순위" : "운동하기"} />
         </div>
         {needsMessage && (
           <div>
-            <Label htmlFor="auto-message">{kind === "reminder" ? "Reminder message" : "Prompt"}</Label>
+            <Label htmlFor="auto-message">{kind === "reminder" ? "알림 메시지" : "프롬프트"}</Label>
             <Textarea
               id="auto-message"
               rows={kind === "agent_prompt" ? 3 : 2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={4000}
-              placeholder={kind === "reminder" ? "Time to exercise" : "Review my unfinished tasks and suggest three priorities"}
+              placeholder={kind === "reminder" ? "운동할 시간입니다" : "남은 할 일을 검토하고 오늘의 우선순위 3가지를 제안해줘"}
             />
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 sm:col-span-1">
-            <Label htmlFor="auto-type">Repeat</Label>
+            <Label htmlFor="auto-type">반복</Label>
             <Select id="auto-type" value={type} onChange={(e) => setType(e.target.value as ScheduleSpec["type"])}>
-              <option value="once">Once</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="interval">Every N minutes</option>
+              <option value="once">한 번만</option>
+              <option value="daily">매일</option>
+              <option value="weekly">매주</option>
+              <option value="monthly">매월</option>
+              <option value="interval">N분마다</option>
             </Select>
           </div>
           <div className="col-span-2 sm:col-span-1">
             {type === "once" ? (
               <>
-                <Label htmlFor="auto-at">When</Label>
+                <Label htmlFor="auto-at">일시</Label>
                 <Input id="auto-at" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} />
               </>
             ) : type === "interval" ? (
               <>
-                <Label htmlFor="auto-min">Minutes</Label>
+                <Label htmlFor="auto-min">분</Label>
                 <Input id="auto-min" type="number" min={15} max={44640} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} />
               </>
             ) : (
               <>
-                <Label htmlFor="auto-time">Time</Label>
+                <Label htmlFor="auto-time">시간</Label>
                 <Input id="auto-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
               </>
             )}
           </div>
         </div>
         {type === "weekly" && (
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Days of week">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="요일 선택">
             {DAYS.map((d, i) => (
               <button type="button"
                 key={d}
@@ -345,8 +346,8 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
         )}
         {type === "monthly" && (
           <div>
-            <Label htmlFor="auto-day" hint="Months without this day use their last day.">
-              Day of month
+            <Label htmlFor="auto-day" hint="해당 일자가 없는 달은 말일에 실행됩니다.">
+              일
             </Label>
             <Input id="auto-day" type="number" min={1} max={31} value={day} onChange={(e) => setDay(Number(e.target.value))} />
           </div>

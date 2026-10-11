@@ -13,7 +13,7 @@ export const noteTools = [
       content: z.string().max(20_000),
       project: z.string().max(200).optional(),
     }),
-    label: (i) => `Saving note “${i.title}”`,
+    label: (i) => `메모 “${i.title}” 저장 중`,
     execute: (i, ctx) => {
       let projectId: string | null = null;
       if (i.project) {
@@ -32,7 +32,7 @@ export const noteTools = [
     permission: "read",
     maxCallsPerTurn: 3,
     input: z.object({ query: z.string().min(1).max(200) }),
-    label: (i) => `Searching notes for “${i.query}”`,
+    label: (i) => `메모에서 “${i.query}” 검색 중`,
     execute: (i, ctx) => ({
       results: ctx.services.notes.search(i.query, 8).map((n) => ({ id: n.id, title: n.title, excerpt: n.content.slice(0, 400) })),
     }),
@@ -43,7 +43,7 @@ export const noteTools = [
     permission: "read",
     maxCallsPerTurn: 3,
     input: z.object({ id: z.string().min(1) }),
-    label: () => `Reading a note`,
+    label: () => `메모 확인 중`,
     execute: (i, ctx) => {
       const note = ctx.services.notes.get(i.id);
       if (!note) throw new ToolError("Note not found.");
@@ -62,7 +62,7 @@ export const noteTools = [
       content: z.string().max(20_000).optional(),
       append: z.string().max(10_000).optional(),
     }),
-    label: () => `Updating a note`,
+    label: () => `메모 수정 중`,
     execute: (i, ctx) => {
       const note = ctx.services.notes.get(i.id);
       if (!note) throw new ToolError("Note not found.");
@@ -77,11 +77,11 @@ export const noteTools = [
     permission: "destructive",
     maxCallsPerTurn: 2,
     input: z.object({ id: z.string().min(1) }),
-    label: () => `Proposing to delete a note`,
+    label: () => `메모 삭제 제안 중`,
     prepare: (i, ctx) => {
       const note = ctx.services.notes.get(i.id);
       if (!note) throw new ToolError("Note not found.");
-      return { targetId: note.id, summary: `Delete note ${quoteTitle(note.title)}` };
+      return { targetId: note.id, summary: `메모 ${quoteTitle(note.title)} 삭제` };
     },
     commit: (id, ctx) => {
       const note = ctx.services.notes.get(id);
@@ -99,7 +99,7 @@ export const projectTools = [
     permission: "read",
     maxCallsPerTurn: 2,
     input: z.object({}),
-    label: () => `Checking projects`,
+    label: () => `프로젝트 목록 확인 중`,
     execute: (_i, ctx) => ({
       projects: ctx.services.projects.list().map((p) => ({ id: p.id, name: p.name, status: p.status, description: p.description.slice(0, 200) })),
     }),
@@ -114,7 +114,7 @@ export const projectTools = [
       description: z.string().max(2000).optional(),
       status: z.enum(PROJECT_STATUSES).optional(),
     }),
-    label: (i) => `Creating project “${i.name}”`,
+    label: (i) => `프로젝트 “${i.name}” 생성 중`,
     execute: (i, ctx) => {
       const existing = ctx.services.projects.resolve(i.name);
       if (existing) return { existing: { id: existing.id, name: existing.name } };

@@ -7,13 +7,13 @@ import { api } from "../lib/api";
 import { relativeTime } from "../lib/utils";
 
 const CATEGORY_LABELS: Record<MemoryCategory, string> = {
-  preference: "Preferences",
-  fact: "Facts",
-  goal: "Goals",
-  project: "Projects",
-  habit: "Habits",
-  person: "People",
-  other: "Other",
+  preference: "선호 사항",
+  fact: "사실",
+  goal: "목표",
+  project: "프로젝트",
+  habit: "습관",
+  person: "인물",
+  other: "기타",
 };
 
 export default function MemoryPage() {
@@ -39,29 +39,29 @@ export default function MemoryPage() {
 
   const remove = useApiMutation((id: string) => api(`/memories/${id}`, { method: "DELETE" }), {
     invalidate: [["memories"]],
-    success: "Memory deleted",
+    success: "기억이 삭제되었습니다.",
     onSuccess: () => setDeleting(null),
   });
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
       <PageHeader
-        title="Memory"
+        title="기억"
         description={
           <>
-            What Talorys knows about you. Only the most relevant memories are shared with the AI in each conversation.
-            {data ? ` ${data.total} saved.` : ""}
+            에이전트가 기억하고 있는 정보입니다. 대화 시 가장 관련성 높은 기억만 선별되어 전달됩니다.
+            {data ? ` 총 ${data.total}개 저장됨.` : ""}
           </>
         }
         actions={
           <Button onClick={() => setEditing("new")}>
-            <Plus className="h-4 w-4" /> Add memory
+            <Plus className="h-4 w-4" /> 기억 추가
           </Button>
         }
       />
       <div className="relative mb-6">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search memories" className="pl-9" aria-label="Search memories" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="기억 검색" className="pl-9" aria-label="기억 검색" />
       </div>
 
       {error ? (
@@ -73,10 +73,10 @@ export default function MemoryPage() {
       ) : grouped.length === 0 ? (
         <EmptyState
           icon={<Brain className="h-9 w-9" />}
-          title={debounced ? "No matching memories" : "Nothing remembered yet"}
-          action={!debounced && <Button variant="outline" onClick={() => setEditing("new")}>Add your first memory</Button>}
+          title={debounced ? "일치하는 기억이 없습니다" : "저장된 기억이 없습니다"}
+          action={!debounced && <Button variant="outline" onClick={() => setEditing("new")}>첫 번째 기억 추가하기</Button>}
         >
-          {debounced ? "Try a different search." : 'Tell Talorys things like "Remember that I prefer morning meetings", or add them here.'}
+          {debounced ? "다른 검색어를 입력해 보세요." : '대화 중 "간결한 답변을 선호한다고 기억해줘"처럼 요청하거나 여기서 직접 추가할 수 있습니다.'}
         </EmptyState>
       ) : (
         <div className="space-y-8">
@@ -91,14 +91,14 @@ export default function MemoryPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] leading-6">{m.content}</p>
                       <p className="mt-0.5 text-xs text-fg-subtle">
-                        {m.source === "agent" ? "Learned in chat" : m.source === "import" ? "Imported" : "Added manually"} · {relativeTime(m.updated_at)}
+                        {m.source === "agent" ? "대화에서 학습됨" : m.source === "import" ? "가져옴" : "직접 추가됨"} · {relativeTime(m.updated_at)}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(m)} aria-label="Edit memory">
+                      <Button variant="ghost" size="icon" onClick={() => setEditing(m)} aria-label="기억 수정">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label="Delete memory">
+                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label="기억 삭제">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -113,9 +113,9 @@ export default function MemoryPage() {
       <MemoryEditor memory={editing} onClose={() => setEditing(null)} />
       <ConfirmDialog
         open={!!deleting}
-        title="Forget this memory?"
-        message={<>Talorys will no longer remember: “{deleting?.content}”</>}
-        confirmLabel="Forget"
+        title="이 기억을 삭제할까요?"
+        message={<>에이전트가 다음 내용을 더 이상 기억하지 않습니다: “{deleting?.content}”</>}
+        confirmLabel="삭제"
         onCancel={() => setDeleting(null)}
         onConfirm={() => deleting && remove.mutate(deleting.id)}
         loading={remove.isPending}
@@ -141,31 +141,31 @@ function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onCl
       memory === "new"
         ? api("/memories", { method: "POST", body: { content, category } })
         : api(`/memories/${(memory as Memory).id}`, { method: "PATCH", body: { content, category } }),
-    { invalidate: [["memories"], keys.memories()], success: "Memory saved", onSuccess: onClose },
+    { invalidate: [["memories"], keys.memories()], success: "기억이 저장되었습니다.", onSuccess: onClose },
   );
   return (
     <Dialog
       open={!!memory}
       onClose={onClose}
-      title={memory === "new" ? "Add memory" : "Edit memory"}
+      title={memory === "new" ? "기억 추가" : "기억 수정"}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            취소
           </Button>
           <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!content.trim()}>
-            Save
+            저장
           </Button>
         </>
       }
     >
       <div className="space-y-4">
         <div>
-          <Label htmlFor="memory-content">What should Talorys remember?</Label>
-          <Textarea id="memory-content" rows={3} value={content} onChange={(e) => setContent(e.target.value)} maxLength={2000} autoFocus placeholder="Prefers concise answers" />
+          <Label htmlFor="memory-content">기억할 내용을 입력하세요</Label>
+          <Textarea id="memory-content" rows={3} value={content} onChange={(e) => setContent(e.target.value)} maxLength={2000} autoFocus placeholder="간결한 답변 선호" />
         </div>
         <div>
-          <Label htmlFor="memory-category">Category</Label>
+          <Label htmlFor="memory-category">카테고리</Label>
           <Select id="memory-category" value={category} onChange={(e) => setCategory(e.target.value as MemoryCategory)}>
             {MEMORY_CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -174,7 +174,7 @@ function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onCl
             ))}
           </Select>
         </div>
-        <Badge tone="accent">Stored only in your Cloudflare account</Badge>
+        <Badge tone="accent">프라이빗 클라우드에만 안전하게 저장됩니다</Badge>
       </div>
     </Dialog>
   );

@@ -17,12 +17,12 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
     <Dialog
       open={open}
       onClose={onClose}
-      title="Notifications"
+      title="알림"
       wide
       footer={
         (data?.unread ?? 0) > 0 ? (
           <Button variant="outline" size="sm" onClick={() => markRead.mutate(undefined)} loading={markRead.isPending}>
-            Mark all as read
+            모두 읽음으로 표시
           </Button>
         ) : undefined
       }
@@ -32,8 +32,8 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
           <Spinner />
         </div>
       ) : !data?.notifications.length ? (
-        <EmptyState icon={<BellOff className="h-8 w-8" />} title="No notifications">
-          Reminders and automation results will appear here.
+        <EmptyState icon={<BellOff className="h-8 w-8" />} title="새 알림이 없습니다">
+          미리 알림과 자동화 실행 결과가 여기에 표시됩니다.
         </EmptyState>
       ) : (
         <ul className="-mx-2 divide-y divide-border">
@@ -52,7 +52,7 @@ export function NotificationCenter({ open, onClose }: { open: boolean; onClose: 
               <button type="button"
                 onClick={() => remove.mutate(n.id)}
                 className="self-start rounded p-1 text-fg-subtle opacity-0 transition-opacity hover:text-danger group-hover:opacity-100 focus:opacity-100"
-                aria-label="Delete notification"
+                aria-label="알림 삭제"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

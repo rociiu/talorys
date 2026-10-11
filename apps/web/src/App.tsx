@@ -33,7 +33,7 @@ export function App() {
       <FullScreen>
         <Logo className="h-10 w-10" />
         <div className="w-full max-w-sm">
-          <ErrorNotice error={error ?? new Error("Talorys is unreachable.")} onRetry={() => void refresh()} />
+          <ErrorNotice error={error ?? new Error("Talorys 서버에 연결할 수 없습니다.")} onRetry={() => void refresh()} />
         </div>
       </FullScreen>
     );

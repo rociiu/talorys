@@ -38,10 +38,10 @@ interface StreamState {
 }
 
 const SUGGESTIONS = [
-  "What should I work on today?",
-  "Add a task to review my project tomorrow",
-  "Remember that I prefer short answers",
-  "Every Friday at 5pm, remind me to plan next week",
+  "오늘 무엇을 해야 할까요?",
+  "내일 프로젝트 검토할 일 추가해줘",
+  "짧고 간결하게 대답하는 걸 선호한다고 기억해줘",
+  "매주 금요일 오후 5시에 다음 주 계획 세우라고 알려줘",
 ];
 
 export function ChatPage() {
@@ -134,7 +134,7 @@ export function ChatPage() {
       if (controller.signal.aborted) {
         setStream((s) => s && { ...s, done: true });
       } else {
-        const message = error instanceof ApiError || error instanceof Error ? error.message : "Connection lost.";
+        const message = error instanceof ApiError || error instanceof Error ? error.message : "연결이 끊어졌습니다.";
         setStream((s) => s && { ...s, error: message, done: true });
       }
     } finally {
@@ -187,7 +187,7 @@ export function ChatPage() {
               <Spinner />
             </div>
           ) : conversation.isError && !streamHere ? (
-            <div className="p-8 text-center text-sm text-fg-muted">This conversation could not be loaded.</div>
+            <div className="p-8 text-center text-sm text-fg-muted">대화를 불러올 수 없습니다.</div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 md:px-6">
               {messages.map((m) =>
@@ -221,7 +221,7 @@ export function ChatPage() {
         <Composer streaming={streaming || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} />
       </section>
 
-      <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} title="Conversations">
+      <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} title="대화 목록">
         <div className="-mx-5 -my-4 h-[60vh]">
           <ConversationList activeId={conversationId} onNavigate={() => setHistoryOpen(false)} />
         </div>
@@ -242,14 +242,14 @@ function ChatHeader({
   return (
     <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-3 md:px-4">
       <div className="flex min-w-0 items-center gap-1">
-        <button type="button" onClick={onOpenHistory} className="rounded-lg p-2 text-fg-muted hover:bg-muted lg:hidden" aria-label="Conversation history">
+        <button type="button" onClick={onOpenHistory} className="rounded-lg p-2 text-fg-muted hover:bg-muted lg:hidden" aria-label="대화 기록">
           <History className="h-[18px] w-[18px]" />
         </button>
-        <h2 className="truncate text-sm font-medium text-fg">{conversation?.title ?? "New conversation"}</h2>
+        <h2 className="truncate text-sm font-medium text-fg">{conversation?.title ?? "새 대화"}</h2>
       </div>
       <Button variant="ghost" size="sm" onClick={onNew}>
         <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">New chat</span>
+        <span className="hidden sm:inline">새 대화</span>
       </Button>
     </div>
   );
@@ -260,7 +260,7 @@ function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void
   const navigate = useNavigate();
   const greeting = (() => {
     const h = new Date().getHours();
-    return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    return h < 12 ? "좋은 아침입니다" : h < 18 ? "좋은 오후입니다" : "좋은 저녁입니다";
   })();
   return (
     <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center px-5 py-10 animate-fade-in">
@@ -269,7 +269,7 @@ function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void
         <span className="text-sm font-medium">{name}</span>
       </div>
       <h1 className="mt-6 text-3xl font-semibold tracking-tight text-fg md:text-4xl">{greeting}.</h1>
-      <p className="mt-2 text-lg text-fg-muted">What would you like to do today?</p>
+      <p className="mt-2 text-lg text-fg-muted">오늘 어떤 작업을 진행할까요?</p>
       <div className="mt-8 grid gap-2 sm:grid-cols-2">
         {SUGGESTIONS.map((s) => (
           <button type="button"
@@ -283,7 +283,7 @@ function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void
       </div>
       {!!recent.data?.length && (
         <div className="mt-10">
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">Recent conversations</h3>
+          <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">최근 대화</h3>
           <ul className="space-y-0.5">
             {recent.data.slice(0, 4).map((c) => (
               <li key={c.id}>
@@ -323,7 +323,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
   );
   const remove = useApiMutation((id: string) => api(`/conversations/${id}`, { method: "DELETE" }), {
     invalidate: [["conversations"]],
-    success: "Conversation deleted",
+    success: "대화가 삭제되었습니다.",
     onSuccess: (_r, id) => {
       setDeleting(null);
       if (id === activeId) navigate("/chat");
@@ -341,20 +341,20 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
             onNavigate();
           }}
         >
-          <Plus className="h-4 w-4" /> New conversation
+          <Plus className="h-4 w-4" /> 새 대화
         </Button>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search history" className="h-9 pl-9 text-sm" aria-label="Search conversations" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="대화 기록 검색" className="h-9 pl-9 text-sm" aria-label="대화 검색" />
         </div>
       </div>
-      <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2 pb-3" aria-label="Conversations">
+      <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2 pb-3" aria-label="대화 목록">
         {list.isLoading ? (
           <div className="flex justify-center py-6">
             <Spinner />
           </div>
         ) : !list.data?.length ? (
-          <p className="px-3 py-6 text-center text-sm text-fg-subtle">{debounced ? "No matches." : "No conversations yet."}</p>
+          <p className="px-3 py-6 text-center text-sm text-fg-subtle">{debounced ? "일치하는 대화가 없습니다." : "아직 나눈 대화가 없습니다."}</p>
         ) : (
           <ul className="space-y-0.5">
             {list.data.map((c) => (
@@ -375,7 +375,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
                 <button type="button"
                   onClick={() => setMenu(menu === c.id ? null : c.id)}
                   className="absolute right-1.5 top-2 rounded-md p-1 text-fg-subtle opacity-100 hover:bg-border hover:text-fg md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
-                  aria-label={`Options for ${c.title}`}
+                  aria-label={`${c.title} 메뉴`}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -389,7 +389,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
                         setMenu(null);
                       }}
                     >
-                      <Pencil className="h-3.5 w-3.5" /> Rename
+                      <Pencil className="h-3.5 w-3.5" /> 이름 변경
                     </button>
                     <button type="button"
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-danger-soft"
@@ -398,7 +398,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
                         setMenu(null);
                       }}
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                      <Trash2 className="h-3.5 w-3.5" /> 삭제
                     </button>
                   </div>
                 )}
@@ -411,17 +411,17 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
       <Dialog
         open={!!renaming}
         onClose={() => setRenaming(null)}
-        title="Rename conversation"
+        title="대화 이름 변경"
         footer={
           <>
             <Button variant="ghost" onClick={() => setRenaming(null)}>
-              Cancel
+              취소
             </Button>
             <Button
               onClick={() => renaming && title.trim() && rename.mutate({ id: renaming.id, title: title.trim() })}
               loading={rename.isPending}
             >
-              Save
+              저장
             </Button>
           </>
         }
@@ -432,13 +432,13 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
             if (renaming && title.trim()) rename.mutate({ id: renaming.id, title: title.trim() });
           }}
         >
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} autoFocus aria-label="Title" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} autoFocus aria-label="제목" />
         </form>
       </Dialog>
       <ConfirmDialog
         open={!!deleting}
-        title="Delete conversation?"
-        message={`“${deleting?.title}” and all its messages will be permanently deleted.`}
+        title="대화를 삭제할까요?"
+        message={`“${deleting?.title}” 대화와 모든 메시지가 영구적으로 삭제됩니다.`}
         onCancel={() => setDeleting(null)}
         onConfirm={() => deleting && remove.mutate(deleting.id)}
         loading={remove.isPending}
@@ -491,10 +491,10 @@ function ToolChip({ tool }: { tool: ToolActivity }) {
 }
 
 const APPROVAL_DONE: Record<Exclude<PendingAction["status"], "pending">, string> = {
-  approved: "Approved and done",
-  cancelled: "Declined — nothing was changed",
-  expired: "Expired — ask again if you still want this",
-  failed: "Approved, but it failed",
+  approved: "승인되어 완료됨",
+  cancelled: "거절됨 (변경 없음)",
+  expired: "만료됨 (필요시 다시 요청)",
+  failed: "승인되었으나 실패함",
 };
 
 /** The only way a destructive action proposed by the agent can run. */
@@ -532,20 +532,20 @@ function ApprovalCard({ action: initial }: { action: PendingAction }) {
     );
   }
   return (
-    <div role="group" aria-label="Approval needed" className="rounded-lg border border-warning/40 bg-surface px-3 py-2.5 shadow-sm">
+    <div role="group" aria-label="승인 필요" className="rounded-lg border border-warning/40 bg-surface px-3 py-2.5 shadow-sm">
       <div className="flex items-start gap-2 text-sm">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div className="min-w-0">
           <p className="break-words font-medium text-fg">{action.summary}?</p>
-          <p className="text-xs text-fg-muted">Nothing changes unless you approve.</p>
+          <p className="text-xs text-fg-muted">승인하기 전까지는 아무것도 변경되지 않습니다.</p>
         </div>
       </div>
       <div className="mt-2.5 flex justify-end gap-2">
         <Button size="sm" variant="ghost" disabled={decide.isPending} onClick={() => decide.mutate("cancel")}>
-          Decline
+          거절
         </Button>
         <Button size="sm" variant="danger" loading={decide.isPending && decide.variables === "approve"} disabled={decide.isPending} onClick={() => decide.mutate("approve")}>
-          Approve
+          승인
         </Button>
       </div>
     </div>
@@ -573,7 +573,7 @@ function AssistantBubble({
       <Logo className="mt-0.5 h-6 w-6 shrink-0" />
       <div className="min-w-0 flex-1 space-y-2.5">
         {tools.length > 0 && (
-          <div role="group" className="flex flex-wrap gap-1.5" aria-label="Actions taken">
+          <div role="group" className="flex flex-wrap gap-1.5" aria-label="실행된 작업">
             {tools.map((t) => (
               <ToolChip key={t.id} tool={t} />
             ))}
@@ -583,20 +583,20 @@ function AssistantBubble({
         {text ? (
           <Markdown content={text} />
         ) : streaming && tools.every((t) => t.status !== "running") ? (
-          <div role="status" className="flex h-7 items-center gap-1" aria-label="Thinking">
+          <div role="status" className="flex h-7 items-center gap-1" aria-label="생각 중">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg-subtle" />
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg-subtle [animation-delay:150ms]" />
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg-subtle [animation-delay:300ms]" />
           </div>
         ) : null}
-        {cancelled && <p className="text-xs text-fg-subtle">Stopped.</p>}
+        {cancelled && <p className="text-xs text-fg-subtle">중단됨.</p>}
         {error && (
           <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span className="flex-1">{error}</span>
             {onRetry && (
               <button type="button" onClick={onRetry} className="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline">
-                <RotateCcw className="h-3.5 w-3.5" /> Retry
+                <RotateCcw className="h-3.5 w-3.5" /> 다시 시도
               </button>
             )}
           </div>
@@ -611,10 +611,10 @@ function AssistantBubble({
                 })
               }
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-fg-subtle hover:bg-muted hover:text-fg"
-              aria-label="Copy response"
+              aria-label="응답 복사"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? "복사됨" : "복사"}
             </button>
           </div>
         )}
@@ -657,22 +657,22 @@ function Composer({ streaming, onSend, onStop, autoFocus }: { streaming: boolean
           onKeyDown={onKeyDown}
           autoFocus={autoFocus}
           maxLength={16000}
-          placeholder="Ask Talorys anything…"
-          aria-label="Message"
+          placeholder="무엇이든 물어보세요…"
+          aria-label="메시지 입력"
           className="max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] leading-6 placeholder:text-fg-subtle focus:outline-none"
         />
         {streaming ? (
-          <Button variant="secondary" size="icon" onClick={onStop} aria-label="Stop generating" className="rounded-xl">
+          <Button variant="secondary" size="icon" onClick={onStop} aria-label="생성 중단" className="rounded-xl">
             <Square className="h-3.5 w-3.5 fill-current" />
           </Button>
         ) : (
-          <Button size="icon" onClick={submit} disabled={!value.trim()} aria-label="Send message" className="rounded-xl">
+          <Button size="icon" onClick={submit} disabled={!value.trim()} aria-label="메시지 전송" className="rounded-xl">
             <ArrowUp className="h-4 w-4" />
           </Button>
         )}
       </div>
       <p className="mx-auto mt-2 hidden max-w-3xl text-center text-[11px] text-fg-subtle md:block">
-        Runs on your Cloudflare account. Talorys can make mistakes — check important details.
+        Cloudflare 인프라에서 실행됩니다. 중요한 내용은 한 번 더 확인하세요.
       </p>
     </div>
   );
