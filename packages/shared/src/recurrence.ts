@@ -15,6 +15,9 @@ const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Expected HH:MM (24h)
 
 /** True when year/month/day name a real calendar date (rejects e.g. 2026-02-31). */
 export function isValidCalendarDate(year: number, month: number, day: number): boolean {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return false;
+  }
   return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
 }
 
@@ -73,6 +76,9 @@ function formatter(timeZone: string): Intl.DateTimeFormat {
 }
 
 export function isValidTimeZone(timeZone: string): boolean {
+  if (typeof timeZone !== "string" || timeZone.trim().length === 0) {
+    return false;
+  }
   try {
     formatter(timeZone);
     return true;
@@ -138,6 +144,12 @@ function daysInMonth(year: number, month: number): number {
 
 /** Next run strictly after `after`, or null when the schedule will never fire again. */
 export function computeNextRun(spec: ScheduleSpec, timeZone: string, after: Date): Date | null {
+  if (!spec || typeof spec !== "object" || !spec.type) return null;
+  if (!isValidTimeZone(timeZone)) return null;
+  if (!(after instanceof Date) || Number.isNaN(after.getTime())) return null;
+  const parsed = scheduleSpecSchema.safeParse(spec);
+  if (!parsed.success) return null;
+
   if (spec.type === "interval") {
     return new Date(after.getTime() + spec.minutes * 60_000);
   }
@@ -173,17 +185,22 @@ export function computeNextRun(spec: ScheduleSpec, timeZone: string, after: Date
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function describeSchedule(spec: ScheduleSpec): string {
+  if (!spec || typeof spec !== "object") return "Invalid schedule";
   switch (spec.type) {
     case "once":
       return `Once at ${spec.at.replace("T", " ")}`;
     case "daily":
       return `Every day at ${spec.time}`;
-    case "weekly":
-      if (spec.days.length === 7) return `Every day at ${spec.time}`;
-      return `Every ${[...spec.days].sort().map((d) => DAY_NAMES[d]).join(", ")} at ${spec.time}`;
+    case "weekly": {
+      const uniqueDays = [...new Set(spec.days)].sort((a, b) => a - b);
+      if (uniqueDays.length === 7) return `Every day at ${spec.time}`;
+      return `Every ${uniqueDays.map((d) => DAY_NAMES[d]).join(", ")} at ${spec.time}`;
+    }
     case "monthly":
       return `Monthly on day ${spec.day} at ${spec.time}`;
     case "interval":
       return spec.minutes % 60 === 0 ? `Every ${spec.minutes / 60} hour(s)` : `Every ${spec.minutes} minutes`;
+    default:
+      return "Unknown schedule";
   }
 }
