@@ -33,11 +33,24 @@ class ComputerStateManager {
   private currentTitle = "";
   private history: ActionLogEntry[] = [];
   private idleTimer: NodeJS.Timeout | null = null;
+  private activeActionController: AbortController | null = null;
 
   private readonly IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
   constructor() {
     this.resetTimer();
+  }
+
+  beginAction(): AbortSignal {
+    if (this.controlMode === "user_controlling") {
+      throw new Error("COMPUTER_LOCKED_USER_CONTROLLING");
+    }
+    this.activeActionController = new AbortController();
+    return this.activeActionController.signal;
+  }
+
+  endAction() {
+    this.activeActionController = null;
   }
 
   private resetTimer() {
@@ -81,6 +94,10 @@ class ComputerStateManager {
   }
 
   async stop(): Promise<void> {
+    if (this.activeActionController) {
+      this.activeActionController.abort("session_stop");
+      this.activeActionController = null;
+    }
     await disconnectAutomation();
     await stopContainer();
     this.status = "stopped";
@@ -91,8 +108,14 @@ class ComputerStateManager {
   async takeControl(): Promise<SessionInfo> {
     if (this.status !== "running") throw new Error("Computer session is not running.");
     this.controlMode = "user_controlling";
+    // Safely abort any in-flight AI command immediately to eliminate race conditions
+    if (this.activeActionController) {
+      console.log("[ComputerManager] Aborting in-flight AI action due to manual takeover.");
+      this.activeActionController.abort("user_took_control");
+      this.activeActionController = null;
+    }
     this.touch();
-    this.logAction("control.take", undefined, "User took manual interactive control.");
+    this.logAction("control.take", undefined, "User took manual interactive control. Any in-flight AI action aborted.");
     return this.getInfo();
   }
 

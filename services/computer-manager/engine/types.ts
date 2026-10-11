@@ -27,11 +27,11 @@ export interface ScrollOptions {
 export interface BrowserEngineAdapter {
   readonly name: string;
   connect(cdpPort: number): Promise<void>;
-  navigate(url: string): Promise<BrowserState>;
-  click(target: ClickTarget): Promise<BrowserState>;
-  typeText(target: TypeTarget): Promise<BrowserState>;
-  pressKey(key: string): Promise<BrowserState>;
-  scroll(options: ScrollOptions): Promise<BrowserState>;
+  navigate(url: string, signal?: AbortSignal): Promise<BrowserState>;
+  click(target: ClickTarget, signal?: AbortSignal): Promise<BrowserState>;
+  typeText(target: TypeTarget, signal?: AbortSignal): Promise<BrowserState>;
+  pressKey(key: string, signal?: AbortSignal): Promise<BrowserState>;
+  scroll(options: ScrollOptions, signal?: AbortSignal): Promise<BrowserState>;
   getState(includeScreenshot?: boolean): Promise<BrowserState>;
   takeScreenshot(): Promise<string>;
   disconnect(): Promise<void>;

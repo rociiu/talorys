@@ -75,6 +75,38 @@ function proxyVncHttp(req: http.IncomingMessage, res: http.ServerResponse, vncPa
   req.pipe(proxyReq, { end: true });
 }
 
+const authCache = new Map<string, { ok: boolean; exp: number }>();
+
+async function isRequestAuthenticated(req: http.IncomingMessage): Promise<boolean> {
+  const cookie = req.headers.cookie;
+  if (!cookie) return false;
+  const tokenMatch = cookie.match(/(?:^|;\s*)(?:__Host-)?talorys_session=([^;]+)/);
+  if (!tokenMatch || !tokenMatch[1]) return false;
+  const token = tokenMatch[1];
+
+  const cached = authCache.get(token);
+  if (cached && cached.exp > Date.now()) {
+    return cached.ok;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:28788/api/auth/session", {
+      headers: {
+        cookie: req.headers.cookie || "",
+        host: "talorys.wasuphj.app",
+      },
+      signal: AbortSignal.timeout(2000),
+    });
+    if (res.ok) {
+      const json = await res.json() as any;
+      const isAuthed = json?.authenticated === true;
+      authCache.set(token, { ok: isAuthed, exp: Date.now() + 30_000 });
+      return isAuthed;
+    }
+  } catch {}
+  return false;
+}
+
 export function createComputerServer(): http.Server {
   const server = http.createServer(async (req, res) => {
     const parsedUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -92,8 +124,15 @@ export function createComputerServer(): http.Server {
     }
 
     try {
-      // VNC Proxy route (/vnc or /vnc/...)
+      // VNC Proxy route (/vnc or /vnc/...) - Requires valid Talorys session
       if (pathname === "/vnc" || pathname.startsWith("/vnc/")) {
+        const authed = await isRequestAuthenticated(req);
+        if (!authed) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized: Valid Talorys session required to access computer stream." }));
+          return;
+        }
+
         const vncPath = pathname.replace(/^\/vnc/, "") + parsedUrl.search;
         return proxyVncHttp(req, res, vncPath || "/");
       }
@@ -137,53 +176,75 @@ export function createComputerServer(): http.Server {
           });
         }
 
+        let actionSignal: AbortSignal;
+        try {
+          actionSignal = computerState.beginAction();
+        } catch {
+          return sendJson(res, 409, {
+            error: "Computer is currently under manual user control. AI execution is paused.",
+            mode: "user_controlling",
+          });
+        }
+
         const body = await readBody(req);
         const { action } = body;
         let result: any;
 
-        switch (action) {
-          case "navigate":
-            result = await navigate(body.url);
-            computerState.logAction("navigate", { url: body.url }, `Navigated to ${body.url}`, result.screenshotBase64);
-            computerState.updatePageInfo(result.url, result.title);
-            break;
-          case "click":
-            result = await click({ selector: body.selector, ref: body.ref, x: body.x, y: body.y });
-            computerState.logAction("click", body, `Clicked ${body.ref || body.selector || `(${body.x}, ${body.y})`}`, result.screenshotBase64);
-            computerState.updatePageInfo(result.url, result.title);
-            break;
-          case "type":
-            result = await typeText(body.text, body.ref || body.selector);
-            computerState.logAction("type", { text: body.text, target: body.ref || body.selector }, `Typed "${body.text}"`, result.screenshotBase64);
-            computerState.updatePageInfo(result.url, result.title);
-            break;
-          case "key":
-            result = await pressKey(body.key);
-            computerState.logAction("key", { key: body.key }, `Pressed key ${body.key}`, result.screenshotBase64);
-            computerState.updatePageInfo(result.url, result.title);
-            break;
-          case "scroll":
-            result = await scroll(body.direction || "down", body.amount || 400);
-            computerState.logAction("scroll", body, `Scrolled ${body.direction}`, result.screenshotBase64);
-            break;
-          case "screenshot":
-            const shot = await takeScreenshot();
-            result = { screenshotBase64: shot };
-            break;
-          case "get_state":
-            result = await getComputerState(body.includeScreenshot ?? true);
-            computerState.updatePageInfo(result.url, result.title);
-            break;
-          case "xdotool":
-            const out = await xdotool(body.args || []);
-            result = { stdout: out };
-            computerState.logAction("xdotool", body.args, out);
-            break;
-          default:
-            return sendJson(res, 400, { error: `Unknown action: ${action}` });
-        }
+        try {
+          switch (action) {
+            case "navigate":
+              result = await navigate(body.url, actionSignal);
+              computerState.logAction("navigate", { url: body.url }, `Navigated to ${body.url}`, result.screenshotBase64);
+              computerState.updatePageInfo(result.url, result.title);
+              break;
+            case "click":
+              result = await click({ selector: body.selector, ref: body.ref, x: body.x, y: body.y }, actionSignal);
+              computerState.logAction("click", body, `Clicked ${body.ref || body.selector || `(${body.x}, ${body.y})`}`, result.screenshotBase64);
+              computerState.updatePageInfo(result.url, result.title);
+              break;
+            case "type":
+              result = await typeText(body.text, body.ref || body.selector, actionSignal);
+              computerState.logAction("type", { text: body.text, target: body.ref || body.selector }, `Typed "${body.text}"`, result.screenshotBase64);
+              computerState.updatePageInfo(result.url, result.title);
+              break;
+            case "key":
+              result = await pressKey(body.key, actionSignal);
+              computerState.logAction("key", { key: body.key }, `Pressed key ${body.key}`, result.screenshotBase64);
+              computerState.updatePageInfo(result.url, result.title);
+              break;
+            case "scroll":
+              result = await scroll(body.direction || "down", body.amount || 400, actionSignal);
+              computerState.logAction("scroll", body, `Scrolled ${body.direction}`, result.screenshotBase64);
+              break;
+            case "screenshot":
+              const shot = await takeScreenshot();
+              result = { screenshotBase64: shot };
+              break;
+            case "get_state":
+              result = await getComputerState(body.includeScreenshot ?? true);
+              computerState.updatePageInfo(result.url, result.title);
+              break;
+            case "xdotool":
+              const out = await xdotool(body.args || []);
+              result = { stdout: out };
+              computerState.logAction("xdotool", body.args, out);
+              break;
+            default:
+              return sendJson(res, 400, { error: `Unknown action: ${action}` });
+          }
 
-        return sendJson(res, 200, { ok: true, result });
+          return sendJson(res, 200, { ok: true, result });
+        } catch (actionErr: any) {
+          if (actionSignal.aborted || actionErr?.message?.includes("ABORTED")) {
+            return sendJson(res, 409, {
+              error: "AI action was safely aborted because user took control.",
+              mode: "user_controlling",
+            });
+          }
+          throw actionErr;
+        } finally {
+          computerState.endAction();
+        }
       }
 
       sendJson(res, 404, { error: "Not found" });

@@ -32,38 +32,38 @@ export async function disconnectAutomation(): Promise<void> {
 }
 
 /** Navigate active page to URL */
-export async function navigate(url: string): Promise<BrowserState> {
+export async function navigate(url: string, signal?: AbortSignal): Promise<BrowserState> {
   const engine = await getBrowserEngine();
-  return engine.navigate(url);
+  return engine.navigate(url, signal);
 }
 
 /** Click an element or specific coordinates or ref */
-export async function click(target: ClickTarget): Promise<BrowserState> {
+export async function click(target: ClickTarget, signal?: AbortSignal): Promise<BrowserState> {
   const engine = await getBrowserEngine();
-  return engine.click(target);
+  return engine.click(target, signal);
 }
 
 /** Type text into an active element or selector or ref */
-export async function typeText(text: string, selectorOrRef?: string): Promise<BrowserState> {
+export async function typeText(text: string, selectorOrRef?: string, signal?: AbortSignal): Promise<BrowserState> {
   const engine = await getBrowserEngine();
   const isRef = selectorOrRef?.startsWith("@");
   return engine.typeText({
     text,
     ref: isRef ? selectorOrRef : undefined,
     selector: !isRef ? selectorOrRef : undefined,
-  });
+  }, signal);
 }
 
 /** Press a keyboard key (Enter, Escape, Tab, Backspace, etc.) */
-export async function pressKey(key: string): Promise<BrowserState> {
+export async function pressKey(key: string, signal?: AbortSignal): Promise<BrowserState> {
   const engine = await getBrowserEngine();
-  return engine.pressKey(key);
+  return engine.pressKey(key, signal);
 }
 
 /** Scroll page vertically or horizontally */
-export async function scroll(direction: "up" | "down" | "left" | "right", amount = 400): Promise<BrowserState> {
+export async function scroll(direction: "up" | "down" | "left" | "right", amount = 400, signal?: AbortSignal): Promise<BrowserState> {
   const engine = await getBrowserEngine();
-  return engine.scroll({ direction, amount });
+  return engine.scroll({ direction, amount }, signal);
 }
 
 /** Take screenshot as Base64 string */

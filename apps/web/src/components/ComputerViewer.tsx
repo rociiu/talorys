@@ -146,17 +146,28 @@ export function ComputerViewer({ open, onClose }: ComputerViewerProps) {
             <iframe
               ref={iframeRef}
               key={iframeKey}
-              src="/api/computer/vnc/index.html?autoconnect=true&resize=remote"
-              className="h-full w-full border-0"
+              src={`/api/computer/vnc/index.html?autoconnect=true&resize=remote${!isUserControlling ? "&view_only=true" : ""}`}
+              className={`h-full w-full border-0 ${!isUserControlling ? "pointer-events-none select-none" : ""}`}
               allow="clipboard-read; clipboard-write"
             />
+
+            {/* 관찰 모드 입력 차단 투명 오버레이 */}
+            {!isUserControlling && (
+              <div
+                className="absolute inset-0 z-10 cursor-not-allowed bg-black/5"
+                title="AI 관찰 모드입니다. 직접 조작하려면 상단의 [직접 조작하기]를 클릭하세요."
+                onClick={() => {
+                  takeControl.mutate();
+                }}
+              />
+            )}
 
             {/* AI Control Notice Overlay (when not in user_controlling mode) */}
             {!isUserControlling && (
               <div className="pointer-events-none absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-lg border border-border/80 bg-surface/90 px-3 py-2 text-xs backdrop-blur shadow-lg">
                 <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
                 <span className="text-fg font-medium">AI 관찰 모드</span>
-                <span className="text-fg-muted">· 직접 클릭하거나 입력하려면 상단의 [직접 조작하기]를 누르세요.</span>
+                <span className="text-fg-muted">· 화면을 클릭하거나 상단의 [직접 조작하기]를 누르면 사용자가 제어합니다.</span>
               </div>
             )}
           </>

@@ -22,11 +22,12 @@ export class AgentBrowserAdapter implements BrowserEngineAdapter {
     }
   }
 
-  private async runCli(args: string[]): Promise<string> {
+  private async runCli(args: string[], signal?: AbortSignal): Promise<string> {
     const fullArgs = ["--cdp", String(this.cdpPort), ...args];
     try {
       const { stdout } = await execFileAsync(this.binaryPath, fullArgs, {
         timeout: 30_000,
+        signal,
         env: {
           ...process.env,
           AGENT_BROWSER_HEADED: "false",
@@ -34,30 +35,33 @@ export class AgentBrowserAdapter implements BrowserEngineAdapter {
       });
       return stdout.trim();
     } catch (err: unknown) {
+      if (signal?.aborted) {
+        throw new Error("ACTION_ABORTED_USER_CONTROL");
+      }
       const errorMsg = err instanceof Error ? err.message : String(err);
       throw new Error(`[agent-browser error] ${errorMsg}`);
     }
   }
 
-  async navigate(url: string): Promise<BrowserState> {
+  async navigate(url: string, signal?: AbortSignal): Promise<BrowserState> {
     let target = url;
     if (!/^https?:\/\//i.test(target)) {
       target = `https://${target}`;
     }
-    await this.runCli(["open", target]);
+    await this.runCli(["open", target], signal);
     // Small settling wait
     await new Promise((r) => setTimeout(r, 800));
     return this.getState(true);
   }
 
-  async click(target: ClickTarget): Promise<BrowserState> {
+  async click(target: ClickTarget, signal?: AbortSignal): Promise<BrowserState> {
     if (target.ref) {
       const cleanRef = target.ref.startsWith("@") ? target.ref : `@${target.ref}`;
-      await this.runCli(["click", cleanRef]);
+      await this.runCli(["click", cleanRef], signal);
     } else if (target.selector) {
-      await this.runCli(["click", target.selector]);
+      await this.runCli(["click", target.selector], signal);
     } else if (typeof target.x === "number" && typeof target.y === "number") {
-      await this.runCli(["mouse", "click", String(target.x), String(target.y)]);
+      await this.runCli(["mouse", "click", String(target.x), String(target.y)], signal);
     } else {
       throw new Error("Must provide ref, selector, or (x, y) coordinates for click.");
     }
@@ -65,29 +69,29 @@ export class AgentBrowserAdapter implements BrowserEngineAdapter {
     return this.getState(true);
   }
 
-  async typeText(target: TypeTarget): Promise<BrowserState> {
+  async typeText(target: TypeTarget, signal?: AbortSignal): Promise<BrowserState> {
     if (target.ref) {
       const cleanRef = target.ref.startsWith("@") ? target.ref : `@${target.ref}`;
-      await this.runCli(["fill", cleanRef, target.text]);
+      await this.runCli(["fill", cleanRef, target.text], signal);
     } else if (target.selector) {
-      await this.runCli(["fill", target.selector, target.text]);
+      await this.runCli(["fill", target.selector, target.text], signal);
     } else {
-      await this.runCli(["keyboard", "type", target.text]);
+      await this.runCli(["keyboard", "type", target.text], signal);
     }
     await new Promise((r) => setTimeout(r, 400));
     return this.getState(true);
   }
 
-  async pressKey(key: string): Promise<BrowserState> {
-    await this.runCli(["press", key]);
+  async pressKey(key: string, signal?: AbortSignal): Promise<BrowserState> {
+    await this.runCli(["press", key], signal);
     await new Promise((r) => setTimeout(r, 400));
     return this.getState(true);
   }
 
-  async scroll(options: ScrollOptions): Promise<BrowserState> {
+  async scroll(options: ScrollOptions, signal?: AbortSignal): Promise<BrowserState> {
     const dir = options.direction || "down";
     const amount = options.amount ? String(options.amount) : "400";
-    await this.runCli(["scroll", dir, amount]);
+    await this.runCli(["scroll", dir, amount], signal);
     await new Promise((r) => setTimeout(r, 400));
     return this.getState(true);
   }
