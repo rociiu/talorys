@@ -106,4 +106,3 @@ export function formatLocal(iso: string | null, timeZone: string): string | null
     return null;
   }
 }
-

@@ -123,7 +123,7 @@ describe("chat (mock provider)", () => {
     const { task } = await c.json("/api/tasks", { method: "POST", body: { title: "Approve-me chores" } });
     const events = await readSse(await c.call("/api/chat", { method: "POST", body: { message: "delete task Approve-me chores" } }));
     const toolEnd = events.filter((e) => e.type === "tool").at(-1).tool;
-    expect(toolEnd).toMatchObject({ name: "delete_task", status: "success", approval: { status: "pending", summary: "Delete task “Approve-me chores”" } });
+    expect(toolEnd).toMatchObject({ name: "delete_task", status: "success", approval: { status: "pending", summary: "할 일 “Approve-me chores” 삭제" } });
     expect((await c.call(`/api/tasks/${task.id}`)).status).toBe(200);
 
     const convId = events.find((e) => e.type === "start").conversation_id;

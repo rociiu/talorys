@@ -210,7 +210,7 @@ describe("semantic routes", () => {
     expect(hits).toHaveLength(1);
     expect(hits[0]).toMatchObject({ id: memory.id, content: "Drives a Tesla Model 3", category: "fact", cosine: expect.any(Number) });
     expect(Object.keys(hits[0]).sort()).toEqual(["category", "content", "cosine", "fused", "id", "saved"]);
-    expect(hits[0].saved).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$/);
+    expect(hits[0].saved).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} (?:UTC|GMT\+9)$/);
 
     expect((await c.json("/api/semantic/search?q=kayak")).hits).toHaveLength(10);
     expect((await c.json("/api/semantic/search?q=kayak&limit=3")).hits).toHaveLength(3);

@@ -50,15 +50,27 @@ export interface PromptContext {
 }
 
 export function buildSystemPrompt(ctx: PromptContext): string {
-  const localNow = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: ctx.timezone,
-    dateStyle: "full",
-    timeStyle: "short",
-  }).format(ctx.now);
+  let format: Intl.DateTimeFormat;
+  let tz = ctx.timezone;
+  try {
+    format = new Intl.DateTimeFormat("ko-KR", {
+      timeZone: ctx.timezone,
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+  } catch {
+    tz = "UTC";
+    format = new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "UTC",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+  }
+  const localNow = format.format(ctx.now);
   const sections = [
     BASE_SYSTEM_PROMPT.replace("{{name}}", ctx.agentName),
     `${SAFETY_RULES}\n${ctx.autoMemory ? AUTO_MEMORY_RULE : EXPLICIT_MEMORY_RULE}`,
-    `Current time for the owner: ${localNow} (${ctx.timezone}).`,
+    `Current time for the owner: ${localNow} (${tz}).`,
   ];
   if (ctx.memories.length > 0) {
     sections.push(
