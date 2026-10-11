@@ -54,6 +54,17 @@ export class UsageService {
     return this.today().ai_requests < limits.maxAiRequestsPerDay;
   }
 
+  remainingAi(limits: Limits): number {
+    return Math.max(0, limits.maxAiRequestsPerDay - this.today().ai_requests);
+  }
+
+  /** Counts one more model call if the daily budget allows it; false means stop. */
+  reserveAi(limits: Limits): boolean {
+    if (!this.canUseAi(limits)) return false;
+    this.increment({ ai_requests: 1 });
+    return true;
+  }
+
   canRunScheduledAi(limits: Limits): boolean {
     return this.today().scheduled_ai_runs < limits.maxScheduledAiRunsPerDay && this.canUseAi(limits);
   }

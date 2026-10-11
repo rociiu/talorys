@@ -58,7 +58,9 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 - Scheduled AI runs get read-only tools plus `notify_owner`.
 - Per-request limits: tool calls, per-tool caps, duplicate-call detection,
   reasoning steps, output and context tokens; daily caps on AI requests and
-  scheduled AI runs.
+  scheduled AI runs. Every model call (each tool-loop step and each history
+  summary) is counted against the daily cap before it is made, and the SDK's
+  automatic retries are off so no call goes uncounted.
 - No shell, code execution, outbound HTTP, credentials or deployment tools exist.
 
 ## Installer

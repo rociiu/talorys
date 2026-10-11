@@ -1,4 +1,4 @@
-import { generateText, stepCountIs, streamText, type ToolSet } from "ai";
+import { generateText, streamText, type ToolSet } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import type { AgentEvent, AIProvider, GenerateRequest, ToolRequest } from "./provider";
 import { classifyAiError } from "./provider";
@@ -33,7 +33,8 @@ export class CloudflareWorkersAIProvider implements AIProvider {
         maxOutputTokens: req.maxOutputTokens,
         temperature: req.temperature,
         abortSignal: req.signal,
-        maxRetries: 1,
+        // Retries would be model calls the daily budget cannot see; the UI offers Retry instead.
+        maxRetries: 0,
       });
       return {
         text: result.text,
@@ -66,11 +67,14 @@ export class CloudflareWorkersAIProvider implements AIProvider {
       maxOutputTokens: req.maxOutputTokens,
       temperature: req.temperature,
       abortSignal: req.signal,
-      maxRetries: 1,
+      // Retries would be model calls the daily budget cannot see; the UI offers Retry instead.
+      maxRetries: 0,
       ...(hasTools
         ? {
             tools,
-            stopWhen: stepCountIs(req.maxIterations),
+            // Every further step is another model call: stop at the step cap or when the daily budget is spent.
+            stopWhen: ({ steps }: { steps: unknown[] }) =>
+              steps.length >= req.maxIterations || (req.reserveNextStep ? !req.reserveNextStep() : false),
             // On the last allowed step, or once the tool budget is spent, force a plain-text answer.
             prepareStep: ({ stepNumber }: { stepNumber: number }) =>
               stepNumber >= req.maxIterations - 1 || req.toolBudgetExhausted() ? { toolChoice: "none" as const } : {},

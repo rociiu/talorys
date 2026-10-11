@@ -154,7 +154,8 @@ paid features on its own. It is not "unlimited free", though:
 
 Built-in guardrails (adjustable in **Settings → AI**): max output tokens, max
 context tokens (older history is summarized), max tool calls and reasoning
-steps per request, max AI requests per day, and max scheduled AI runs per day.
+steps per request, max AI requests per day (every model call counts, including
+each reasoning step and history summary), and max scheduled AI runs per day.
 Simple reminders and task digests never use AI. The Usage panel shows local
 **estimates** and links to the Cloudflare dashboard for exact Neuron usage.
 

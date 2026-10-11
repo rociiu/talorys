@@ -33,6 +33,11 @@ export interface ToolRequest extends GenerateRequest {
   maxIterations: number;
   /** Returns true when no further tool calls are allowed; the model must then answer in text. */
   toolBudgetExhausted: () => boolean;
+  /**
+   * Called before every model call after the first; it records the call against the
+   * daily budget and returns false when the budget is spent, which ends the turn.
+   */
+  reserveNextStep?: () => boolean;
 }
 
 export type AgentEvent =
