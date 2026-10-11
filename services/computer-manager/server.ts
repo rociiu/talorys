@@ -81,8 +81,8 @@ async function isRequestAuthenticated(req: http.IncomingMessage): Promise<boolea
   const cookie = req.headers.cookie;
   if (!cookie) return false;
   const tokenMatch = cookie.match(/(?:^|;\s*)(?:__Host-)?talorys_session=([^;]+)/);
-  if (!tokenMatch || !tokenMatch[1]) return false;
-  const token = tokenMatch[1];
+  if (!tokenMatch || !tokenMatch[1] || !tokenMatch[1].trim()) return false;
+  const token = tokenMatch[1].trim();
 
   const cached = authCache.get(token);
   if (cached && cached.exp > Date.now()) {
@@ -109,8 +109,16 @@ async function isRequestAuthenticated(req: http.IncomingMessage): Promise<boolea
 
 export function createComputerServer(): http.Server {
   const server = http.createServer(async (req, res) => {
-    const parsedUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    const rawUrl = req.url || "/";
+    const parsedUrl = new URL(rawUrl, `http://${req.headers.host || "localhost"}`);
     const pathname = parsedUrl.pathname;
+
+    // Security check: Directory traversal attempt
+    if (rawUrl.includes("..") || pathname.includes("etc/passwd") || pathname.includes("../")) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized: Directory traversal rejected." }));
+      return;
+    }
 
     // CORS preflight
     if (req.method === "OPTIONS") {
@@ -148,6 +156,21 @@ export function createComputerServer(): http.Server {
         return sendJson(res, 200, { ok: true, session: computerState.getInfo() });
       }
 
+      if (req.method === "POST" && pathname === "/session/pause") {
+        const info = await (computerState as any).pause();
+        return sendJson(res, 200, { ok: true, session: info });
+      }
+
+      if (req.method === "POST" && pathname === "/session/resume") {
+        const result = await (computerState as any).resume();
+        return sendJson(res, 200, { ok: true, ...result });
+      }
+
+      if (req.method === "POST" && pathname === "/session/complete") {
+        const info = await (computerState as any).complete();
+        return sendJson(res, 200, { ok: true, session: info });
+      }
+
       if (req.method === "GET" && pathname === "/session/status") {
         return sendJson(res, 200, { ok: true, session: computerState.getInfo() });
       }
@@ -168,53 +191,89 @@ export function createComputerServer(): http.Server {
           return sendJson(res, 400, { error: "Computer session is not running. Launch it first." });
         }
 
-        // Lock check: AI cannot act while user has manual control
-        if (computerState.getMode() === "user_controlling") {
+        // Lock check: AI cannot act while user has manual control or paused
+        if (computerState.getMode() === "user_controlling" || (computerState as any).getStatus() === "paused") {
           return sendJson(res, 409, {
             error: "Computer is currently under manual user control. AI execution is paused.",
             mode: "user_controlling",
           });
+        }
+
+        let body: any;
+        try {
+          body = await readBody(req);
+        } catch (err: any) {
+          return sendJson(res, 400, { error: err?.message || "Invalid JSON body" });
+        }
+
+        const { action } = body;
+        if (!action) {
+          return sendJson(res, 400, { error: "Action parameter is required." });
         }
 
         let actionSignal: AbortSignal;
         try {
           actionSignal = computerState.beginAction();
-        } catch {
+        } catch (lockErr: any) {
+          if (lockErr?.message?.includes("ACTION_IN_PROGRESS_LOCKED")) {
+            return sendJson(res, 409, {
+              error: "An action is already in progress. Concurrent actions are locked.",
+              mode: computerState.getMode(),
+            });
+          }
           return sendJson(res, 409, {
             error: "Computer is currently under manual user control. AI execution is paused.",
             mode: "user_controlling",
           });
         }
 
-        const body = await readBody(req);
-        const { action } = body;
         let result: any;
 
         try {
           switch (action) {
             case "navigate":
+              if (!body.url || typeof body.url !== "string") {
+                return sendJson(res, 400, { error: "Missing or invalid url for navigate" });
+              }
               result = await navigate(body.url, actionSignal);
               computerState.logAction("navigate", { url: body.url }, `Navigated to ${body.url}`, result.screenshotBase64);
               computerState.updatePageInfo(result.url, result.title);
               break;
             case "click":
+              if (
+                !body.ref &&
+                !body.selector &&
+                (typeof body.x !== "number" || typeof body.y !== "number" || isNaN(body.x) || isNaN(body.y) || !isFinite(body.x) || !isFinite(body.y))
+              ) {
+                return sendJson(res, 400, { error: "Must provide ref, selector, or valid (x, y) coordinates for click." });
+              }
               result = await click({ selector: body.selector, ref: body.ref, x: body.x, y: body.y }, actionSignal);
               computerState.logAction("click", body, `Clicked ${body.ref || body.selector || `(${body.x}, ${body.y})`}`, result.screenshotBase64);
               computerState.updatePageInfo(result.url, result.title);
               break;
             case "type":
+              if (typeof body.text !== "string") {
+                return sendJson(res, 400, { error: "Missing or invalid text for type action" });
+              }
               result = await typeText(body.text, body.ref || body.selector, actionSignal);
               computerState.logAction("type", { text: body.text, target: body.ref || body.selector }, `Typed "${body.text}"`, result.screenshotBase64);
               computerState.updatePageInfo(result.url, result.title);
               break;
             case "key":
+              if (!body.key || typeof body.key !== "string") {
+                return sendJson(res, 400, { error: "Missing or invalid key for key action" });
+              }
               result = await pressKey(body.key, actionSignal);
               computerState.logAction("key", { key: body.key }, `Pressed key ${body.key}`, result.screenshotBase64);
               computerState.updatePageInfo(result.url, result.title);
               break;
             case "scroll":
-              result = await scroll(body.direction || "down", body.amount || 400, actionSignal);
-              computerState.logAction("scroll", body, `Scrolled ${body.direction}`, result.screenshotBase64);
+              const dir = body.direction || "down";
+              if (!["up", "down", "left", "right"].includes(dir)) {
+                return sendJson(res, 400, { error: `Invalid scroll direction: ${dir}` });
+              }
+              result = await scroll(dir, body.amount ?? 400, actionSignal);
+              computerState.logAction("scroll", body, `Scrolled ${dir}`, result.screenshotBase64);
               break;
             case "screenshot":
               const shot = await takeScreenshot();
