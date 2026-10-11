@@ -19,7 +19,7 @@ import { z } from "zod";
 import { ALL_TOOLS } from "../src/tools";
 import { AgentRunner } from "../src/agent/runner";
 import type { AgentEvent, AIProvider, GenerateRequest, ToolRequest } from "../src/ai/provider";
-import { NEWER_WINS_NOTE } from "../src/semantic/recall";
+import { NEWER_WINS_NOTE, savedAt } from "../src/semantic/recall";
 import type { Env } from "../src/env";
 
 function reset(s: Services) {
@@ -365,8 +365,10 @@ describe("semantic recall off", () => {
       expect(hooked.calls).toHaveLength(2);
       for (const i of [0, 1]) {
         expect(toolShape(hooked.calls[i]!)).toEqual(toolShape(upstream.calls[i]!));
+        const tz = s.settings.get().timezone;
+        const memory = s.memories.list()[0]!;
         expect(hooked.calls[i]!.system).toBe(
-          upstream.calls[i]!.system.replace("Prefers green tea", "(saved 2026-03-04 10:00 UTC) Prefers green tea"),
+          upstream.calls[i]!.system.replace("Prefers green tea", `(saved ${savedAt(memory.updated_at, tz)}) Prefers green tea`),
         );
       }
       expect(upstream.calls[0]!.system).toContain("- [preference] Prefers green tea in the morning");

@@ -8,7 +8,7 @@ import { classifyAiError } from "../src/ai/provider";
 import { MIGRATIONS, migrate, schemaVersion } from "../src/db/migrations";
 import { buildContextWindow } from "../src/agent/memory";
 import { buildSystemPrompt } from "../src/agent/prompt";
-import { parseLocalDateTime } from "../src/services/time";
+import { parseLocalDateTime, toLocalMinute } from "../src/services/time";
 
 /** A provider that replays a scripted sequence of tool calls, to exercise limits deterministically. */
 class ScriptedProvider implements AIProvider {
@@ -109,7 +109,7 @@ describe("prompt-injection and destructive-action defenses", () => {
       expect(result.status).toBe("awaiting_owner_approval");
       expect(s.tasks.get(task.id)).not.toBeNull();
       const action = ex.approvalFor("call_1")!;
-      expect(action).toMatchObject({ status: "pending", summary: "Delete task “Keep me”" });
+      expect(action).toMatchObject({ status: "pending", summary: "할 일 “Keep me” 삭제" });
 
       // Unknown targets are rejected up front instead of producing an approval card.
       await expect(ex.execute("cancel_automation", { id: "missing" }, "call_2")).rejects.toThrow(/not found/);
@@ -263,7 +263,8 @@ describe("scheduling", () => {
     const c = await loggedIn();
     const aiBefore = await inAgent((a) => a.services.usage.today().ai_requests);
     const at = new Date(Date.now() + 2 * 60_000);
-    const local = at.toISOString().slice(0, 16);
+    const tz = (await c.json("/api/settings")).settings.timezone;
+    const local = toLocalMinute(at, tz);
     const { automation } = await c.json("/api/automations", {
       method: "POST",
       body: { name: "Stretch", kind: "reminder", message: "Time to stretch", schedule: { type: "once", at: local } },

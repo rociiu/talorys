@@ -27,24 +27,44 @@ export function parseLocalDateTime(value: string, timeZone: string): string | nu
 
 /** Local wall-clock "YYYY-MM-DDTHH:MM" for an instant in the owner's timezone. */
 export function toLocalMinute(date: Date, timeZone: string): string {
-  const p = getZonedParts(date, timeZone);
+  let tz = timeZone;
+  let p: ReturnType<typeof getZonedParts>;
+  try {
+    p = getZonedParts(date, tz);
+  } catch {
+    p = getZonedParts(date, "UTC");
+  }
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
 }
 
 /** UTC boundaries of the owner's current local day. */
 export function localDayBounds(timeZone: string, at = new Date()): { start: string; end: string } {
-  const p = getZonedParts(at, timeZone);
-  const start = zonedTimeToUtc(p.year, p.month, p.day, 0, 0, timeZone);
+  let tz = timeZone;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+  } catch {
+    tz = "UTC";
+  }
+  const p = getZonedParts(at, tz);
+  const start = zonedTimeToUtc(p.year, p.month, p.day, 0, 0, tz);
   const next = new Date(Date.UTC(p.year, p.month - 1, p.day + 1));
-  const end = zonedTimeToUtc(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), 0, 0, timeZone);
+  const end = zonedTimeToUtc(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), 0, 0, tz);
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
 export function formatLocal(iso: string | null, timeZone: string): string | null {
   if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  let tz = timeZone;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+  } catch {
+    tz = "UTC";
+  }
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     weekday: "short",
     year: "numeric",
     month: "short",
@@ -52,5 +72,5 @@ export function formatLocal(iso: string | null, timeZone: string): string | null
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-  }).format(new Date(iso));
+  }).format(d);
 }

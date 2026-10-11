@@ -20,7 +20,7 @@ function wrapSearchMemories(sem: SemanticContext): ToolDefinition {
     ...base,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
-      const timezone = ctx.services.settings.get().timezone;
+      const timezone = ctx.timezone ?? ctx.services.settings.get().timezone;
       const hits = await hybridSearch(sem, query, { limit: SEARCH_MEMORY_LIMIT });
       return {
         memories: hits.map(({ memory: m }) => ({ id: m.id, content: m.content, category: m.category, saved: savedAt(m.updated_at, timezone) })),
@@ -37,7 +37,7 @@ function wrapSearch(sem: SemanticContext): ToolDefinition {
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
       const result = (await base.execute(raw, ctx)) as Record<string, unknown>;
-      const timezone = ctx.services.settings.get().timezone;
+      const timezone = ctx.timezone ?? ctx.services.settings.get().timezone;
       const hits = await hybridSearch(sem, query, { limit: SEARCH_ALL_MEMORY_LIMIT });
       return { ...result, memories: hits.map(({ memory: m }) => ({ id: m.id, content: m.content, saved: savedAt(m.updated_at, timezone) })) };
     },
