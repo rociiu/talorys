@@ -1,6 +1,13 @@
 import { BACKUP_FORMAT, BACKUP_VERSION, type Backup, TALORYS_VERSION, backupSchema, scheduleSpecSchema } from "@talorys/shared";
 import type { Services } from "./container";
 import { ValidationError } from "../api/errors";
+import { decodeTools } from "../db/repositories/conversations";
+
+/**
+ * Settings a backup may never change: they control cost and model behaviour, and a
+ * backup file is untrusted input. The owner changes them in Settings instead.
+ */
+export const IMPORT_IGNORED_SETTINGS = ["model", "limits", "demoMode", "autoMemory"] as const;
 
 /** Builds a portable backup. Sessions, login attempts and credentials are never exported. */
 export function exportData(s: Services): Backup {
@@ -33,6 +40,9 @@ export interface ImportSummary {
   notes: number;
   projects: number;
   automations: number;
+  /** Imported automations always arrive paused; the owner enables them. */
+  automations_paused: number;
+  ignored_settings: string[];
 }
 
 const str = (v: unknown, fallback = ""): string => (typeof v === "string" ? v : fallback);
@@ -43,7 +53,9 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T):
 /**
  * Merges a backup into the current data inside one transaction. Records are
  * upserted by id, so importing the same backup twice is harmless and nothing
- * that exists only locally is deleted. Imported automations are re-armed afterwards.
+ * that exists only locally is deleted. A backup is untrusted input: new automations
+ * arrive paused, existing automations and the settings in IMPORT_IGNORED_SETTINGS are
+ * never changed, and imported messages can never be retried as owner input.
  */
 export async function importData(s: Services, raw: unknown): Promise<ImportSummary> {
   const parsed = backupSchema.safeParse(raw);
@@ -57,6 +69,7 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
   const db = s.db;
   const now = new Date().toISOString();
 
+  let paused = 0; // existing automations this backup paused
   const summary = db.transaction((): ImportSummary => {
     for (const p of d.projects) {
       db.run(
@@ -67,19 +80,22 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
     }
     const projectExists = (id: unknown) => typeof id === "string" && !!db.one(`SELECT 1 AS x FROM tal_projects WHERE id = ?`, id);
     for (const c of d.conversations) {
+      // Summaries go into the system prompt but are invisible in the UI, so imported ones are
+      // dropped and regenerated from the (visible) messages when needed.
       db.run(
-        `INSERT INTO tal_conversations (id, title, summary, summary_upto, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO tal_conversations (id, title, summary, summary_upto, created_at, updated_at) VALUES (?, ?, NULL, NULL, ?, ?)
          ON CONFLICT(id) DO UPDATE SET title = excluded.title, updated_at = excluded.updated_at`,
-        c.id, c.title, strOrNull(c.summary), strOrNull(c.summary_upto), c.created_at, c.updated_at,
+        c.id, c.title, c.created_at, c.updated_at,
       );
     }
     let messages = 0;
     for (const m of d.messages) {
       if (!db.one(`SELECT 1 AS x FROM tal_conversations WHERE id = ?`, m.conversation_id)) continue;
       db.run(
-        `INSERT INTO tal_messages (id, conversation_id, role, content, tools, status, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO NOTHING`,
-        m.id, m.conversation_id, m.role, m.content, typeof m.tools === "string" ? m.tools : JSON.stringify(m.tools ?? []),
+        `INSERT INTO tal_messages (id, conversation_id, role, content, tools, status, error, created_at, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'import') ON CONFLICT(id) DO NOTHING`,
+        // Approvals refer to pending actions in the exporting instance; an imported one could only mislead.
+        m.id, m.conversation_id, m.role, m.content, JSON.stringify(decodeTools(m.tools).map(({ approval: _a, ...t }) => t)),
         pick(m.status, ["complete", "error", "cancelled"], "complete"), strOrNull(m.error), m.created_at,
       );
       messages++;
@@ -116,20 +132,27 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
       const schedule = scheduleSpecSchema.safeParse(a.schedule);
       if (!schedule.success) continue;
       const kind = pick(a.kind, ["reminder", "task_digest", "agent_prompt"], "reminder");
-      const enabled = a.enabled !== false;
+      // An imported AI prompt must not start running on its own, and an existing automation keeps the
+      // owner's version. The one change a backup may make to it is the safe one: pausing it.
+      if (db.one(`SELECT 1 AS x FROM tal_automations WHERE id = ?`, a.id)) {
+        if (a.enabled === false) {
+          paused += db.run(`UPDATE tal_automations SET enabled = 0, status = 'paused', updated_at = ? WHERE id = ? AND enabled = 1`, now, a.id).changes > 0 ? 1 : 0;
+        }
+        continue;
+      }
       db.run(
         `INSERT INTO tal_automations (id, name, kind, message, schedule, enabled, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET name = excluded.name, kind = excluded.kind, message = excluded.message,
-           schedule = excluded.schedule, enabled = excluded.enabled, updated_at = excluded.updated_at`,
-        a.id, a.name, kind, str(a.message), JSON.stringify(schedule.data), enabled ? 1 : 0, enabled ? "scheduled" : "paused",
-        str(a.created_at, now), now,
+         VALUES (?, ?, ?, ?, ?, 0, 'paused', ?, ?)`,
+        a.id, a.name, kind, str(a.message), JSON.stringify(schedule.data), str(a.created_at, now), now,
       );
       automations++;
     }
-    if (d.settings && Object.keys(d.settings).length > 0) {
+    const settings: Record<string, unknown> = { ...d.settings };
+    const ignored = IMPORT_IGNORED_SETTINGS.filter((key) => key in settings);
+    for (const key of ignored) delete settings[key];
+    if (Object.keys(settings).length > 0) {
       // Validated merge; invalid fields are rejected with a clear error.
-      s.settings.update(d.settings as never);
+      s.settings.update(settings as never);
     }
     return {
       conversations: d.conversations.length,
@@ -139,12 +162,13 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
       notes: d.notes.length,
       projects: d.projects.length,
       automations,
+      automations_paused: automations,
+      ignored_settings: [...ignored],
     };
   });
 
-  // Arm (or disarm) imported schedules outside the data transaction (SDK schedules are separate rows).
-  // A backup can change timezone even when all scheduled automations are local.
-  if (summary.automations > 0 || s.settings.get().timezone !== previousTimezone) await s.automations.rearmAll();
+  // Disarm automations the backup paused; a new timezone also moves the owner's existing schedules.
+  if (paused > 0 || s.settings.get().timezone !== previousTimezone) await s.automations.rearmAll();
   s.activity.record("data.imported", `Imported backup from ${backup.exported_at}`);
   return summary;
 }

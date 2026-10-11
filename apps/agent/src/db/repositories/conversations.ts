@@ -1,4 +1,4 @@
-import type { ChatMessage, Conversation, ToolActivity } from "@talorys/shared";
+import { type ChatMessage, type Conversation, type ToolActivity, toolActivitySchema } from "@talorys/shared";
 import { type Database, likePattern, newId, now } from "../database";
 import { NotFoundError } from "../../api/errors";
 
@@ -11,6 +11,7 @@ interface MessageRow {
   status: ChatMessage["status"];
   error: string | null;
   created_at: string;
+  source: "chat" | "import";
 }
 
 export interface ConversationRecord extends Conversation {
@@ -18,14 +19,25 @@ export interface ConversationRecord extends Conversation {
   summary_upto: string | null;
 }
 
-function toMessage(row: MessageRow): ChatMessage {
-  let tools: ToolActivity[] = [];
-  try {
-    tools = JSON.parse(row.tools) as ToolActivity[];
-  } catch {
-    tools = [];
+/** Decodes stored tool activity, dropping malformed entries (e.g. from an imported backup). */
+export function decodeTools(raw: unknown): ToolActivity[] {
+  let value = raw;
+  if (typeof raw === "string") {
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      return [];
+    }
   }
-  return { ...row, tools };
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const parsed = toolActivitySchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function toMessage(row: MessageRow): ChatMessage {
+  return { ...row, tools: decodeTools(row.tools) };
 }
 
 export class ConversationRepository {
@@ -133,6 +145,7 @@ export class ConversationRepository {
       status: input.status ?? "complete",
       error: input.error ?? null,
       created_at: now(),
+      source: "chat",
     };
     this.db.run(
       `INSERT INTO tal_messages (id, conversation_id, role, content, tools, status, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

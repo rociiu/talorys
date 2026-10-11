@@ -70,7 +70,9 @@ export class AgentRunner {
       if (last?.role === "assistant" && last.status !== "complete") s.conversations.deleteMessage(last.id);
       const prev = s.conversations.lastMessage(conversation.id);
       if (prev?.role !== "user") throw new AppError("CONFLICT", "Nothing to retry.");
-      userMessage = prev!;
+      // Restored backup content is data, never live owner input.
+      if (prev.source === "import") throw new AppError("CONFLICT", "Messages restored from a backup can't be retried. Send a new message instead.");
+      userMessage = prev;
     } else {
       if (!conversation) {
         conversation = s.conversations.create(titleFromMessage(input.message));

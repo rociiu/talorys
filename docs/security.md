@@ -61,6 +61,20 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
   scheduled AI runs.
 - No shell, code execution, outbound HTTP, credentials or deployment tools exist.
 
+## Backups
+
+A backup file is untrusted input; importing one cannot change what Talorys
+does on its own:
+
+- New automations arrive paused, and existing ones are never rewritten or
+  re-enabled (a backup may only pause them).
+- The model, limits, demo mode and auto-memory settings are not imported.
+- Conversation summaries are dropped; they feed the system prompt but are
+  invisible in the UI. They are regenerated from the visible messages.
+- Imported messages are marked as imported. Retry refuses them, and recorded
+  approvals are stripped, so they never count as the owner's input.
+- Malformed tool activity is dropped instead of breaking the chat view.
+
 ## Installer
 
 - Commands are spawned with argument arrays (no shell).

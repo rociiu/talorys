@@ -304,8 +304,16 @@ function PrivacyTab() {
     try {
       if (file.size > 25 * 1024 * 1024) throw new Error("Backup file is larger than 25 MB.");
       const json = JSON.parse(await file.text());
-      const r = await api<{ imported: Record<string, number> }>("/import", { method: "POST", body: json });
-      toast(`Imported ${Object.entries(r.imported).map(([k, v]) => `${v} ${k}`).join(", ")}`);
+      const r = await api<{ imported: Record<string, number> & { automations_paused: number; ignored_settings: string[] } }>("/import", {
+        method: "POST",
+        body: json,
+      });
+      const { automations_paused, ignored_settings, ...counts } = r.imported;
+      const notes = [
+        automations_paused ? `${automations_paused} automation(s) imported paused — enable them in Automations` : "",
+        ignored_settings.length ? `kept your current ${ignored_settings.join(", ")} settings` : "",
+      ].filter(Boolean);
+      toast(`Imported ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ")}${notes.length ? `. ${notes.join("; ")}.` : ""}`);
       await qc.invalidateQueries();
     } catch (error) {
       toast(error instanceof SyntaxError ? "That file is not valid JSON." : errorMessage(error), "error");
@@ -326,7 +334,7 @@ function PrivacyTab() {
             <Download className="h-4 w-4" /> Download backup
           </a>
         </Row>
-        <Row label="Import data" hint="Merges a backup into your data. Existing items with the same id are updated; nothing is deleted.">
+        <Row label="Import data" hint="Merges a backup into your data. Existing items with the same id are updated, except automations, which are kept as they are; new automations arrive paused. Model, limits, demo mode and auto-memory settings are not imported. Nothing is deleted.">
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => e.target.files?.[0] && void onImport(e.target.files[0])} />
           <Button variant="outline" className="w-full justify-center" loading={importing} onClick={() => fileRef.current?.click()}>
             <Upload className="h-4 w-4" /> Choose backup file

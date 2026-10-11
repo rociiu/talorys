@@ -91,6 +91,24 @@ export interface ToolActivity {
   approval?: PendingAction;
 }
 
+/** Shape check for tool activity stored with a message. Entries that fail it (e.g. from a hostile backup) are dropped on read. */
+export const toolActivitySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  label: z.string(),
+  status: z.enum(["running", "success", "error"]),
+  error: z.string().optional(),
+  approval: z
+    .object({
+      id: z.string(),
+      summary: z.string(),
+      status: z.enum(["pending", "approved", "cancelled", "expired", "failed"]),
+      error: z.string().nullable(),
+      expires_at: z.string(),
+    })
+    .optional(),
+}) satisfies z.ZodType<ToolActivity>;
+
 export interface ChatMessage {
   id: string;
   conversation_id: string;
@@ -100,6 +118,8 @@ export interface ChatMessage {
   status: "complete" | "error" | "cancelled";
   error: string | null;
   created_at: string;
+  /** "import" for messages restored from a backup; they never count as live owner input. */
+  source?: "chat" | "import";
 }
 
 export type AutomationStatus = "scheduled" | "running" | "paused" | "completed" | "failed";
