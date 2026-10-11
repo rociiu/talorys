@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BACKUP_FORMAT, LIMIT_CEILINGS } from "./constants";
+import { BACKUP_FORMAT, ENCRYPTED_BACKUP_FORMAT, LIMIT_CEILINGS } from "./constants";
 import { isValidTimeZone, scheduleSpecSchema } from "./recurrence";
 
 // ---------- Primitives ----------
@@ -266,35 +266,94 @@ export const changePasswordSchema = z.object({
 
 // ---------- Backup ----------
 
-const backupEntity = <T extends z.ZodRawShape>(shape: T) => z.object(shape).passthrough();
+export function hasPrototypePollution(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) {
+    return value.some(hasPrototypePollution);
+  }
+  const keys = Object.getOwnPropertyNames(value);
+  for (const k of keys) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") return true;
+    if (hasPrototypePollution((value as any)[k])) return true;
+  }
+  return false;
+}
 
-export const backupSchema = z.object({
-  format: z.literal(BACKUP_FORMAT),
+const backupEntity = <T extends z.ZodRawShape>(shape: T) =>
+  z
+    .object(shape)
+    .passthrough()
+    .superRefine((val, ctx) => {
+      if (hasPrototypePollution(val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Prototype pollution attempt detected" });
+      }
+    });
+
+export const backupDataSchema = z.object({
+  settings: z.record(z.string(), z.unknown()).optional().default({}),
+  conversations: z.array(backupEntity({ id, title: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
+  messages: z
+    .array(
+      backupEntity({
+        id,
+        conversation_id: id,
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+        created_at: z.string(),
+      }),
+    )
+    .default([]),
+  memories: z.array(backupEntity({ id, content: z.string(), category: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
+  tasks: z.array(backupEntity({ id, title: z.string(), status: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
+  notes: z.array(backupEntity({ id, title: z.string(), content: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
+  projects: z.array(backupEntity({ id, name: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
+  automations: z.array(backupEntity({ id, name: z.string(), kind: z.string(), schedule: z.unknown() })).default([]),
+});
+
+export const backupSchema = z
+  .object({
+    format: z.literal(BACKUP_FORMAT),
+    version: z.number().int().min(1),
+    exported_at: z.string(),
+    app_version: z.string().optional(),
+    data: backupDataSchema,
+  })
+  .superRefine((val, ctx) => {
+    if (hasPrototypePollution(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Prototype pollution attempt detected" });
+    }
+  });
+export type Backup = z.infer<typeof backupSchema>;
+
+export const signedBackupSchema = z
+  .object({
+    format: z.literal(BACKUP_FORMAT),
+    version: z.number().int().min(1),
+    exported_at: z.string(),
+    app_version: z.string().optional(),
+    hmac: z.string().min(1),
+    data: backupDataSchema,
+  })
+  .superRefine((val, ctx) => {
+    if (hasPrototypePollution(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Prototype pollution attempt detected" });
+    }
+  });
+export type SignedBackup = z.infer<typeof signedBackupSchema>;
+
+export const encryptedBackupSchema = z.object({
+  format: z.literal(ENCRYPTED_BACKUP_FORMAT),
   version: z.number().int().min(1),
   exported_at: z.string(),
   app_version: z.string().optional(),
-  data: z.object({
-    settings: z.record(z.string(), z.unknown()).optional().default({}),
-    conversations: z.array(backupEntity({ id, title: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
-    messages: z
-      .array(
-        backupEntity({
-          id,
-          conversation_id: id,
-          role: z.enum(["user", "assistant"]),
-          content: z.string(),
-          created_at: z.string(),
-        }),
-      )
-      .default([]),
-    memories: z.array(backupEntity({ id, content: z.string(), category: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
-    tasks: z.array(backupEntity({ id, title: z.string(), status: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
-    notes: z.array(backupEntity({ id, title: z.string(), content: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
-    projects: z.array(backupEntity({ id, name: z.string(), created_at: z.string(), updated_at: z.string() })).default([]),
-    automations: z.array(backupEntity({ id, name: z.string(), kind: z.string(), schedule: z.unknown() })).default([]),
-  }),
+  algorithm: z.enum(["AES-GCM-256"]),
+  iv: z.string().min(1),
+  ciphertext: z.string().min(1),
+  tag: z.string().optional(),
+  hmac: z.string().min(1),
 });
-export type Backup = z.infer<typeof backupSchema>;
+export type EncryptedBackup = z.infer<typeof encryptedBackupSchema>;
+
 
 // ---------- API contract ----------
 
