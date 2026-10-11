@@ -1,0 +1,2044 @@
+{
+  "timestamp": "2026-10-11T22:27:18.581Z",
+  "domain": "time-scheduling",
+  "total": 250,
+  "passed": 250,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 22.94,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 40,
+      "passed": 40,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "time-norm-001",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: local date '2026-05-15' in Asia/Seoul resolves to 23:59 KST (14:59 UTC)",
+      "status": "PASS",
+      "durationMs": 1.38
+    },
+    {
+      "id": "time-norm-002",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: local date-time '2026-05-15T09:00' in Asia/Seoul resolves to 00:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-003",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: local date-time with space '2026-05-15 14:30' in Asia/Seoul resolves to 05:30 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-004",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Tokyo (JST, UTC+9) resolves '2026-01-10T12:00' to 03:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "time-norm-005",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/New_York summer (EDT, UTC-4) resolves '2026-06-15T12:00' to 16:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-norm-006",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/New_York winter (EST, UTC-5) resolves '2026-01-15T12:00' to 17:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-007",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/Los_Angeles summer (PDT, UTC-7) resolves '2026-06-15T12:00' to 19:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-norm-008",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/Los_Angeles winter (PST, UTC-8) resolves '2026-01-15T12:00' to 20:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-009",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/Chicago summer (CDT, UTC-5) resolves '2026-06-15T12:00' to 17:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-norm-010",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/Chicago winter (CST, UTC-6) resolves '2026-01-15T12:00' to 18:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-011",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/London summer (BST, UTC+1) resolves '2026-06-15T12:00' to 11:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "time-norm-012",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/London winter (GMT, UTC+0) resolves '2026-01-15T12:00' to 12:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-013",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/Paris summer (CEST, UTC+2) resolves '2026-06-15T12:00' to 10:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-014",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/Paris winter (CET, UTC+1) resolves '2026-01-15T12:00' to 11:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-015",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/Berlin summer (CEST, UTC+2) resolves '2026-06-15T12:00' to 10:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-016",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Europe/Berlin winter (CET, UTC+1) resolves '2026-01-15T12:00' to 11:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-017",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Shanghai (CST, UTC+8) resolves '2026-06-15T12:00' to 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-018",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Singapore (SGT, UTC+8) resolves '2026-06-15T12:00' to 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-019",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Hong_Kong (HKT, UTC+8) resolves '2026-06-15T12:00' to 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-020",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Dubai (GST, UTC+4) resolves '2026-06-15T12:00' to 08:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-021",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Asia/Kolkata (IST, UTC+5:30) resolves '2026-06-15T12:00' to 06:30 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-022",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Australia/Sydney winter (AEST, UTC+10) resolves '2026-06-15T12:00' to 02:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-023",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Australia/Sydney summer (AEDT, UTC+11) resolves '2026-01-15T12:00' to 01:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-024",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Australia/Perth (AWST, UTC+8) resolves '2026-06-15T12:00' to 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-025",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Pacific/Auckland winter (NZST, UTC+12) resolves '2026-06-15T12:00' to 00:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-026",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Pacific/Auckland summer (NZDT, UTC+13) resolves '2026-01-15T12:00' to 23:00 UTC previous day",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-027",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Pacific/Honolulu (HST, UTC-10) resolves '2026-06-15T12:00' to 22:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-028",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: America/Sao_Paulo (BRT, UTC-3) resolves '2026-06-15T12:00' to 15:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-029",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Africa/Johannesburg (SAST, UTC+2) resolves '2026-06-15T12:00' to 10:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-030",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Africa/Cairo (EEST, UTC+3) resolves '2026-06-15T12:00' to 09:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-031",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: UTC timezone directly resolves '2026-06-15T12:00' to 12:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-032",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: Etc/UTC timezone resolves '2026-06-15T12:00' to 12:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.3
+    },
+    {
+      "id": "time-norm-033",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 string with 'Z' suffix is parsed to UTC ISO string",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-norm-034",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 with positive offset '+09:00' converts correctly to UTC",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-norm-035",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 with negative offset '-05:00' converts correctly to UTC",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-036",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 with fractional seconds '.123Z' preserves milliseconds",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-037",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 with fractional seconds and offset '.500+09:00' converts correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-038",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 without seconds '2026-07-20T15:45Z' parses correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-039",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: ISO8601 without seconds with offset '2026-07-20T15:45+02:00' parses to UTC",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-040",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: converts UTC 00:00 to Asia/Seoul 09:00",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-041",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: UTC date returns identical local minute",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-norm-042",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: America/New_York (EDT) converts 16:00 UTC to 12:00 EDT",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-043",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: Europe/London (BST) converts 11:00 UTC to 12:00 BST",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-044",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: Asia/Tokyo converts 03:45 UTC to 12:45 JST",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-045",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "toLocalMinute: Australia/Sydney (AEST) converts 02:15 UTC to 12:15 AEST",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-046",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "localDayBounds: Asia/Seoul produces start and end aligned to KST midnight",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "time-norm-047",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "localDayBounds: duration between start and end is exactly 24 hours (86,400,000ms) on normal days",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-048",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "localDayBounds: UTC produces start and end at UTC midnight",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-norm-049",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "localDayBounds: America/New_York (EDT) bounds correctly span 04:00 UTC to next 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-norm-050",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "localDayBounds: Europe/London winter bounds span 00:00 UTC to next 00:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-norm-051",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: formats UTC timestamp to Asia/Seoul string with date and 24h time",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "time-norm-052",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: formats UTC timestamp in UTC timezone",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-norm-053",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: formats in America/New_York (EDT) reflecting UTC-4",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-054",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: formats in Europe/London (BST) reflecting UTC+1",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-norm-055",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: null input returns null cleanly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-056",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "formatLocal: hourCycle is h23 (verifying 23:00 instead of 11 PM)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-057",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: creates daily automation and computes next run in Asia/Seoul",
+      "status": "PASS",
+      "durationMs": 1.68
+    },
+    {
+      "id": "time-norm-058",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: creates weekly automation on weekdays (Mon-Fri)",
+      "status": "PASS",
+      "durationMs": 0.53
+    },
+    {
+      "id": "time-norm-059",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: creates interval automation (30m)",
+      "status": "PASS",
+      "durationMs": 0.23
+    },
+    {
+      "id": "time-norm-060",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: creates future once automation",
+      "status": "PASS",
+      "durationMs": 0.31
+    },
+    {
+      "id": "time-norm-061",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: update name without schedule change keeps scheduleId intact",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "time-norm-062",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: update schedule disarms old and arms new scheduleId",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "time-norm-063",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: disabling automation pauses and cancels schedule",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-norm-064",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: delete automation deletes from repo and cancels scheduler",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "time-norm-065",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: fire executes callback, logs run result, and increments run_count",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "time-norm-066",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: fire records failure on thrown error and sets status to failed",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "time-norm-067",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "AutomationService: rearmAll re-arms all enabled automations and cancels orphaned schedules",
+      "status": "PASS",
+      "durationMs": 0.24
+    },
+    {
+      "id": "time-norm-068",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: handles input string with leading and trailing spaces",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-norm-069",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: parses ISO with negative half-hour offset '-03:30'",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-norm-070",
+      "domain": "time-scheduling",
+      "category": "normal",
+      "description": "parseLocalDateTime: parses ISO with positive half-hour offset '+05:30'",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-001",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: midnight 00:00 in Asia/Seoul resolves to 15:00 UTC previous day",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-002",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: midnight 00:00 in UTC resolves to exact 00:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-003",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: midnight 00:00 in America/New_York (EDT) resolves to 04:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-004",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: midnight 00:00 in Europe/London (BST) resolves to 23:00 UTC previous day",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-005",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: end of day 23:59 in Asia/Seoul resolves to 14:59 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-006",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: date-only '2026-06-30' defaults to end of day 23:59",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-007",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: date-only in America/New_York (EST) defaults to 23:59 (04:59 UTC next day)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-008",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: date-only in Pacific/Honolulu (HST) defaults to 23:59 (09:59 UTC next day)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-009",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: year-end boundary '2026-12-31T23:59' in Asia/Seoul resolves to 14:59 UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-010",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: new year boundary '2027-01-01T00:00' in Asia/Seoul resolves to 15:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-011",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: difference between 2026-12-31T23:59 and 2027-01-01T00:00 is exactly 60,000ms",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-012",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: leap day 2024-02-29 in Asia/Seoul is valid and parses",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-013",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: leap day 2028-02-29 in Europe/London is valid and parses",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-014",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: 400-year leap day 2000-02-29 is valid and parses",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-015",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: century non-leap year 2100-02-28 is valid calendar date",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-016",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: millisecond boundary .000Z preserves exact millisecond",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-017",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: millisecond boundary .999Z preserves exact millisecond",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-018",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: millisecond boundary .001Z preserves exact millisecond",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-019",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "parseLocalDateTime: millisecond boundary .500+09:00 preserves 500ms in UTC",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-020",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Kiritimati (+14:00) parses 12:00 local to 22:00 UTC previous day",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "time-bnd-021",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Kiritimati (+14:00) toLocalMinute formats correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-022",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Tongatapu (+13:00) parses 12:00 local to 23:00 UTC previous day",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-bnd-023",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Chatham (+12:45 standard) parses 45m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-bnd-024",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Etc/GMT+12 (-12:00) parses 12:00 local to 00:00 UTC next day",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-025",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Etc/GMT+12 (-12:00) toLocalMinute formats correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-026",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Pago_Pago (-11:00) parses 12:00 local to 23:00 UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-027",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Pacific/Marquesas (-09:30) parses fractional negative offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-028",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: America/St_Johns summer (-02:30) parses Newfoundland Daylight Time",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-bnd-029",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: America/St_Johns winter (-03:30) parses Newfoundland Standard Time",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-030",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Asia/Tehran (+03:30) parses 30m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-031",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Asia/Kabul (+04:30) parses 30m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-032",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Asia/Kathmandu (+05:45) parses 45m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-033",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Asia/Yangon (+06:30) parses 30m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-034",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Australia/Eucla (+08:45) parses 45m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-035",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Australia/Darwin (+09:30) parses 30m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-036",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Extreme timezone: Australia/Lord_Howe (+10:30 standard) parses 30m offset correctly",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-bnd-037",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds: evaluated at exact instant of start (00:00:00.000Z in UTC)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-038",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds: evaluated at 23:59:59.999Z in UTC produces identical start and end",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-039",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds: evaluated at exact KST midnight 00:00:00.000 (15:00 UTC)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-040",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds: evaluated at 23:59:59.999 KST in Asia/Seoul (14:59:59.999 UTC)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-041",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "toLocalMinute: at exact instant 23:59:59.999Z in UTC formats to 23:59",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-042",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "toLocalMinute: at exact instant 00:00:00.000Z in UTC formats to 00:00",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-043",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "toLocalMinute: at instant 00:00:00.001Z in UTC formats to 00:00",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-044",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "DST boundary: America/New_York spring-forward non-existent 02:30 advances to 03:30",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-045",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "DST boundary: America/New_York fall-back overlap 01:30 selects earlier instant (EDT)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-046",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "DST boundary: Europe/London spring-forward non-existent 01:30 advances to 02:30 BST (01:30 UTC)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-047",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "DST boundary: Europe/London fall-back overlap 01:30 selects earlier instant (BST)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-bnd-048",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Month boundary: 01/31 to 02/01 transition in Asia/Seoul spans across midnight",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-049",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Month boundary: 02/28 to 03/01 transition in non-leap year (2026) in Asia/Seoul",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-050",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Month boundary: 04/30 to 05/01 transition in UTC",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-051",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Schedule recurrence: monthly on 31st clamps to day 30 in April",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-bnd-052",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Schedule recurrence: monthly on 31st clamps to day 28 in February (non-leap)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-053",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Schedule recurrence: monthly on 31st clamps to day 29 in February (leap year 2028)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-bnd-054",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Schedule recurrence: interval boundary minimum is 15 minutes",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-055",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Schedule recurrence: interval boundary maximum 60*24*31 minutes",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-bnd-056",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Reconcile catch-up boundary: missed by exactly MAX_CATCH_UP_MS - 500ms executes catch-up schedule",
+      "status": "PASS",
+      "durationMs": 0.26
+    },
+    {
+      "id": "time-bnd-057",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "Reconcile catch-up boundary: missed by > MAX_CATCH_UP_MS skips catch-up and arms future run",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "time-bnd-058",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds across America/New_York spring forward has 23-hour duration",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-bnd-059",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "localDayBounds across America/New_York fall back has 25-hour duration",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-bnd-060",
+      "domain": "time-scheduling",
+      "category": "boundary",
+      "description": "formatLocal formats boundary leap second ISO cleanly if valid timestamp",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "time-fail-001",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: invalid timezone 'Invalid/Timezone' returns null instead of throwing",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-fail-002",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: invalid timezone 'Mars/Curiosity' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-003",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: invalid timezone 'Fake/Zone' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-004",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: empty string timezone '' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-005",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: invalid offset timezone 'UTC+99' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-006",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: invalid offset timezone 'GMT-99' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-007",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: bare city name 'Seoul' without continent returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-008",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: abbreviation 'KST' without standard IANA name returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-009",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: abbreviation 'EST' (ambiguous/non-standard) returns null if rejected",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-fail-010",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: arbitrary non-timezone string returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-011",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: timezone string 'null' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-012",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: timezone string 'undefined' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-013",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: numeric string '12345' as timezone returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-014",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 30 '2026-02-30' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-015",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 31 '2026-02-31' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-016",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 29 in non-leap year 2025 returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-017",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 29 in non-leap year 2026 returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-018",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 29 in non-leap year 2027 returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-019",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: February 29 in century non-leap year 2100 returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-020",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: April 31 '2026-04-31' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-021",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: June 31 '2026-06-31' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-022",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: September 31 '2026-09-31' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-023",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: November 31 '2026-11-31' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-024",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: month 00 '2026-00-15' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-025",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: month 13 '2026-13-01' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-026",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: day 00 '2026-05-00' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-027",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: day 32 '2026-05-32' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-028",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: hour 24 '2026-05-15T24:00' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-029",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: minute 60 '2026-05-15T12:60' is rejected and returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-030",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with illegal Feb 31 '2026-02-31T12:00:00Z' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-031",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with illegal April 31 '2026-04-31T12:00:00Z' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-032",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with month 13 '2026-13-01T12:00:00Z' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-033",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with hour 24 '2026-05-15T24:00:00Z' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-034",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with minute 60 '2026-05-15T12:60:00Z' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-035",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with second 60 '2026-05-15T12:00:60Z' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-036",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with illegal offset hour '+25:00' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-037",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: ISO format with illegal offset minute '+09:60' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-038",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: garbage string 'not-a-date' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-039",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: slash-separated '2026/05/15' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-040",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: European format '15-05-2026' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-041",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: unpadded date '2026-5-1' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-042",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "parseLocalDateTime: empty string '' returns null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-fail-043",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "formatLocal: invalid date string 'not-an-iso-string' returns null instead of throwing",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-044",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "formatLocal: malformed date '2026-99-99' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-045",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "formatLocal: empty string '' returns null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "time-fail-046",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "AutomationService: create reminder with empty message throws ValidationError",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "time-fail-047",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "AutomationService: create agent_prompt with empty message throws ValidationError",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-fail-048",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "AutomationService: create with past once schedule throws ValidationError",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "time-fail-049",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "AutomationService: create with invalid schedule type throws validation error",
+      "status": "PASS",
+      "durationMs": 0.34
+    },
+    {
+      "id": "time-fail-050",
+      "domain": "time-scheduling",
+      "category": "failure",
+      "description": "AutomationService: create with interval < 15 minutes throws validation error",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "time-conc-001",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent parseLocalDateTime across 50 distinct IANA timezones in parallel",
+      "status": "PASS",
+      "durationMs": 1.33
+    },
+    {
+      "id": "time-conc-002",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent parseLocalDateTime: 100 identical parallel calls yield exact same instant",
+      "status": "PASS",
+      "durationMs": 0.92
+    },
+    {
+      "id": "time-conc-003",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent toLocalMinute: 50 parallel calls in Asia/Seoul yield consistent local string",
+      "status": "PASS",
+      "durationMs": 0.26
+    },
+    {
+      "id": "time-conc-004",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent toLocalMinute: 50 parallel calls alternating between Asia/Seoul and America/New_York",
+      "status": "PASS",
+      "durationMs": 0.23
+    },
+    {
+      "id": "time-conc-005",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent localDayBounds: 50 parallel calls across multiple timezones",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "time-conc-006",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent formatLocal: 50 parallel calls in Asia/Seoul yield identical format",
+      "status": "PASS",
+      "durationMs": 1.28
+    },
+    {
+      "id": "time-conc-007",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Concurrent formatLocal: 50 parallel calls across multiple zones produce non-null strings",
+      "status": "PASS",
+      "durationMs": 1.25
+    },
+    {
+      "id": "time-conc-008",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Formatter cache stress: 100 parallel operations querying formatterCache simultaneously",
+      "status": "PASS",
+      "durationMs": 0.34
+    },
+    {
+      "id": "time-conc-009",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "Formatter cache with invalid timezone mix: valid and invalid timezones called concurrently",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "time-conc-010",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: concurrent fire on two distinct automations simultaneously",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "time-conc-011",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: concurrent duplicate fire on same automation runs executor exactly once",
+      "status": "PASS",
+      "durationMs": 0.2
+    },
+    {
+      "id": "time-conc-012",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: reschedule during active run leaves new schedule intact",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "time-conc-013",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: pause during active run completes run but remains paused with null schedule",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "time-conc-014",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: delete during active run records completed run and does not re-arm",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "time-conc-015",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: concurrent rearmAll with 20 automations",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "time-conc-016",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "AutomationService: parallel create calls for 10 automations generate distinct schedule IDs",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "time-conc-017",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 017: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.19
+    },
+    {
+      "id": "time-conc-018",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 018: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-conc-019",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 019: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-conc-020",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 020: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-021",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 021: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-022",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 022: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-023",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 023: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-024",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 024: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-025",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 025: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-026",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 026: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-027",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 027: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-028",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 028: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-029",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 029: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-030",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 030: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-031",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 031: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-032",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 032: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-033",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 033: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-034",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 034: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-035",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 035: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-036",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 036: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-037",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 037: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-conc-038",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 038: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-039",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 039: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-conc-040",
+      "domain": "time-scheduling",
+      "category": "concurrency",
+      "description": "High-throughput concurrency verification test 040: rapid concurrent conversion and scheduling",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-rec-001",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "formatLocal: invalid timezone 'Invalid/Timezone' safely falls back to UTC instead of throwing",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-rec-002",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "formatLocal: empty timezone '' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-rec-003",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "formatLocal: bad zone name 'Bad/Zone_Name' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "time-rec-004",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "toLocalMinute: invalid timezone 'Invalid/Timezone' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-rec-005",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "toLocalMinute: empty timezone '' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-rec-006",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "localDayBounds: invalid timezone 'Invalid/Timezone' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-rec-007",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "localDayBounds: empty timezone '' safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "time-rec-008",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "toLocalMinute: NaN Date recovers to current time instead of throwing",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "time-rec-009",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "toLocalMinute: NaN Date with UTC timezone recovers cleanly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-rec-010",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "localDayBounds: NaN Date recovers to current date instead of throwing",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-rec-011",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "localDayBounds: NaN Date in UTC timezone recovers cleanly",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "time-rec-012",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: settings with invalid timezone safely falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "time-rec-013",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: create succeeds when settings has empty timezone ''",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "time-rec-014",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: rearmAll succeeds when settings has invalid timezone",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "time-rec-015",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: fire recovers from corrupted/NaN next_run and rearms cleanly",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "time-rec-016",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: reconcile with corrupted/NaN next_run repairs automation",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "time-rec-017",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: reconcile restores schedule when schedule_id was lost/deleted",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-rec-018",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: reconcile recovers stuck 'running' status after worker crash",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "time-rec-019",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "Missed run recovery: run missed 1 hour ago (< 24h) schedules immediate catch-up run",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-rec-020",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "Missed run recovery: run missed 23 hours ago (< 24h) schedules immediate catch-up run",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-rec-021",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "Missed run recovery: run missed 25 hours ago (> 24h) skips catch-up and arms future occurrence",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "time-rec-022",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "Missed run recovery: run missed 7 days ago (> 24h) skips catch-up and arms future occurrence",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-rec-023",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "formatLocal: NaN timestamp returns null cleanly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "time-rec-024",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: executor failure records error and leaves automation re-armed for next cycle",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "time-rec-025",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: executor throwing non-Error object is gracefully converted to string and recorded",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "time-rec-026",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: recovery when scheduler throws error on cancel during disarm",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "time-rec-027",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: rearmAll adjusts next_run when settings timezone changes",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "time-rec-028",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: completed once automation is disabled and marked completed without schedule",
+      "status": "PASS",
+      "durationMs": 0.2
+    },
+    {
+      "id": "time-rec-029",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: long result string is truncated to 2000 characters",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "time-rec-030",
+      "domain": "time-scheduling",
+      "category": "recovery",
+      "description": "AutomationService: pruneRuns is called after execution maintaining bounded history",
+      "status": "PASS",
+      "durationMs": 0.11
+    }
+  ],
+  "defects": []
+}
