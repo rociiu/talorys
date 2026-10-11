@@ -54,8 +54,10 @@ export function defineTool<S extends z.ZodType, R>(def: ToolDefinition<S, R>): T
 
 /** Quotes a title for an approval summary, shortened so the card stays readable. */
 export function quoteTitle(text: string, max = 80): string {
-  const clean = text.replace(/\s+/g, " ").trim();
-  return `“${clean.length > max ? `${clean.slice(0, max - 1)}…` : clean}”`;
+  const str = typeof text === "string" ? text : String(text ?? "");
+  const clean = str.replace(/\s+/g, " ").trim();
+  const limit = Math.max(1, max);
+  return `“${clean.length > limit ? `${clean.slice(0, limit - 1)}…` : clean}”`;
 }
 
 export class ToolError extends Error {
@@ -153,7 +155,9 @@ export class ToolExecutor {
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([_, v]) => v !== undefined)
+    .sort(([a], [b]) => a.localeCompare(b));
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
 }
 
@@ -172,7 +176,13 @@ export async function runApprovedAction(tools: ToolDefinition[], ctx: ToolContex
     throw new AppError("CONFLICT", status === "expired" ? "This request expired. Ask again to get a new one." : "This action was already handled.");
   }
   try {
-    await tool.commit(stored.target_id, ctx);
+    let maybePromise: unknown;
+    ctx.services.db.transaction(() => {
+      maybePromise = tool.commit(stored.target_id, ctx);
+    });
+    if (maybePromise instanceof Promise) {
+      await maybePromise;
+    }
   } catch (error) {
     pending.markFailed(actionId, error instanceof ToolError ? error.message : "The action failed.");
     if (!(error instanceof ToolError)) console.error("Approved action failed", error);

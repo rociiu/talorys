@@ -45,6 +45,7 @@ export class PendingActionRepository {
        VALUES (?, ?, ?, ?, ?, 'pending', NULL, ?, ?, NULL)`,
       row.id, row.conversation_id, row.tool, row.target_id, row.summary, row.created_at, row.expires_at,
     );
+    this.db.run(`DELETE FROM tal_pending_actions WHERE status = 'pending' AND expires_at < ?`, createdAt);
     this.db.run(`DELETE FROM tal_pending_actions WHERE created_at < ?`, new Date(Date.now() - 30 * 86_400_000).toISOString());
     return present(row);
   }
@@ -72,16 +73,36 @@ export class PendingActionRepository {
     );
   }
 
+  /**
+   * Cleans up expired pending actions past their expiration date.
+   * If olderThanMs is provided, only deletes actions that expired at least olderThanMs ago.
+   */
+  cleanupExpired(olderThanMs: number = 0): number {
+    const threshold = new Date(Date.now() - olderThanMs).toISOString();
+    return this.db.run(
+      `DELETE FROM tal_pending_actions WHERE status = 'pending' AND expires_at < ?`,
+      threshold,
+    ).changes;
+  }
+
   /** Refreshes approval cards stored on messages with each action's current status. */
   withCurrentStatus(messages: ChatMessage[]): ChatMessage[] {
+    if (!Array.isArray(messages)) return [];
     return messages.map((m) =>
-      m.tools.some((t) => t.approval)
-        ? { ...m, tools: m.tools.map((t) => (t.approval ? { ...t, approval: this.view(t.approval.id) ?? t.approval } : t)) }
+      m?.tools && Array.isArray(m.tools) && m.tools.some((t) => t?.approval)
+        ? { ...m, tools: m.tools.map((t) => (t?.approval ? { ...t, approval: this.view(t.approval.id) ?? t.approval } : t)) }
         : m,
     );
   }
 
-  markFailed(id: string, error: string): void {
-    this.db.run(`UPDATE tal_pending_actions SET status = 'failed', error = ? WHERE id = ?`, error.slice(0, 300), id);
+  markFailed(id: string, error?: string | null): void {
+    const at = now();
+    const safeError = typeof error === "string" ? error.slice(0, 300) : String(error ?? "The action failed.").slice(0, 300);
+    this.db.run(
+      `UPDATE tal_pending_actions SET status = 'failed', error = ?, resolved_at = COALESCE(resolved_at, ?) WHERE id = ?`,
+      safeError,
+      at,
+      id,
+    );
   }
 }
