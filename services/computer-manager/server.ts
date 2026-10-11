@@ -267,7 +267,7 @@ export function createComputerServer(): http.Server {
               computerState.logAction("key", { key: body.key }, `Pressed key ${body.key}`, result.screenshotBase64);
               computerState.updatePageInfo(result.url, result.title);
               break;
-            case "scroll":
+            case "scroll": {
               const dir = body.direction || "down";
               if (!["up", "down", "left", "right"].includes(dir)) {
                 return sendJson(res, 400, { error: `Invalid scroll direction: ${dir}` });
@@ -275,19 +275,22 @@ export function createComputerServer(): http.Server {
               result = await scroll(dir, body.amount ?? 400, actionSignal);
               computerState.logAction("scroll", body, `Scrolled ${dir}`, result.screenshotBase64);
               break;
-            case "screenshot":
+            }
+            case "screenshot": {
               const shot = await takeScreenshot();
               result = { screenshotBase64: shot };
               break;
+            }
             case "get_state":
               result = await getComputerState(body.includeScreenshot ?? true);
               computerState.updatePageInfo(result.url, result.title);
               break;
-            case "xdotool":
+            case "xdotool": {
               const out = await xdotool(body.args || []);
               result = { stdout: out };
               computerState.logAction("xdotool", body.args, out);
               break;
+            }
             default:
               return sendJson(res, 400, { error: `Unknown action: ${action}` });
           }

@@ -146,6 +146,7 @@ export function ComputerViewer({ open, onClose }: ComputerViewerProps) {
             <iframe
               ref={iframeRef}
               key={iframeKey}
+              title="Cloud Computer Display"
               src={`/api/computer/vnc/index.html?autoconnect=true&resize=remote${!isUserControlling ? "&view_only=true" : ""}`}
               className={`h-full w-full border-0 ${!isUserControlling ? "pointer-events-none select-none" : ""}`}
               allow="clipboard-read; clipboard-write"

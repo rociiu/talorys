@@ -72,7 +72,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     let totalOutputTokens = 0;
 
     const formattedTools = req.tools.map((t) => {
-      const schema = zodToJsonSchema(t.inputSchema, { target: "openAi" });
+      const schema = zodToJsonSchema(t.inputSchema as any, { target: "openAi" });
       return {
         type: "function",
         function: {
