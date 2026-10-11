@@ -135,18 +135,23 @@ export function decodeVector(encoded: string): Float32Array {
   return out;
 }
 
-/** Cosine similarity; 0 when either vector is zero or the lengths differ. */
+/** Cosine similarity; 0 when either vector is zero, lengths differ, or inputs contain non-finite numbers. */
 export function cosine(a: Float32Array, b: Float32Array): number {
   if (a.length !== b.length) return 0;
   let dot = 0;
   let na = 0;
   let nb = 0;
   for (let i = 0; i < a.length; i++) {
-    dot += a[i]! * b[i]!;
-    na += a[i]! * a[i]!;
-    nb += b[i]! * b[i]!;
+    const ai = a[i]!;
+    const bi = b[i]!;
+    if (!Number.isFinite(ai) || !Number.isFinite(bi)) return 0;
+    dot += ai * bi;
+    na += ai * ai;
+    nb += bi * bi;
   }
-  return na === 0 || nb === 0 ? 0 : dot / Math.sqrt(na * nb);
+  if (na === 0 || nb === 0 || !Number.isFinite(dot) || !Number.isFinite(na) || !Number.isFinite(nb)) return 0;
+  const sim = dot / Math.sqrt(na * nb);
+  return Number.isFinite(sim) ? Math.min(1, Math.max(-1, sim)) : 0;
 }
 
 /** The text embedded for a memory. */

@@ -56,23 +56,36 @@ function hasTable(db: Database): boolean {
   return db.one(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, TABLE) !== null;
 }
 
-/** A new unit-length copy of `v`; a zero vector stays zero. */
+/** A new unit-length copy of `v`; a zero vector stays zero. Non-finite values safely return a zero vector. */
 export function normalize(v: Float32Array): Float32Array {
   let sum = 0;
-  for (let i = 0; i < v.length; i++) sum += v[i]! * v[i]!;
+  for (let i = 0; i < v.length; i++) {
+    const val = v[i]!;
+    if (!Number.isFinite(val)) return new Float32Array(v.length);
+    sum += val * val;
+  }
   const out = new Float32Array(v.length);
-  if (sum === 0) return out;
+  if (sum === 0 || !Number.isFinite(sum)) return out;
   const norm = Math.sqrt(sum);
-  for (let i = 0; i < v.length; i++) out[i] = v[i]! / norm;
+  if (norm === 0 || !Number.isFinite(norm)) return out;
+  for (let i = 0; i < v.length; i++) {
+    const n = v[i]! / norm;
+    out[i] = Number.isFinite(n) ? n : 0;
+  }
   return out;
 }
 
-/** Dot product; the cosine of two unit vectors. 0 when the lengths differ. */
+/** Dot product; the cosine of two unit vectors. 0 when lengths differ or contain non-finite numbers. */
 export function dot(a: Float32Array, b: Float32Array): number {
   if (a.length !== b.length) return 0;
   let sum = 0;
-  for (let i = 0; i < a.length; i++) sum += a[i]! * b[i]!;
-  return sum;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i]!;
+    const bi = b[i]!;
+    if (!Number.isFinite(ai) || !Number.isFinite(bi)) return 0;
+    sum += ai * bi;
+  }
+  return Number.isFinite(sum) ? sum : 0;
 }
 
 /**
@@ -90,13 +103,27 @@ function toHex(v: Float32Array): string {
 
 /** A stored vector: a little-endian Float32 BLOB, or a legacy base64 TEXT row decoded and normalized. */
 function decodeStored(value: unknown): Float32Array {
-  if (typeof value === "string") return normalize(decodeVector(value));
-  const view = ArrayBuffer.isView(value)
-    ? new DataView(value.buffer, value.byteOffset, value.byteLength)
-    : new DataView(value as ArrayBuffer);
-  const out = new Float32Array(view.byteLength >> 2);
-  for (let i = 0; i < out.length; i++) out[i] = view.getFloat32(i * 4, true);
-  return out;
+  if (typeof value === "string") {
+    try {
+      return normalize(decodeVector(value));
+    } catch {
+      return new Float32Array(0);
+    }
+  }
+  if (!value) return new Float32Array(0);
+  try {
+    const view = ArrayBuffer.isView(value)
+      ? new DataView(value.buffer, value.byteOffset, value.byteLength)
+      : value instanceof ArrayBuffer
+        ? new DataView(value)
+        : null;
+    if (!view || view.byteLength < 4) return new Float32Array(0);
+    const out = new Float32Array(view.byteLength >> 2);
+    for (let i = 0; i < out.length; i++) out[i] = view.getFloat32(i * 4, true);
+    return out;
+  } catch {
+    return new Float32Array(0);
+  }
 }
 
 /**

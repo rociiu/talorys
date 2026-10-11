@@ -77,6 +77,7 @@ export function rrf(lists: string[][], k = RRF_K): Map<string, number> {
 async function embedQuery(ctx: SemanticContext, query: string): Promise<Float32Array | null> {
   const { db, config, embedder } = ctx;
   if (!embedder) return null;
+  if (!query || query.trim().length === 0) return null;
   const day = UsageService.day();
   if (embeddingsToday(db, day) >= config.maxEmbeddingsPerDay) return null;
   try {
@@ -153,7 +154,7 @@ export async function hybridSearch(ctx: SemanticContext, query: string, opts: { 
   hits.sort(
     (a, b) =>
       b.fused - a.fused ||
-      (b.cosine ?? -Infinity) - (a.cosine ?? -Infinity) ||
+      (b.cosine ?? -1) - (a.cosine ?? -1) ||
       compareDesc(a.memory.updated_at, b.memory.updated_at) ||
       compareAsc(a.memory.id, b.memory.id),
   );
