@@ -1,0 +1,2044 @@
+{
+  "timestamp": "2026-10-11T22:53:40.220Z",
+  "domain": "recurrence-engine",
+  "total": 250,
+  "passed": 250,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 13.65,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 40,
+      "passed": 40,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "rec-normal-daily-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 00:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 3.04
+    },
+    {
+      "id": "rec-normal-daily-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 01:15 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-normal-daily-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 04:30 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-daily-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 06:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-daily-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 08:30 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-daily-006",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 09:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-daily-007",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 11:45 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-daily-008",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 12:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-daily-009",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 14:15 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-daily-010",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 16:30 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-daily-011",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 18:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-daily-012",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 20:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-daily-013",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 21:30 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-daily-014",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 23:00 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-daily-015",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Daily schedule at 23:59 in UTC calculates correct next run",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-weekly-single-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Sunday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.89
+    },
+    {
+      "id": "rec-normal-weekly-single-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Monday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-normal-weekly-single-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Tuesday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-weekly-single-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Wednesday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-single-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Thursday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-single-006",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Friday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-normal-weekly-single-007",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule on Saturday at 10:00 picks correct day",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-normal-weekly-multi-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Mon/Wed/Fri) picks expected next weekday (3)",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "rec-normal-weekly-multi-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Mon/Wed/Fri same day) picks expected next weekday (1)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-multi-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Weekends) picks expected next weekday (6)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-multi-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Weekdays) picks expected next weekday (1)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-weekly-multi-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (All 7 days) picks expected next weekday (2)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-weekly-multi-006",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Tue/Thu) picks expected next weekday (2)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-multi-007",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Tue/Thu from Tue after) picks expected next weekday (4)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-weekly-multi-008",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Sat only from Sun) picks expected next weekday (6)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-weekly-multi-009",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Sun only from Sat) picks expected next weekday (0)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-weekly-multi-010",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Wed only from Thu) picks expected next weekday (3)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-normal-weekly-multi-011",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Mon/Fri from Wed) picks expected next weekday (5)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-normal-weekly-multi-012",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Tue/Wed from Wed after) picks expected next weekday (2)",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "rec-normal-weekly-multi-013",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Weekly schedule (Thu/Fri/Sat from Sun) picks expected next weekday (4)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-normal-monthly-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 1 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "rec-normal-monthly-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 2 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-monthly-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 5 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 8 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 10 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-006",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 12 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-007",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 15 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-monthly-008",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 18 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-009",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 20 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-010",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 22 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-monthly-011",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 25 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-012",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 26 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-013",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 27 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-normal-monthly-014",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 28 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-monthly-015",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Monthly schedule on day 15 at 09:00 calculates next occurrence",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-interval-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 15m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0.21
+    },
+    {
+      "id": "rec-normal-interval-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 20m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-normal-interval-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 30m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-normal-interval-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 45m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 60m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-006",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 90m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-007",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 120m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-008",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 360m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-009",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 720m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-interval-010",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Interval schedule of 1440m adds exact milliseconds",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-normal-once-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Once schedule at 2026-06-01T08:00 fires once and then returns null",
+      "status": "PASS",
+      "durationMs": 0.35
+    },
+    {
+      "id": "rec-normal-once-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Once schedule at 2026-07-15T12:30 fires once and then returns null",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-once-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Once schedule at 2026-08-20T18:45 fires once and then returns null",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-once-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Once schedule at 2026-11-10T09:15 fires once and then returns null",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-normal-once-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "Once schedule at 2026-12-31T23:59 fires once and then returns null",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-describe-001",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "describeSchedule formats once schedule correctly",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-normal-describe-002",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "describeSchedule formats daily schedule correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-normal-describe-003",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "describeSchedule formats weekly schedule correctly",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-normal-describe-004",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "describeSchedule formats monthly schedule correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-normal-describe-005",
+      "domain": "recurrence",
+      "category": "normal",
+      "description": "describeSchedule formats interval schedule correctly",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-leap-001",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 400-year leap 1600 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-leap-002",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 400-year leap 2000 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-003",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 400-year leap 2400 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-004",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 1700 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-005",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 1800 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-006",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 1900 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-007",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 2100 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-008",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 2200 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-009",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 2300 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-010",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 100-year non-leap 2500 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-011",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 4-year leap 2020 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-012",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 4-year leap 2024 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-013",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 4-year leap 2028 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-014",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks 4-year leap 2032 (Feb 29 = true)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-015",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2021 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-016",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2022 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-017",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2023 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-018",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2025 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-019",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2026 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-leap-020",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "isValidCalendarDate checks non-leap 2027 (Feb 29 = false)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-boundary-monthend-001",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: Feb in non-leap year clamps day 31 to 28",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-boundary-monthend-002",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: Feb in leap year clamps day 31 to 29",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-003",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: April clamps day 31 to 30",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-004",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: June clamps day 31 to 30",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-005",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: September clamps day 31 to 30",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-006",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: November clamps day 31 to 30",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-007",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: January retains day 31",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-008",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: March retains day 31",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-009",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: May retains day 31",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-010",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: July retains day 31",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-011",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: August retains day 31",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-monthend-012",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: October retains day 31",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-013",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: December retains day 31",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-014",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: Feb clamps day 30 to 28 in non-leap",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-monthend-015",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly clamp: Feb clamps day 30 to 29 in leap",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-boundary-dstgap-001",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: NY 02:30 -> 03:30 EDT",
+      "status": "PASS",
+      "durationMs": 0.25
+    },
+    {
+      "id": "rec-boundary-dstgap-002",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: NY 02:00 -> 03:00 EDT",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-dstgap-003",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: NY 02:59 -> 03:59 EDT",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-dstgap-004",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: Chicago 02:30 -> 03:30 CDT",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-boundary-dstgap-005",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: LA 02:30 -> 03:30 PDT",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-boundary-dstgap-006",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: London 01:30 -> 02:30 BST",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-dstgap-007",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: Paris 02:30 -> 03:30 CEST",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-dstgap-008",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: Berlin 02:15 -> 03:15 CEST",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-dstgap-009",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: Sydney 02:30 -> 03:30 AEDT",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-dstgap-010",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Spring Forward gap: Lord Howe 02:15 -> 02:45 (30m gap)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-boundary-dstoverlap-001",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: NY 01:30 EDT earlier instant",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-dstoverlap-002",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: Chicago 01:30 CDT earlier instant",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-dstoverlap-003",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: LA 01:30 PDT earlier instant",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-dstoverlap-004",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: London 01:30 BST earlier instant",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-dstoverlap-005",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: Paris 02:30 CEST earlier instant",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-dstoverlap-006",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: Berlin 02:30 CEST earlier instant",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-dstoverlap-007",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: Sydney 02:30 AEDT earlier instant",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-dstoverlap-008",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "DST Fall Back overlap: Lord Howe 01:45 earlier instant",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-boundary-limits-001",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Interval minimum allowed (15 minutes)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-boundary-limits-002",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Interval maximum allowed (44640 minutes = 31 days)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-boundary-limits-003",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Year-end boundary transition from 2026-12-31 to 2027-01-01",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-boundary-limits-004",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Midnight exact boundary: after is 00:00:00.000Z",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-boundary-limits-005",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Sub-second millisecond boundary: 23:59:59.999Z to next day 00:00:00.000Z",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-boundary-limits-006",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Monthly schedule on day 1 from previous month last millisecond",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-boundary-limits-007",
+      "domain": "recurrence",
+      "category": "boundary",
+      "description": "Weekly schedule 400-day loop covers leap years correctly",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "rec-failure-daily-001",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"24:00\"",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "rec-failure-daily-002",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"25:00\"",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-failure-daily-003",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"99:00\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-004",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"-01:00\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-005",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"12:60\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-006",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"12:99\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-007",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"9:00\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-008",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"09:0\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-daily-009",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"abc\"",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-daily-010",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid daily time: \"\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-weekly-001",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: empty days array",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-failure-weekly-002",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: negative day",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "rec-failure-weekly-003",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: day 7 out of 0..6",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-failure-weekly-004",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: day 100 out of bounds",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-weekly-005",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: non-integer day",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-weekly-006",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: more than 7 items",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-failure-weekly-007",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: string instead of number",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-weekly-008",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: invalid time 25:00",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-weekly-009",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: invalid time 12:60",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-weekly-010",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid weekly: null in days array",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-001",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: day 0",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-failure-monthly-002",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: day 32",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-monthly-003",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: day -1",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-004",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: day 100",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-005",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: non-integer day",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-006",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: string day",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-monthly-007",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: time 24:00",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-008",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: time 12:60",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-009",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: time abc",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-monthly-010",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid monthly: null day",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-interval-001",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: 14",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-failure-interval-002",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: 0",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-interval-003",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: -1",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-interval-004",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: -15",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-failure-interval-005",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: -60",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-interval-006",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: 44641",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-interval-007",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: 15.5",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-interval-008",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-interval-009",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: Infinity",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-interval-010",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid interval minutes: -Infinity",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-once-001",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-02-31 (Feb 31 does not exist)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "rec-failure-once-002",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-02-29 (Feb 29 in non-leap year)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-once-003",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-04-31 (April has 30 days)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-once-004",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-06-31 (June has 30 days)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-once-005",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-09-31 (September has 30 days)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-failure-once-006",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-11-31 (November has 30 days)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-once-007",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-13-01 (Month 13 does not exist)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-once-008",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-00-10 (Month 0 does not exist)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-once-009",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-01-32 (Day 32 does not exist)",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-failure-once-010",
+      "domain": "recurrence",
+      "category": "failure",
+      "description": "Reject invalid once date/time: 2026-01-01T25:00 (Hour 25 does not exist)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-concurrency-immut-001",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun does not mutate frozen ScheduleSpec (daily)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-concurrency-immut-002",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun does not mutate frozen ScheduleSpec (weekly)",
+      "status": "PASS",
+      "durationMs": 0.23
+    },
+    {
+      "id": "rec-concurrency-immut-003",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun does not mutate frozen ScheduleSpec (monthly)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-concurrency-immut-004",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun does not mutate frozen ScheduleSpec (interval)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-immut-005",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun does not mutate after Date object",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "rec-concurrency-immut-006",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "describeSchedule does not mutate weekly days array order",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-concurrency-immut-007",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "getZonedParts does not mutate input Date object",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-concurrency-immut-008",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "timeZoneOffsetMs does not mutate timestamp argument",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "rec-concurrency-immut-009",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "computeNextRun returns new Date instances on repeated calls",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "rec-concurrency-immut-010",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Mutating returned Date does not affect future computeNextRun calls",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "rec-concurrency-immut-011",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "zonedTimeToUtc returns new Date instance each time",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-immut-012",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "describeSchedule result is deterministic across calls",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-concurrency-immut-013",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "getZonedParts returns independent object every time",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "rec-concurrency-immut-014",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "scheduleSpecSchema parsing does not mutate input object",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "rec-concurrency-immut-015",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "isValidCalendarDate does not mutate arguments or state",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-concurrency-async-001",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "50 parallel computeNextRun calls on same spec/tz yield identical results",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "rec-concurrency-async-002",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Parallel execution across 10 distinct IANA timezones concurrently",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "rec-concurrency-async-003",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Parallel execution of mixed schedule types concurrently",
+      "status": "PASS",
+      "durationMs": 0.2
+    },
+    {
+      "id": "rec-concurrency-async-004",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #4",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "rec-concurrency-async-005",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #5",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "rec-concurrency-async-006",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #6",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-007",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #7",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-008",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #8",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-009",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #9",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-010",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #10",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-concurrency-async-011",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #11",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-012",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #12",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-concurrency-async-013",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #13",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-014",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #14",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-concurrency-async-015",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Concurrent batch stress test run #15",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-concurrency-cache-001",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Repeated getZonedParts calls reuse formatter without error",
+      "status": "PASS",
+      "durationMs": 0.31
+    },
+    {
+      "id": "rec-concurrency-cache-002",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Rapidly alternating between timezones does not mix parts",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "rec-concurrency-cache-003",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #3 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "rec-concurrency-cache-004",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #4 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-concurrency-cache-005",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #5 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-concurrency-cache-006",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #6 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-concurrency-cache-007",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #7 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-concurrency-cache-008",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #8 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-concurrency-cache-009",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #9 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-concurrency-cache-010",
+      "domain": "recurrence",
+      "category": "concurrency",
+      "description": "Cache isolation check #10 across distinct timezones",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-001",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"Invalid/Timezone\"",
+      "status": "PASS",
+      "durationMs": 0.32
+    },
+    {
+      "id": "rec-recovery-tz-002",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"Mars/Olympus\"",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-tz-003",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"GMT+99\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-004",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"America/NonExistent\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-005",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-006",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"   \"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-007",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"UTC+25\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-008",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"123\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-009",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"Null\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-tz-010",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone correctly identifies invalid timezone: \"undefined\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-001",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"Invalid/Timezone\"",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "rec-recovery-compute-tz-002",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"Foo/Bar\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-003",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-004",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"   \"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-005",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"America/Nowhere\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-006",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"UTC+99\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-007",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"BadZone\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-compute-tz-008",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for unknown timezone: \"Fake/Zone\"",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-spec-001",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for malformed spec: null spec",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-spec-002",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for malformed spec: undefined spec",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-spec-003",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for malformed spec: empty object spec",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "rec-recovery-spec-004",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for malformed spec: unknown spec type",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "rec-recovery-spec-005",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for malformed spec: invalid time 25:00",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-recovery-date-001",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely for Invalid Date object",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-date-002",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely when after is null",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-date-003",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "computeNextRun returns null safely when after is undefined",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-defect-001",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidCalendarDate must reject non-integer day or month (e.g. 27.5, 2.5)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-defect-002",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "isValidTimeZone must reject undefined and null rather than using system default",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "rec-recovery-defect-003",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "describeSchedule handles duplicate days without saying 'Every day' when not all 7 days present",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "rec-recovery-defect-004",
+      "domain": "recurrence",
+      "category": "recovery",
+      "description": "describeSchedule deduplicates repeated days and sorts properly",
+      "status": "PASS",
+      "durationMs": 0.01
+    }
+  ],
+  "defects": []
+}

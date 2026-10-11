@@ -9,11 +9,22 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const state = join(root, ".wrangler/e2e-state");
 rmSync(state, { recursive: true, force: true });
 const wrangler = join(root, "node_modules/wrangler/bin/wrangler.js");
+const agentPort = process.env.TALORYS_E2E_AGENT_PORT || "38787";
+const pagesPort = process.env.TALORYS_E2E_PAGES_PORT || "38788";
+const vitePort = process.env.TALORYS_E2E_VITE_PORT || "5173";
 const env = { ...process.env, WRANGLER_SEND_METRICS: "false" };
+
 const procs = [
-  spawn(process.execPath, [wrangler, "dev", "--local", "--port", "8787", "--persist-to", state], { cwd: join(root, "apps/agent"), env, stdio: "inherit" }),
-  spawn(process.execPath, [wrangler, "pages", "dev", "dist", "--port", "8788", "--persist-to", `${state}-pages`], { cwd: join(root, "apps/web"), env, stdio: "inherit" }),
-  spawn(process.execPath, [join(root, "node_modules/vite/bin/vite.js"), "--port", "5173", "--strictPort"], { cwd: join(root, "apps/web"), env, stdio: "inherit" }),
+  spawn(process.execPath, [wrangler, "dev", "--local", "--port", agentPort, "--persist-to", state], {
+    cwd: join(root, "apps/agent"),
+    env,
+    stdio: "inherit",
+  }),
+  spawn(process.execPath, [join(root, "node_modules/vite/bin/vite.js"), "--port", vitePort, "--strictPort"], {
+    cwd: join(root, "apps/web"),
+    env: { ...env, TALORYS_API_PROXY: `http://127.0.0.1:${agentPort}` },
+    stdio: "inherit",
+  }),
 ];
 const stop = () => {
   for (const p of procs) p.kill("SIGTERM");

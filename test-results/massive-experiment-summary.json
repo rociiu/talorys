@@ -1,0 +1,336 @@
+{
+  "timestamp": "2026-10-11T23:02:52.116Z",
+  "grandTotal": 2010,
+  "uniqueTestCount": 2010,
+  "duplicateIdCount": 0,
+  "grandPassed": 2010,
+  "grandFailed": 0,
+  "grandErrored": 0,
+  "passRate": "100.00%",
+  "errorRate": "0.00%",
+  "totalDurationMs": 3067.44,
+  "domainSummaries": {
+    "recurrence-engine": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 13.65,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "security-schemas": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 110.05,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "vector-math": {
+      "total": 260,
+      "passed": 260,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 72.45,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 72,
+          "passed": 72,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 64,
+          "passed": 64,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 52,
+          "passed": 52,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 42,
+          "passed": 42,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "backup-serialization": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 286.57,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "time-scheduling": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 26.21,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "approval-tools": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 544.99,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "computer-state": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 1402.2,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    },
+    "localization-api": {
+      "total": 250,
+      "passed": 250,
+      "failed": 0,
+      "errored": 0,
+      "durationMs": 611.32,
+      "categoryBreakdown": {
+        "normal": {
+          "total": 70,
+          "passed": 70,
+          "failed": 0,
+          "errored": 0
+        },
+        "boundary": {
+          "total": 60,
+          "passed": 60,
+          "failed": 0,
+          "errored": 0
+        },
+        "failure": {
+          "total": 50,
+          "passed": 50,
+          "failed": 0,
+          "errored": 0
+        },
+        "concurrency": {
+          "total": 40,
+          "passed": 40,
+          "failed": 0,
+          "errored": 0
+        },
+        "recovery": {
+          "total": 30,
+          "passed": 30,
+          "failed": 0,
+          "errored": 0
+        }
+      },
+      "defectCount": 0
+    }
+  },
+  "totalDefects": 0,
+  "allDefects": []
+}

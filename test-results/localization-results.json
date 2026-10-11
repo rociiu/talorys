@@ -1,0 +1,2044 @@
+{
+  "timestamp": "2026-10-11T23:02:46.671Z",
+  "domain": "localization-and-api-invariants",
+  "total": 250,
+  "passed": 250,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 611.32,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 40,
+      "passed": 40,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "NORM-001",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "BASE_SYSTEM_PROMPT includes natural Korean response mandate",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "NORM-002",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SAFETY_RULES includes natural Korean response rule",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "NORM-003",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SCHEDULED_RUN_PROMPT includes Korean reply rule in <= 200 words",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "NORM-004",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats date with Korean year suffix (년)",
+      "status": "PASS",
+      "durationMs": 242.15
+    },
+    {
+      "id": "NORM-005",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats date with Korean month suffix (월)",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "NORM-006",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats date with Korean day suffix (일)",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "NORM-007",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats morning time with 오전",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-008",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats afternoon time with 오후",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-009",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt replaces {{name}} with custom Korean agent name",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-010",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt replaces {{name}} with custom English agent name",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-011",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes AUTO_MEMORY_RULE when autoMemory=true",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "NORM-012",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes EXPLICIT_MEMORY_RULE when autoMemory=false",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-013",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes SCHEDULED_RUN_PROMPT when scheduled=true",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-014",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt omits SCHEDULED_RUN_PROMPT when scheduled=false",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-015",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats memories with '- [category] content'",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "NORM-016",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats preference memories correctly",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "NORM-017",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats fact memories correctly",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-018",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats routine memories correctly",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-019",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt formats other memories correctly",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-020",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes conversationSummary when provided",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-021",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt omits conversationSummary when null",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-022",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt omits conversationSummary when undefined",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-023",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes timezone in parentheses (Asia/Seoul)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-024",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "buildSystemPrompt includes timezone in parentheses (UTC)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-025",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats standard timestamp in Asia/Seoul with GMT+9",
+      "status": "PASS",
+      "durationMs": 1.47
+    },
+    {
+      "id": "NORM-026",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats standard timestamp in UTC with UTC",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "NORM-027",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats midnight (00:00) on 24-hour clock",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-028",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats noon (12:00) on 24-hour clock",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-029",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats late evening (23:59) on 24-hour clock",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "NORM-030",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats early morning (07:05) with zero-padded hour and minute",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "NORM-031",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt zero-pads single-digit month (01 through 09)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "NORM-032",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats two-digit month (10, 11, 12)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "NORM-033",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt zero-pads single-digit day (01 through 09)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "NORM-034",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt formats two-digit day (10 through 31)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "NORM-035",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt in Asia/Tokyo produces GMT+9",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-036",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt in America/New_York standard time produces EST",
+      "status": "PASS",
+      "durationMs": 97.67
+    },
+    {
+      "id": "NORM-037",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt in America/New_York daylight time produces EDT",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "NORM-038",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt in Europe/London winter time produces GMT or UTC",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "NORM-039",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt in Europe/London summer time produces BST",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "NORM-040",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt correctly shifts UTC 15:00 to next day 00:00 in Asia/Seoul",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-041",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt correctly handles month boundary shift (Jan 31 15:30 UTC -> Feb 1 00:30 KST)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-042",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt correctly handles year boundary shift (Dec 31 16:00 UTC -> Jan 1 01:00 KST)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-043",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt correctly handles leap day (Feb 28 16:00 UTC -> Feb 29 01:00 KST in 2024)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-044",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt produces format matching YYYY-MM-DD HH:MM (UTC|GMT+9) for Seoul",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "NORM-045",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "savedAt produces format matching YYYY-MM-DD HH:MM (UTC|GMT+9) for UTC",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "NORM-046",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 prefixes each memory with (saved YYYY-MM-DD HH:MM TZ)",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "NORM-047",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 leaves input memory objects unmutated",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "NORM-048",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 sorts memories by updated_at descending",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "NORM-049",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 breaks updated_at tie using created_at descending",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "NORM-050",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 breaks created_at tie using id ascending",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "NORM-051",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 formats timezone in Asia/Seoul as GMT+9 in memory line",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "NORM-052",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "applyM1 with multiple memories prefixes all correctly",
+      "status": "PASS",
+      "durationMs": 0.16
+    },
+    {
+      "id": "NORM-053",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "newerWinsNote returns memory with id semantic-newer-wins-note",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "NORM-054",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "newerWinsNote returns exact invariant note text",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "NORM-055",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "newerWinsNote has epoch timestamps (1970-01-01T00:00:00.000Z)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "NORM-056",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "newerWinsNote has category other and source agent",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "NORM-057",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses single start event frame",
+      "status": "PASS",
+      "durationMs": 3.88
+    },
+    {
+      "id": "NORM-058",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses single text event frame",
+      "status": "PASS",
+      "durationMs": 97.94
+    },
+    {
+      "id": "NORM-059",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses multiple text event frames in stream",
+      "status": "PASS",
+      "durationMs": 0.5
+    },
+    {
+      "id": "NORM-060",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses tool event frame",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "NORM-061",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses tool event with approval proposal",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "NORM-062",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses done event frame",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "NORM-063",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser parses error event frame",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "NORM-064",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser ignores stream open comment (: stream open)",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "NORM-065",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser handles multiple frames in single chunk",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "NORM-066",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser handles CRLF line endings",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "NORM-067",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser preserves Korean characters in text events",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "NORM-068",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser reconstructs streaming message from text deltas",
+      "status": "PASS",
+      "durationMs": 0.3
+    },
+    {
+      "id": "NORM-069",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser ignores frames without data line",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "NORM-070",
+      "domain": "localization-and-api-invariants",
+      "category": "normal",
+      "description": "SSE parser invokes onEvent callback for each parsed event",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "BND-001",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: tech stack",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "BND-002",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: brands & models",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "BND-003",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: file paths",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "BND-004",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: URLs",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "BND-005",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: email addresses",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-006",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: CLI commands",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-007",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: acronyms",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-008",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: numbers with Korean counting units",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-009",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: currency formatting",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-010",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean/English mixed memory: dates with mixed syntax",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-011",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean mixed with Hanja (CJK Ideographs)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-012",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean mixed with Japanese Katakana/Hiragana",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-013",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Long Korean text (5,000 characters) in system prompt memory",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "BND-014",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Long Korean conversation summary (2,000 characters)",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-015",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "50 memories simultaneously rendered in system prompt",
+      "status": "PASS",
+      "durationMs": 0.31
+    },
+    {
+      "id": "BND-016",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing double smart quotes (“...”)",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-017",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing single smart quotes (‘...’)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-018",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing HTML entities (&amp;, &lt;, &gt;, &quot;)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-019",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing raw Markdown table with Korean headers",
+      "status": "PASS",
+      "durationMs": 2.58
+    },
+    {
+      "id": "BND-020",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing Markdown checklist (- [x] 완료, - [ ] 미완료)",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "BND-021",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing multiline code block with backticks",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-022",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing escaped JSON strings",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-023",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing zero-width spaces (​)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-024",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing non-breaking spaces ( )",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "BND-025",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Memory containing tab characters and carriage returns",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "BND-026",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Agent name containing brackets and special characters",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-027",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Prompt injection test: memory containing English override instructions",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-028",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Prompt injection test: memory containing Korean override instructions",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-029",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Korean punctuation marks (·, …, 『, 』, 【, 】) preserved",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-030",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Full-width ASCII characters (가나다 ＡＢＣ １２３) preserved",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-031",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Hangul first syllable '가' (U+AC00) boundary",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-032",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Hangul last syllable '힣' (U+D7A3) boundary",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-033",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Hangul single consonant 'ㄱ' ~ 'ㅎ' (Compatibility Jamo)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "BND-034",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Hangul single vowel 'ㅏ' ~ 'ㅣ' (Compatibility Jamo)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "BND-035",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Complex Hangul syllables with double final consonants (닭, 밟, 읊, 뚫)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-036",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Archaic Hangul syllables (e.g. ힰ, 빀)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-037",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "4-byte UTF-8 emojis (🎉, 🚀, 🤖, 🇰🇷) in prompt",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-038",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Emojis with skin tone modifiers (👍🏽, 👨🏻‍💻) in memory",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-039",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "ZWJ emoji sequence (👨‍👩‍👧‍👦 family sequence) in memory",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "BND-040",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Unicode NFC vs NFD normalization in memory content",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "BND-041",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Unicode surrogate pairs handling in string length calculations",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "BND-042",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Multi-byte Korean in SSE text event payload",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "BND-043",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Multi-byte Korean in SSE tool proposal summary",
+      "status": "PASS",
+      "durationMs": 0.24
+    },
+    {
+      "id": "BND-044",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Multi-byte Korean in AppError message",
+      "status": "PASS",
+      "durationMs": 0.3
+    },
+    {
+      "id": "BND-045",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "Multi-byte Korean in ValidationError issue message",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "BND-046",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split across 3-byte Hangul UTF-8 boundary",
+      "status": "PASS",
+      "durationMs": 91.34
+    },
+    {
+      "id": "BND-047",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split across 4-byte emoji boundary",
+      "status": "PASS",
+      "durationMs": 0.31
+    },
+    {
+      "id": "BND-048",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split in the middle of data: prefix",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "BND-049",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split in the middle of JSON key ('type')",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "BND-050",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split in the middle of JSON Korean value ('안녕' / '하세요')",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-051",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE chunk split between \n and \n of event delimiter",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "BND-052",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream where single frame is fragmented into 10 byte-sized chunks",
+      "status": "PASS",
+      "durationMs": 0.29
+    },
+    {
+      "id": "BND-053",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with large chunk (64KB) containing 50 concatenated frames",
+      "status": "PASS",
+      "durationMs": 0.26
+    },
+    {
+      "id": "BND-054",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with empty chunks (0 bytes) interspersed between valid chunks",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "BND-055",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with CRLF fragmented across chunks (\r in chunk A, \n\r\n in chunk B)",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "BND-056",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with 'event:' line in chunk A and 'data:' line in chunk B",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-057",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with chunk split inside JSON numeric value",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "BND-058",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with chunk split inside JSON boolean value",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "BND-059",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream with trailing incomplete frame after stream close ignored",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "BND-060",
+      "domain": "localization-and-api-invariants",
+      "category": "boundary",
+      "description": "SSE stream stress test: 20 random chunk splits reconstruct exact Korean stream",
+      "status": "PASS",
+      "durationMs": 0.59
+    },
+    {
+      "id": "FAIL-001",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED when cookie header is missing",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "FAIL-002",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED when cookie is empty string",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "FAIL-003",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED when cookie key does not match session name",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "FAIL-004",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED when session token is invalid string",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "FAIL-005",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED when session token is expired",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "FAIL-006",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED with SQL injection payload in cookie",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "FAIL-007",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED with script tags in cookie",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "FAIL-008",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession throws 401 UNAUTHORIZED with oversized token string",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "FAIL-009",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession allows unauthenticated access to GET /api/health",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "FAIL-010",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession allows unauthenticated access to POST /api/auth/login",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "FAIL-011",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "requireSession allows unauthenticated access to GET /api/auth/session",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "FAIL-012",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "readSessionToken returns null when cookie header is undefined",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-013",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "readSessionToken returns null when cookie header has unrelated cookies",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-014",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "readSessionToken extracts correct token among multiple cookies",
+      "status": "PASS",
+      "durationMs": 0.5
+    },
+    {
+      "id": "FAIL-015",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookieName returns talorys_session for HTTPS",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-016",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookieName returns talorys_dev_session for HTTP",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-017",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookie sets Max-Age=0 when expires is null",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "FAIL-018",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookie includes HttpOnly flag",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "FAIL-019",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookie includes SameSite=Strict flag",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-020",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "sessionCookie includes Secure flag for HTTPS",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-021",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects POST request without CSRF header (throws 403 FORBIDDEN)",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "FAIL-022",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects POST request with CSRF header != '1' (throws 403 FORBIDDEN)",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "FAIL-023",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects PUT request without CSRF header (throws 403 FORBIDDEN)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "FAIL-024",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects PATCH request without CSRF header (throws 403 FORBIDDEN)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "FAIL-025",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects DELETE request without CSRF header (throws 403 FORBIDDEN)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "FAIL-026",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection allows GET request without CSRF header",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "FAIL-027",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection allows HEAD request without CSRF header",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "FAIL-028",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection allows OPTIONS request without CSRF header",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "FAIL-029",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects untrusted origin in production mode",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "FAIL-030",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection rejects sec-fetch-site=cross-site in production mode",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "FAIL-031",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection allows sec-fetch-site=same-origin",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "FAIL-032",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "csrfProtection allows sec-fetch-site=none",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "FAIL-033",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError sets code, message, details, and headers",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "FAIL-034",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps UNAUTHORIZED to 401",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-035",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps FORBIDDEN to 403",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-036",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps NOT_FOUND to 404",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-037",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps VALIDATION_ERROR to 400",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-038",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps RATE_LIMITED to 429",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-039",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps AI_QUOTA_EXHAUSTED to 503",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-040",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps AI_UNAVAILABLE to 503",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-041",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps AI_LIMIT_REACHED to 429",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-042",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps CONFLICT to 409",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-043",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps NOT_CONFIGURED to 503",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-044",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.status maps INTERNAL_ERROR to 500",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "FAIL-045",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "AppError.toBody returns standard error structure { error: { code, message } }",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "FAIL-046",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "NotFoundError instantiates with default message and status 404",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "FAIL-047",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "ValidationError instantiates with details and status 400",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "FAIL-048",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "ValidationError.fromZod formats issues into dot-separated paths",
+      "status": "PASS",
+      "durationMs": 1.86
+    },
+    {
+      "id": "FAIL-049",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "errorResponse returns Response with JSON content-type and cache-control no-store",
+      "status": "PASS",
+      "durationMs": 0.28
+    },
+    {
+      "id": "FAIL-050",
+      "domain": "localization-and-api-invariants",
+      "category": "failure",
+      "description": "errorResponse catches generic Error and wraps into INTERNAL_ERROR",
+      "status": "PASS",
+      "durationMs": 0.24
+    },
+    {
+      "id": "CONC-001",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "20 concurrent parseSseStream runs on independent streams execute without interference",
+      "status": "PASS",
+      "durationMs": 1.35
+    },
+    {
+      "id": "CONC-002",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent reading of SSE streams does not corrupt buffer states",
+      "status": "PASS",
+      "durationMs": 0.68
+    },
+    {
+      "id": "CONC-003",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Simulated concurrent chat turns on different conversation IDs succeed in parallel",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "CONC-004",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Simulated concurrent chat turns on SAME conversation ID enforces CONFLICT (409)",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "CONC-005",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "50 concurrent calls to savedAt with Asia/Seoul timezone return identical formatted timestamps",
+      "status": "PASS",
+      "durationMs": 3.5
+    },
+    {
+      "id": "CONC-006",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "50 concurrent calls to savedAt with UTC timezone return identical formatted timestamps",
+      "status": "PASS",
+      "durationMs": 2.12
+    },
+    {
+      "id": "CONC-007",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "50 concurrent calls to savedAt mixing 10 different timezones return accurate zone outputs",
+      "status": "PASS",
+      "durationMs": 2.13
+    },
+    {
+      "id": "CONC-008",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "50 concurrent calls to buildSystemPrompt with varying memory sets don't cross-contaminate",
+      "status": "PASS",
+      "durationMs": 2.51
+    },
+    {
+      "id": "CONC-009",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "50 concurrent calls to applyM1 produce thread-safe independent sorted arrays",
+      "status": "PASS",
+      "durationMs": 4.47
+    },
+    {
+      "id": "CONC-010",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent recency sorting of memories under rapid interleaved timestamps",
+      "status": "PASS",
+      "durationMs": 7.96
+    },
+    {
+      "id": "CONC-011",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent RRF scoring across 20 parallel ranking evaluations",
+      "status": "PASS",
+      "durationMs": 0.43
+    },
+    {
+      "id": "CONC-012",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent newerDuplicateCosine lookups across multiple model identifiers",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "CONC-013",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "30 concurrent toLocalMinute calculations for Asia/Seoul",
+      "status": "PASS",
+      "durationMs": 1.37
+    },
+    {
+      "id": "CONC-014",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "30 concurrent localDayBounds calculations for Asia/Seoul",
+      "status": "PASS",
+      "durationMs": 1.14
+    },
+    {
+      "id": "CONC-015",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "30 concurrent formatLocal calculations across multiple timezones",
+      "status": "PASS",
+      "durationMs": 1.14
+    },
+    {
+      "id": "CONC-016",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "High-frequency parseLocalDateTime invocations across timezones",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "CONC-017",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent errorResponse generation across 50 simulated failures",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "CONC-018",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent csrfProtection checks on safe and mutating methods",
+      "status": "PASS",
+      "durationMs": 0.37
+    },
+    {
+      "id": "CONC-019",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent requireSession evaluations on mixed public and private routes",
+      "status": "PASS",
+      "durationMs": 0.32
+    },
+    {
+      "id": "CONC-020",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent session token extractions from multi-client cookie strings",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "CONC-021",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "10 parallel SSE streams streaming 100 text chunks concurrently",
+      "status": "PASS",
+      "durationMs": 1.29
+    },
+    {
+      "id": "CONC-022",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent abort controller signals on active streams",
+      "status": "PASS",
+      "durationMs": 0.19
+    },
+    {
+      "id": "CONC-023",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Race condition test: immediate abort during stream initialization",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "CONC-024",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Race condition test: stream consumer cancels while tool event is enqueued",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "CONC-025",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Rapid back-to-back stream subscriptions on same conversation after completion",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "CONC-026",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent Zod schema validations on chat request payloads",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "CONC-027",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent Zod schema validations on conversation create payloads",
+      "status": "PASS",
+      "durationMs": 0.59
+    },
+    {
+      "id": "CONC-028",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent Zod schema validations on automation schedule specs",
+      "status": "PASS",
+      "durationMs": 0.52
+    },
+    {
+      "id": "CONC-029",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Parallel processing of multi-byte Korean text chunks across 10 stream decoders",
+      "status": "PASS",
+      "durationMs": 0.46
+    },
+    {
+      "id": "CONC-030",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent formatting of dates during month-end boundary",
+      "status": "PASS",
+      "durationMs": 1.95
+    },
+    {
+      "id": "CONC-031",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent formatting of dates during year-end boundary",
+      "status": "PASS",
+      "durationMs": 1.23
+    },
+    {
+      "id": "CONC-032",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent formatting of dates during leap-year boundary",
+      "status": "PASS",
+      "durationMs": 1.24
+    },
+    {
+      "id": "CONC-033",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent memory creation and M1 recency ranking simulation",
+      "status": "PASS",
+      "durationMs": 7.2
+    },
+    {
+      "id": "CONC-034",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Parallel execution of 50 AppError.toBody conversions",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "CONC-035",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent sessionCookie generation for 50 distinct tokens",
+      "status": "PASS",
+      "durationMs": 0.28
+    },
+    {
+      "id": "CONC-036",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Concurrent securityHeaders application across 50 mocked requests",
+      "status": "PASS",
+      "durationMs": 0.79
+    },
+    {
+      "id": "CONC-037",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Simultaneous SSE stream consumption with mismatched chunk rates",
+      "status": "PASS",
+      "durationMs": 0.31
+    },
+    {
+      "id": "CONC-038",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "High-contention map lookup in mock active runs registry",
+      "status": "PASS",
+      "durationMs": 0.19
+    },
+    {
+      "id": "CONC-039",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Parallel stream parsing stress test: 15 streams with 20 events each",
+      "status": "PASS",
+      "durationMs": 1.53
+    },
+    {
+      "id": "CONC-040",
+      "domain": "localization-and-api-invariants",
+      "category": "concurrency",
+      "description": "Mixed concurrent operations: prompt generation, date formatting, and SSE parsing simultaneously",
+      "status": "PASS",
+      "durationMs": 0.43
+    },
+    {
+      "id": "REC-001",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "savedAt with unknown/invalid timezone string ('Mars/Base1') falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.44
+    },
+    {
+      "id": "REC-002",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "savedAt with empty timezone string ('') falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "REC-003",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "savedAt with numeric timezone string ('12345') falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-004",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "savedAt with symbol timezone string ('!@#$%') falls back to UTC",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-005",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "savedAt with lowercase timezone ('utc') handles safely",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-006",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "buildSystemPrompt with invalid timezone string handles gracefully without throwing",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "REC-007",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "buildSystemPrompt with empty agentName ('') renders valid prompt",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "REC-008",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "buildSystemPrompt with empty memories array renders prompt without memories section",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "REC-009",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "buildSystemPrompt with memory containing empty string handles safely",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "REC-010",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "applyM1 with empty memory array returns empty array []",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "REC-011",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "applyM1 with invalid timezone uses UTC fallback without throwing",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "REC-012",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "toLocalMinute with invalid timezone falls back safely",
+      "status": "PASS",
+      "durationMs": 0.35
+    },
+    {
+      "id": "REC-013",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "localDayBounds with invalid timezone falls back safely",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "REC-014",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "formatLocal with null iso input returns null",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "REC-015",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "formatLocal with invalid date string handles safely without crashing",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-016",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with invalid date string returns null",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "REC-017",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with out-of-range month returns null",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "REC-018",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with out-of-range day returns null",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "REC-019",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with out-of-range hour returns null",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "REC-020",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with out-of-range minute returns null",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "REC-021",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with invalid leap day (2025-02-29) returns null",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "REC-022",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "parseLocalDateTime with valid leap day (2024-02-29) returns UTC ISO string",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-023",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE parser recovers when receiving malformed JSON data (skips frame and continues)",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "REC-024",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE parser recovers when receiving non-SSE random text line",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "REC-025",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE parser recovers when stream terminates abruptly mid-event",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "REC-026",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE parser recovers after multiple blank lines and resumes parsing",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "REC-027",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE stream writer abort handler releases active conversation lock on disconnect",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "REC-028",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE stream error handler transmits error event and cleans up controller",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "REC-029",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "SSE stream response headers verify text/event-stream, no-store, and no-buffering",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "REC-030",
+      "domain": "localization-and-api-invariants",
+      "category": "recovery",
+      "description": "Full end-to-end recovery simulation: client disconnects mid-stream, locks clear, reconnect succeeds",
+      "status": "PASS",
+      "durationMs": 0.04
+    }
+  ],
+  "defects": []
+}

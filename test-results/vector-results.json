@@ -1,0 +1,2124 @@
+{
+  "timestamp": "2026-10-11T22:53:40.806Z",
+  "domain": "vector-math",
+  "total": 260,
+  "passed": 260,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 72.45,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 72,
+      "passed": 72,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 64,
+      "passed": 64,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 52,
+      "passed": 52,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 42,
+      "passed": 42,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "VEC-NORM-001",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of identical 2D unit vector [1, 0] is exactly 1.0",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "VEC-NORM-002",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of identical 3D vector [1, 2, 3] is scale-invariant 1.0",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-003",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of scaled vector v and 10*v is exactly 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-004",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of scaled vector v and 0.001*v is 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-005",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 45-degree angle vectors [1, 0] and [1, 1] is sqrt(2)/2 (~0.7071)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-NORM-006",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 60-degree angle vectors is 0.5",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-007",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 30-degree angle vectors is ~0.8660",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-008",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 120-degree angle vectors is -0.5",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-009",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 135-degree angle vectors is -sqrt(2)/2",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-010",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of 150-degree angle vectors is -sqrt(3)/2",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-011",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity of opposite vectors [3, 4] and [-3, -4] is -1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-012",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity in 16D space for identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-NORM-013",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity in 64D space for identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-014",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity in 128D space for identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-015",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity in 384D space for identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-NORM-016",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity in 768D space for identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "VEC-NORM-017",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity symmetry: cosine(a, b) === cosine(b, a) in 384D",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-NORM-018",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Cosine similarity symmetry: cosine(a, b) === cosine(b, a) in random dense 128D",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-019",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Normalize returns new Float32Array instance (non-mutating)",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-NORM-020",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Normalize 2D vector [3, 4] yields [0.6, 0.8] with L2 norm = 1.0",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-021",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Normalize 3D vector [1, 1, 1] yields unit length [1/sqrt(3), 1/sqrt(3), 1/sqrt(3)]",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-022",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Normalize of an already normalized vector is idempotent",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-023",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product of normalized vectors equals cosine similarity of raw vectors (2D)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-NORM-024",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product of normalized vectors equals cosine similarity of raw vectors (16D)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-025",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product of normalized vectors equals cosine similarity of raw vectors (64D)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-NORM-026",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product of normalized vectors equals cosine similarity of raw vectors (384D)",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "VEC-NORM-027",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product of normalized vectors equals cosine similarity of raw vectors (768D)",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "VEC-NORM-028",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Dot product symmetry: dot(a, b) === dot(b, a) for unit vectors",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-NORM-029",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: top-1 from 5 candidates matches maximum cosine similarity",
+      "status": "PASS",
+      "durationMs": 0.35
+    },
+    {
+      "id": "VEC-NORM-030",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: top-3 from 10 candidates sorted strictly in descending order of similarity",
+      "status": "PASS",
+      "durationMs": 0.29
+    },
+    {
+      "id": "VEC-NORM-031",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: top-5 from 20 candidates sorted strictly descending",
+      "status": "PASS",
+      "durationMs": 0.35
+    },
+    {
+      "id": "VEC-NORM-032",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: top-10 from 30 candidates sorted strictly descending",
+      "status": "PASS",
+      "durationMs": 0.51
+    },
+    {
+      "id": "VEC-NORM-033",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: limit = 1 truncates candidate list to exactly 1 item",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-034",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: limit = 3 truncates candidate list to exactly 3 items",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-035",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Top-K ranking: limit = 5 truncates candidate list to exactly 5 items",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-036",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF single list scoring: rank 1 scores 1/(60+1)",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-NORM-037",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF single list scoring: rank 2 scores 1/(60+2)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-038",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF score is monotonically decreasing with rank index",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-NORM-039",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF fusion: item ranked 1st in both vector and keyword lists receives 2/(60+1)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-040",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF fusion: item present in both lists outranks item present in only one list at same rank",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-041",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF fusion: disjoint lists combine all unique IDs without dropping items",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-042",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "RRF custom k parameter: k=10 scales reciprocal weights appropriately",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-NORM-043",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Stored vector: encodeVector and decodeVector roundtrip preserves Float32 values (2D)",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "VEC-NORM-044",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Stored vector: encodeVector and decodeVector roundtrip preserves Float32 values (384D)",
+      "status": "PASS",
+      "durationMs": 0.29
+    },
+    {
+      "id": "VEC-NORM-045",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Stored vector: encodeVector and decodeVector roundtrip preserves Float32 values (768D)",
+      "status": "PASS",
+      "durationMs": 0.3
+    },
+    {
+      "id": "VEC-NORM-046",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database upsert: single vector upserted and retrieved from cachedVectors matches unit vector",
+      "status": "PASS",
+      "durationMs": 1.81
+    },
+    {
+      "id": "VEC-NORM-047",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database upsert: multiple vectors upserted in batch retrieved correctly",
+      "status": "PASS",
+      "durationMs": 0.72
+    },
+    {
+      "id": "VEC-NORM-048",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database upsert: overwrite existing vector updates content_hash and vector BLOB",
+      "status": "PASS",
+      "durationMs": 0.57
+    },
+    {
+      "id": "VEC-NORM-049",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database cachedVectors: subsequent calls return identical cached Map instance",
+      "status": "PASS",
+      "durationMs": 0.43
+    },
+    {
+      "id": "VEC-NORM-050",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database cachedVectors: model filtering isolates vectors of model A from model B",
+      "status": "PASS",
+      "durationMs": 0.46
+    },
+    {
+      "id": "VEC-NORM-051",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database cachedVectors: dims filtering isolates 384D vectors from 768D vectors",
+      "status": "PASS",
+      "durationMs": 0.87
+    },
+    {
+      "id": "VEC-NORM-052",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database deleteVector removes vector from both SQLite and memory cache",
+      "status": "PASS",
+      "durationMs": 0.59
+    },
+    {
+      "id": "VEC-NORM-053",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database deleteAllVectors clears all vectors and empties cache",
+      "status": "PASS",
+      "durationMs": 0.5
+    },
+    {
+      "id": "VEC-NORM-054",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database purgeOrphanVectors removes vectors whose memory_id is missing from tal_memories",
+      "status": "PASS",
+      "durationMs": 0.53
+    },
+    {
+      "id": "VEC-NORM-055",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database countVectors returns exact row count for given model",
+      "status": "PASS",
+      "durationMs": 0.41
+    },
+    {
+      "id": "VEC-NORM-056",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Database vectorMeta returns map with model, dims, and content_hash per memory",
+      "status": "PASS",
+      "durationMs": 0.69
+    },
+    {
+      "id": "VEC-NORM-057",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Content hash: contentHash produces deterministic 64-char hex SHA-256 string",
+      "status": "PASS",
+      "durationMs": 0.47
+    },
+    {
+      "id": "VEC-NORM-058",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Content hash: differing content produces differing SHA-256 hashes",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "VEC-NORM-059",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "EmbeddingText helper: concatenates content and category with newline",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-NORM-060",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder concept: 'car' and 'tesla' have cosine similarity >= 0.70",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "VEC-NORM-061",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder concept: 'vegetarian' and 'food' have cosine similarity >= 0.70",
+      "status": "PASS",
+      "durationMs": 0.24
+    },
+    {
+      "id": "VEC-NORM-062",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder concept: 'peanut' and 'allergy' have cosine similarity >= 0.70",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-NORM-063",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder concept: 'portland' and 'denver' have cosine similarity >= 0.70",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "VEC-NORM-064",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder concept: 'mountains' and 'hiking' have cosine similarity >= 0.70",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "VEC-NORM-065",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder unrelated concepts: 'car' vs 'vegetarian' has cosine similarity < 0.50",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "VEC-NORM-066",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "MockEmbedder unrelated concepts: 'portland' vs 'peanut' has cosine similarity < 0.50",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "VEC-NORM-067",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Hybrid search: combines vector cosine similarity and keyword search results",
+      "status": "PASS",
+      "durationMs": 1.78
+    },
+    {
+      "id": "VEC-NORM-068",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "Hybrid search: limit option correctly bounds returned hits count",
+      "status": "PASS",
+      "durationMs": 0.67
+    },
+    {
+      "id": "VEC-NORM-069",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "PullInNewer: pulls in newer near-duplicate when cosine exceeds threshold",
+      "status": "PASS",
+      "durationMs": 1.32
+    },
+    {
+      "id": "VEC-NORM-070",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "PullInNewer: does not pull in older memory even if cosine is high",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "VEC-NORM-071",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "ApplyM1: sorts memories by updated_at descending and prefixes with saved timestamp",
+      "status": "PASS",
+      "durationMs": 1.38
+    },
+    {
+      "id": "VEC-NORM-072",
+      "domain": "vector-math",
+      "category": "normal",
+      "description": "NewerWinsNote: returns singleton memory note with standard disclaimer",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-BOUND-001",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: normalize of 2D all-zero vector returns all-zero vector",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-002",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: normalize of 384D all-zero vector returns all-zero vector",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "VEC-BOUND-003",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: normalize of 768D all-zero vector returns all-zero vector",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-BOUND-004",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: normalize of 1536D all-zero vector returns all-zero vector",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-BOUND-005",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: dot product of all-zero vector and unit vector is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-006",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: dot product of unit vector and all-zero vector is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-007",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: dot product of two all-zero vectors is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-008",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: cosine similarity of all-zero vector and arbitrary vector is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-009",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: cosine similarity of arbitrary vector and all-zero vector is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-010",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "0-vector: cosine similarity of two all-zero vectors is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-011",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_0 [1, 0, 0] has norm exactly 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-012",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_1 [0, 1, 0] has norm exactly 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-013",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_2 [0, 0, 1] has norm exactly 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-014",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_0 in 384D has norm 1.0",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-BOUND-015",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_383 in 384D has norm 1.0",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-BOUND-016",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: standard basis e_0 in 1536D has norm 1.0",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-017",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: uniform component vector (1/sqrt(d)) has norm 1.0 in 384D",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-018",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Unit vector: uniform component vector (1/sqrt(d)) has norm 1.0 in 1536D",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-019",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: 2D basis e_0 and e_1 have dot product exactly 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-020",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: 2D basis e_0 and e_1 have cosine similarity exactly 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-021",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: 3D [1, -2, 1] and [2, 1, 0] have dot product exactly 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-022",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: 4D Hadamard basis vectors H1 and H2 have dot product 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-023",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: high-dim 384D orthogonal partition vectors have dot product 0.0",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-BOUND-024",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Orthogonal vectors: high-dim 1536D orthogonal partition vectors have dot product 0.0",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "VEC-BOUND-025",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 2D unit vector [0.6, 0.8] and [-0.6, -0.8] have dot product -1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-026",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 2D raw vector [3, 4] and [-3, -4] have cosine similarity -1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-027",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 384D random unit vector v and -v have dot product -1.0",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-BOUND-028",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 384D random vector v and -v have cosine similarity -1.0",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-BOUND-029",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 1536D random unit vector v and -v have dot product -1.0",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-BOUND-030",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Opposite vectors: 1536D random vector v and -v have cosine similarity -1.0",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "VEC-BOUND-031",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 1536D normalization preserves unit length",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-BOUND-032",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 1536D dot product between identical unit vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-BOUND-033",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 1536D cosine similarity of identical vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-BOUND-034",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 3072D normalization preserves unit length",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-BOUND-035",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 3072D dot product between identical unit vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-BOUND-036",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 4096D normalization preserves unit length",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "VEC-BOUND-037",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Ultra-high dimensional vector: 4096D dot product between identical unit vectors is 1.0",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "VEC-BOUND-038",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "1D boundary: 1D vector [5.0] normalized yields [1.0]",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-039",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "1D boundary: 1D vector [-7.0] normalized yields [-1.0]",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-040",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "1D boundary: 1D vectors [3.0] and [4.0] have cosine similarity 1.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-041",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "1D boundary: 1D vectors [3.0] and [-4.0] have cosine similarity -1.0",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-042",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Empty vector (0D): Float32Array(0) normalized returns Float32Array(0)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-043",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Empty vector (0D): dot product of two Float32Array(0) is 0.0",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-044",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Empty vector (0D): cosine similarity of two Float32Array(0) is 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-045",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Tie-breaking: identical cosine scores tie-break by updated_at descending",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-046",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Tie-breaking: identical cosine and updated_at tie-break by memory ID ascending",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-047",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Tie-breaking: identical fused RRF scores tie-break by cosine descending",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-048",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Tie-breaking: identical fused RRF scores with null cosines tie-break by updated_at descending",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-049",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Tie-breaking: identical fused, null cosine, and identical updated_at tie-break by ID ascending",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-BOUND-050",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Floor boundary: cosine score exactly equal to absolute floor (0.55) is kept",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-051",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Floor boundary: cosine score slightly below absolute floor (0.54999) is excluded from primary hits",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-052",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Floor boundary: cosine score slightly above absolute floor (0.55001) is included in primary hits",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-053",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Relative floor: candidate at (top.cosine - relative) is kept",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-054",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Relative floor: candidate below (top.cosine - relative) is excluded from primary hits",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-055",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Backstop floor: fallback candidate at backstop (0.40) is admitted to fill fallback slots",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-056",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Backstop floor: fallback candidate below backstop (0.3999) is rejected from fallback slots",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-057",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Fallback slot boundary: exactly FALLBACK_K (4) items top-up when primary hits < 4",
+      "status": "PASS",
+      "durationMs": 1.36
+    },
+    {
+      "id": "VEC-BOUND-058",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Fallback slot boundary: no fallback top-up occurs when primary hits >= 4",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-BOUND-059",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "PullInNewer boundary: threshold exactly at newerDuplicateCosine pulls in replacement",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-BOUND-060",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "PullInNewer boundary: threshold just below newerDuplicateCosine does not pull in replacement",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "VEC-BOUND-061",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "PullInNewer boundary: MAX_NEWER_PER_HIT (2) limit strictly enforced",
+      "status": "PASS",
+      "durationMs": 1.22
+    },
+    {
+      "id": "VEC-BOUND-062",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "PullInNewer boundary: limit = 0 returns empty array without processing",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "VEC-BOUND-063",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "PullInNewer boundary: hit list at limit drops weakest non-puller to make room",
+      "status": "PASS",
+      "durationMs": 0.66
+    },
+    {
+      "id": "VEC-BOUND-064",
+      "domain": "vector-math",
+      "category": "boundary",
+      "description": "Subnormal numbers: vectors with tiny values (1e-35) normalize without underflow crash",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-FAIL-001",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: normalize vector containing single NaN returns zero vector without NaN",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-FAIL-002",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: normalize vector containing multiple NaNs returns zero vector without NaN",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-FAIL-003",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: normalize vector containing all NaNs returns zero vector without NaN",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-FAIL-004",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: dot product with vector A containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-005",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: dot product with vector B containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-006",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: dot product with both vectors containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-007",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: cosine similarity with vector A containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-008",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: cosine similarity with vector B containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-009",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "NaN defense: cosine similarity with both vectors containing NaN returns 0.0, never NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-010",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: normalize vector containing +Infinity returns zero vector, never NaN or Infinity",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-011",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: normalize vector containing -Infinity returns zero vector, never NaN or Infinity",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-012",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: dot product with +Infinity in vector A returns 0.0, never Infinity or NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-013",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: dot product with -Infinity in vector B returns 0.0, never Infinity or NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-014",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: cosine similarity with +Infinity returns 0.0, never NaN or Infinity",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-015",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Infinity defense: cosine similarity with -Infinity returns 0.0, never NaN or Infinity",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-016",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Mixed non-finite: vector with both NaN and Infinity normalizes safely to zero vector",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-017",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Mixed non-finite: dot product with mixed NaN/Infinity returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-018",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Mixed non-finite: cosine similarity with mixed NaN/Infinity returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-019",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: dot product of length 2 vs length 3 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-020",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: dot product of length 384 vs length 768 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-FAIL-021",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: dot product of length 384 vs length 1536 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-FAIL-022",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: dot product of length 0 vs length 10 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-023",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: cosine similarity of length 2 vs length 3 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-024",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: cosine similarity of length 384 vs length 768 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-FAIL-025",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: cosine similarity of length 384 vs length 1536 returns 0.0",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-FAIL-026",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Dimension mismatch: cachedVectors with requested dims filters out mismatched rows",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "VEC-FAIL-027",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Empty query defense: hybridSearch with empty string '' returns keyword recall without throwing",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "VEC-FAIL-028",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Empty query defense: hybridSearch with whitespace-only '   ' returns safely without throwing",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "VEC-FAIL-029",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Empty query defense: hybridSearch with tabs and newlines '\\t\\n  ' returns safely without throwing",
+      "status": "PASS",
+      "durationMs": 0.61
+    },
+    {
+      "id": "VEC-FAIL-030",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Empty query defense: hybridSearch with empty query does not increment embedding usage",
+      "status": "PASS",
+      "durationMs": 0.43
+    },
+    {
+      "id": "VEC-FAIL-031",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Abnormal similarity: cosine similarity bounded by upper limit 1.0 (never > 1.0000)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-FAIL-032",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Abnormal similarity: cosine similarity bounded by lower limit -1.0 (never < -1.0000)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-FAIL-033",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Abnormal similarity: Number.isFinite is strictly true for all cosine outputs",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-FAIL-034",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "Abnormal similarity: Number.isFinite is strictly true for all dot product outputs",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-FAIL-035",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeStored defense: cachedVectors with corrupted blob in DB recovers without throwing",
+      "status": "PASS",
+      "durationMs": 0.41
+    },
+    {
+      "id": "VEC-FAIL-036",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeStored defense: cachedVectors with empty string in DB recovers without throwing",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "VEC-FAIL-037",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeStored defense: cachedVectors with malformed base64 text recovers without throwing",
+      "status": "PASS",
+      "durationMs": 0.46
+    },
+    {
+      "id": "VEC-FAIL-038",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeStored defense: cachedVectors with truncated 2-byte blob recovers without throwing",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "VEC-FAIL-039",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeStored defense: cachedVectors with zero-byte blob recovers without throwing",
+      "status": "PASS",
+      "durationMs": 0.37
+    },
+    {
+      "id": "VEC-FAIL-040",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "HybridSearch sort defense: sorting hits where both cosines are null evaluates cleanly without NaN",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "VEC-FAIL-041",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "HybridSearch sort defense: multiple keyword-only hits with tied fused score sort deterministically",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-FAIL-042",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response data is null or undefined",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "VEC-FAIL-043",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response data is not an array",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "VEC-FAIL-044",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response row count differs from texts count",
+      "status": "PASS",
+      "durationMs": 0.08
+    },
+    {
+      "id": "VEC-FAIL-045",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response row contains NaN",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "VEC-FAIL-046",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response row contains Infinity",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "VEC-FAIL-047",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response row contains non-numeric strings",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-FAIL-048",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "WorkersAiEmbedder: throws error when AI response rows have inconsistent dimensions",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "VEC-FAIL-049",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "ScanVectors NaN defense: vector with NaN stored in cache does not produce NaN cosine or break sorting",
+      "status": "PASS",
+      "durationMs": 1
+    },
+    {
+      "id": "VEC-FAIL-050",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "UpsertVectors NaN defense: upserting vector with NaN stores safe normalized vector without SQLite error",
+      "status": "PASS",
+      "durationMs": 0.45
+    },
+    {
+      "id": "VEC-FAIL-051",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "DecodeVector invalid base64: malformed base64 throws or handles safely",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-FAIL-052",
+      "domain": "vector-math",
+      "category": "failure",
+      "description": "RRF invalid rank: handles empty lists gracefully without throwing or returning NaN",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-CONC-001",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent search: 5 parallel vector searches return identical results to sequential",
+      "status": "PASS",
+      "durationMs": 1
+    },
+    {
+      "id": "VEC-CONC-002",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent search: 10 parallel vector searches execute concurrently without conflict",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "VEC-CONC-003",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent search: 20 parallel vector searches execute concurrently without conflict",
+      "status": "PASS",
+      "durationMs": 1.18
+    },
+    {
+      "id": "VEC-CONC-004",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent search: 50 parallel vector searches execute concurrently without conflict",
+      "status": "PASS",
+      "durationMs": 2.01
+    },
+    {
+      "id": "VEC-CONC-005",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent search: 20 parallel searches with different query vectors maintain independent top hits",
+      "status": "PASS",
+      "durationMs": 1.89
+    },
+    {
+      "id": "VEC-CONC-006",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent index reads: 10 simultaneous cachedVectors calls return the exact same Map instance",
+      "status": "PASS",
+      "durationMs": 0.53
+    },
+    {
+      "id": "VEC-CONC-007",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent index reads: 50 simultaneous cachedVectors calls maintain cache reference consistency",
+      "status": "PASS",
+      "durationMs": 0.7
+    },
+    {
+      "id": "VEC-CONC-008",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent model reads: concurrent cachedVectors for model A and model B don't cross-contaminate",
+      "status": "PASS",
+      "durationMs": 0.52
+    },
+    {
+      "id": "VEC-CONC-009",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent dims reads: concurrent cachedVectors for 384D and 768D maintain separated results",
+      "status": "PASS",
+      "durationMs": 0.64
+    },
+    {
+      "id": "VEC-CONC-010",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent vectorMeta reads: 20 parallel vectorMeta calls return identical metadata maps",
+      "status": "PASS",
+      "durationMs": 0.51
+    },
+    {
+      "id": "VEC-CONC-011",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent upsert and read: cachedVectors read during an upsert operation returns consistent state",
+      "status": "PASS",
+      "durationMs": 0.59
+    },
+    {
+      "id": "VEC-CONC-012",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent multiple upserts: 10 concurrent upserts with unique IDs all persist to SQLite",
+      "status": "PASS",
+      "durationMs": 0.45
+    },
+    {
+      "id": "VEC-CONC-013",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent upsert overwrites: 10 concurrent upserts to same ID resolve atomically via SQLite",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "VEC-CONC-014",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent delete and read: cachedVectors reflects deletion immediately without race condition",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "VEC-CONC-015",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Async embedding stability: 10 parallel MockEmbedder.embed calls produce deterministic vectors",
+      "status": "PASS",
+      "durationMs": 0.46
+    },
+    {
+      "id": "VEC-CONC-016",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Async embedding stability: concurrent embed calls with identical text return bit-identical Float32Arrays",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "VEC-CONC-017",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Async hybrid search stability: 10 concurrent hybridSearch calls for 'car' return identical rank order",
+      "status": "PASS",
+      "durationMs": 1.4
+    },
+    {
+      "id": "VEC-CONC-018",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Async hybrid search stability: 10 concurrent hybridSearch calls for 'denver' return identical rank order",
+      "status": "PASS",
+      "durationMs": 1.03
+    },
+    {
+      "id": "VEC-CONC-019",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Async hybrid search stability: 10 concurrent hybridSearch calls for 'allergy' return identical rank order",
+      "status": "PASS",
+      "durationMs": 1.11
+    },
+    {
+      "id": "VEC-CONC-020",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent RRF calculation: 20 parallel rrf executions return identical fusion scores",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "VEC-CONC-021",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent pullInNewer: 10 parallel pullInNewer calls on identical input produce identical output",
+      "status": "PASS",
+      "durationMs": 0.43
+    },
+    {
+      "id": "VEC-CONC-022",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Cache invalidation race defense: dropVectorCache during concurrent reads forces clean reload",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "VEC-CONC-023",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent usage recording: recordEmbeddings called 20 times concurrently aggregates counts accurately",
+      "status": "PASS",
+      "durationMs": 0.52
+    },
+    {
+      "id": "VEC-CONC-024",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent content hashing: 30 parallel contentHash calculations return matching SHA-256 hashes",
+      "status": "PASS",
+      "durationMs": 0.28
+    },
+    {
+      "id": "VEC-CONC-025",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent dot products: 100 parallel dot product calculations between random vectors",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "VEC-CONC-026",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent cosine computations: 100 parallel cosine similarity calculations",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "VEC-CONC-027",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent vector normalization: 100 parallel normalize calls on independent vectors",
+      "status": "PASS",
+      "durationMs": 1.36
+    },
+    {
+      "id": "VEC-CONC-028",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent scanVectors: 15 concurrent scanVectors with varying floor configs",
+      "status": "PASS",
+      "durationMs": 1.16
+    },
+    {
+      "id": "VEC-CONC-029",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent legacy conversions: convertLegacyVectors called concurrently is idempotent",
+      "status": "PASS",
+      "durationMs": 0.37
+    },
+    {
+      "id": "VEC-CONC-030",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent orphan purges: purgeOrphanVectors called concurrently executes safely",
+      "status": "PASS",
+      "durationMs": 0.35
+    },
+    {
+      "id": "VEC-CONC-031",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Parallel batch embedding: MockEmbedder embedding 50 texts in a single batch returns 50 valid vectors",
+      "status": "PASS",
+      "durationMs": 0.97
+    },
+    {
+      "id": "VEC-CONC-032",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Parallel batch embedding: MockEmbedder embedding 100 texts in a single batch",
+      "status": "PASS",
+      "durationMs": 1.63
+    },
+    {
+      "id": "VEC-CONC-033",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent applyM1: 20 parallel applyM1 transformations produce timezone-accurate strings",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "VEC-CONC-034",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent hybrid searches with mixed queries execute without deadlock or starvation",
+      "status": "PASS",
+      "durationMs": 0.75
+    },
+    {
+      "id": "VEC-CONC-035",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent DB connection reuse: multiple operations sharing same Database instance stay synchronized",
+      "status": "PASS",
+      "durationMs": 0.44
+    },
+    {
+      "id": "VEC-CONC-036",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "High-frequency upsert and query loop (50 iterations) maintains cache row count accuracy",
+      "status": "PASS",
+      "durationMs": 0.72
+    },
+    {
+      "id": "VEC-CONC-037",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent delete and upsert on distinct IDs leaves correct remaining vectors in cache",
+      "status": "PASS",
+      "durationMs": 0.44
+    },
+    {
+      "id": "VEC-CONC-038",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent vectorMeta and countVectors queries return consistent values",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "VEC-CONC-039",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Parallel RRF with high list count (10 candidate lists) fuses without performance degradation",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-CONC-040",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent hybridSearch with fallback top-up evaluates backstop floors reliably",
+      "status": "PASS",
+      "durationMs": 0.57
+    },
+    {
+      "id": "VEC-CONC-041",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent pullInNewer with limit reduction splices correctly across calls",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "VEC-CONC-042",
+      "domain": "vector-math",
+      "category": "concurrency",
+      "description": "Concurrent embedQuery under approaching daily limit correctly switches to keyword search when cap hit",
+      "status": "PASS",
+      "durationMs": 0.53
+    },
+    {
+      "id": "VEC-RECOV-001",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Invalid vector injection recovery: upsert vector with NaN is sanitized and search succeeds",
+      "status": "PASS",
+      "durationMs": 0.51
+    },
+    {
+      "id": "VEC-RECOV-002",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Invalid vector injection recovery: upsert vector with Infinity is sanitized and search succeeds",
+      "status": "PASS",
+      "durationMs": 0.51
+    },
+    {
+      "id": "VEC-RECOV-003",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Invalid vector injection recovery: raw database insert of corrupted blob recovers on decodeStored",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "VEC-RECOV-004",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Embedding failure recovery: embedder throwing Error falls back to keyword recall seamlessly",
+      "status": "PASS",
+      "durationMs": 0.53
+    },
+    {
+      "id": "VEC-RECOV-005",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Embedding failure recovery: embedder throwing string error falls back to keyword recall seamlessly",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "VEC-RECOV-006",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Embedding failure recovery: embedder returning empty array falls back to keyword recall seamlessly",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "VEC-RECOV-007",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Embedding failure recovery: embedder returning null falls back to keyword recall seamlessly",
+      "status": "PASS",
+      "durationMs": 0.47
+    },
+    {
+      "id": "VEC-RECOV-008",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Quota exhaustion recovery: embeddingsToday >= maxEmbeddingsPerDay uses keyword recall without error",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "VEC-RECOV-009",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Quota exhaustion boundary recovery: usage at exact maxEmbeddingsPerDay triggers fallback",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "VEC-RECOV-010",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing embedder recovery: SemanticContext with embedder=null performs keyword search",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "VEC-RECOV-011",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: cachedVectors when table does not exist returns empty map without throwing",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "VEC-RECOV-012",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: countVectors when table does not exist returns 0 without throwing",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-RECOV-013",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: vectorMeta when table does not exist returns empty map without throwing",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-RECOV-014",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: deleteVector when table does not exist is a safe no-op",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-RECOV-015",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: deleteAllVectors when table does not exist is a safe no-op",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "VEC-RECOV-016",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: purgeOrphanVectors when table does not exist returns 0 without throwing",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "VEC-RECOV-017",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Missing table recovery: convertLegacyVectors when table does not exist returns 0 without throwing",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "VEC-RECOV-018",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Cache recovery: dropVectorCache forces subsequent cachedVectors to reload from SQLite",
+      "status": "PASS",
+      "durationMs": 0.45
+    },
+    {
+      "id": "VEC-RECOV-019",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Cache recovery: out-of-band direct SQL insert detected via row count tripwire and reloads cache",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "VEC-RECOV-020",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Cache recovery: out-of-band direct SQL delete detected via row count tripwire and reloads cache",
+      "status": "PASS",
+      "durationMs": 0.39
+    },
+    {
+      "id": "VEC-RECOV-021",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Cache recovery: out-of-band table drop detected and clears in-memory cache",
+      "status": "PASS",
+      "durationMs": 0.46
+    },
+    {
+      "id": "VEC-RECOV-022",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Orphan vector recovery: deleting memory in tal_memories followed by purgeOrphanVectors cleans vector",
+      "status": "PASS",
+      "durationMs": 0.42
+    },
+    {
+      "id": "VEC-RECOV-023",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Corrupt memory ID recovery: cachedVectors with orphaned ID ignored by hybridSearch",
+      "status": "PASS",
+      "durationMs": 0.57
+    },
+    {
+      "id": "VEC-RECOV-024",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Schema migration recovery: ensureSemanticSchema called on existing v2 database is idempotent",
+      "status": "PASS",
+      "durationMs": 0.44
+    },
+    {
+      "id": "VEC-RECOV-025",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "Legacy text vector recovery: convertLegacyVectors translates legacy base64 text vectors to BLOBs",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "VEC-RECOV-026",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "PullInNewer missing memory recovery: candidate ID missing from memory service skipped gracefully",
+      "status": "PASS",
+      "durationMs": 0.44
+    },
+    {
+      "id": "VEC-RECOV-027",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "SavedAt invalid timezone recovery: invalid timezone string falls back to UTC without throwing",
+      "status": "PASS",
+      "durationMs": 0.48
+    },
+    {
+      "id": "VEC-RECOV-028",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "ApplyM1 empty memories recovery: empty array input returns empty array without throwing",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "VEC-RECOV-029",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "ScanVectors empty database recovery: hybridSearch on empty database returns empty hits array",
+      "status": "PASS",
+      "durationMs": 0.49
+    },
+    {
+      "id": "VEC-RECOV-030",
+      "domain": "vector-math",
+      "category": "recovery",
+      "description": "HybridSearch all-keyword recovery: when no vector matches floor, keyword hits are returned",
+      "status": "PASS",
+      "durationMs": 0.53
+    }
+  ],
+  "defects": []
+}

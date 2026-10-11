@@ -1,0 +1,2044 @@
+{
+  "timestamp": "2026-10-11T22:53:42.808Z",
+  "domain": "approval-tools",
+  "total": 250,
+  "passed": 250,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 544.99,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 40,
+      "passed": 40,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "approval-normal-001",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ALL_TOOLS contains expected set of core tools",
+      "status": "PASS",
+      "durationMs": 0.07
+    },
+    {
+      "id": "approval-normal-002",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Every tool in ALL_TOOLS has unique name, valid description and schema",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "approval-normal-003",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Destructive tools implement prepare and commit, immediate tools implement execute",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "approval-normal-004",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor.available() in chat mode returns all tools including write and destructive",
+      "status": "PASS",
+      "durationMs": 2.13
+    },
+    {
+      "id": "approval-normal-005",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor.available() in scheduled mode excludes write and destructive tools except notify_owner",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "approval-normal-006",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor.find returns correct definition by name in chat mode",
+      "status": "PASS",
+      "durationMs": 0.81
+    },
+    {
+      "id": "approval-normal-007",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor.find returns undefined for non-existent tool",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-normal-008",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor tracks calls count correctly",
+      "status": "PASS",
+      "durationMs": 2.46
+    },
+    {
+      "id": "approval-normal-009",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "ToolExecutor.budgetExhausted returns false initially and true when limit reached",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-normal-010",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Tool label function generates readable label with input parameters",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "approval-normal-011",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "create_task tool creates task in DB and returns presentTask format",
+      "status": "PASS",
+      "durationMs": 1.07
+    },
+    {
+      "id": "approval-normal-012",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "list_tasks tool retrieves tasks created by agent",
+      "status": "PASS",
+      "durationMs": 2.65
+    },
+    {
+      "id": "approval-normal-013",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "update_task tool updates task status and priority",
+      "status": "PASS",
+      "durationMs": 1.53
+    },
+    {
+      "id": "approval-normal-014",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "complete_task tool marks task as done",
+      "status": "PASS",
+      "durationMs": 1.03
+    },
+    {
+      "id": "approval-normal-015",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "create_note tool stores note with markdown content",
+      "status": "PASS",
+      "durationMs": 1.11
+    },
+    {
+      "id": "approval-normal-016",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "read_note tool retrieves note by id",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-normal-017",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "search_notes tool finds note by text match",
+      "status": "PASS",
+      "durationMs": 1.34
+    },
+    {
+      "id": "approval-normal-018",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "create_project and list_projects tools manage projects",
+      "status": "PASS",
+      "durationMs": 1.17
+    },
+    {
+      "id": "approval-normal-019",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "remember tool stores long-term memory fact",
+      "status": "PASS",
+      "durationMs": 1.09
+    },
+    {
+      "id": "approval-normal-020",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "search_memories tool retrieves matching memories",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "approval-normal-021",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "notify_owner tool creates owner notification record",
+      "status": "PASS",
+      "durationMs": 1.09
+    },
+    {
+      "id": "approval-normal-022",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "create_reminder tool creates a timed reminder automation",
+      "status": "PASS",
+      "durationMs": 1.27
+    },
+    {
+      "id": "approval-normal-023",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "list_automations tool lists registered automations",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-normal-024",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "search tool searches across tasks and notes simultaneously",
+      "status": "PASS",
+      "durationMs": 1.17
+    },
+    {
+      "id": "approval-normal-025",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "read_note returns empty excerpt for note with empty content",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-normal-026",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "delete_task execution creates pending action without deleting task",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "approval-normal-027",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "delete_task attaches PendingAction to callId via approvalFor",
+      "status": "PASS",
+      "durationMs": 0.82
+    },
+    {
+      "id": "approval-normal-028",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "delete_task resolves task by partial title in prepare",
+      "status": "PASS",
+      "durationMs": 0.82
+    },
+    {
+      "id": "approval-normal-029",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "delete_note creates pending action without deleting note",
+      "status": "PASS",
+      "durationMs": 0.97
+    },
+    {
+      "id": "approval-normal-030",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "delete_note proposal records tool name and target_id in tal_pending_actions",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-normal-031",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "forget_memory creates pending action without deleting memory",
+      "status": "PASS",
+      "durationMs": 1.19
+    },
+    {
+      "id": "approval-normal-032",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "forget_memory records correct conversation_id in pending action",
+      "status": "PASS",
+      "durationMs": 0.86
+    },
+    {
+      "id": "approval-normal-033",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "cancel_automation creates pending action without cancelling automation",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-normal-034",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "pending action expires_at is set to exactly 30 minutes in the future",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-normal-035",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "pendingActions.view returns clean public PendingAction object",
+      "status": "PASS",
+      "durationMs": 0.87
+    },
+    {
+      "id": "approval-normal-036",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "pendingActions.get returns full stored record with internal metadata",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-normal-037",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Multiple destructive proposals can be created in the same turn within limits",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-normal-038",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "destructive tool without callId still creates pending action in DB",
+      "status": "PASS",
+      "durationMs": 0.89
+    },
+    {
+      "id": "approval-normal-039",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "approval response contains instruction note for AI agent",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-normal-040",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "pending action created_at matches current timestamp",
+      "status": "PASS",
+      "durationMs": 0.86
+    },
+    {
+      "id": "approval-normal-041",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction successfully deletes task upon approval",
+      "status": "PASS",
+      "durationMs": 1.1
+    },
+    {
+      "id": "approval-normal-042",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction logs activity upon task deletion",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-normal-043",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction successfully deletes note upon approval",
+      "status": "PASS",
+      "durationMs": 0.98
+    },
+    {
+      "id": "approval-normal-044",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction logs activity upon note deletion",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-normal-045",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction successfully forgets memory upon approval",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "approval-normal-046",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction logs activity upon memory deletion",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-normal-047",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction successfully cancels automation upon approval",
+      "status": "PASS",
+      "durationMs": 0.97
+    },
+    {
+      "id": "approval-normal-048",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction sets resolved_at timestamp in database",
+      "status": "PASS",
+      "durationMs": 0.88
+    },
+    {
+      "id": "approval-normal-049",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction cannot be executed twice on same action (idempotency)",
+      "status": "PASS",
+      "durationMs": 1.15
+    },
+    {
+      "id": "approval-normal-050",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Approving task deletion does not affect other existing tasks",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "approval-normal-051",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Sequential approvals of multiple different pending actions succeed",
+      "status": "PASS",
+      "durationMs": 1.22
+    },
+    {
+      "id": "approval-normal-052",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction accepts custom timezone in context",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "approval-normal-053",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction view reflects approved status immediately",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-normal-054",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Approved action error field remains null on success",
+      "status": "PASS",
+      "durationMs": 0.91
+    },
+    {
+      "id": "approval-normal-055",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "runApprovedAction returns exactly the matching action ID",
+      "status": "PASS",
+      "durationMs": 0.88
+    },
+    {
+      "id": "approval-normal-056",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "pendingActions.resolve with cancelled moves status to cancelled",
+      "status": "PASS",
+      "durationMs": 0.88
+    },
+    {
+      "id": "approval-normal-057",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelled action cannot subsequently be approved",
+      "status": "PASS",
+      "durationMs": 0.92
+    },
+    {
+      "id": "approval-normal-058",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelled action cannot be cancelled a second time",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-normal-059",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Approved action cannot subsequently be cancelled",
+      "status": "PASS",
+      "durationMs": 0.89
+    },
+    {
+      "id": "approval-normal-060",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancellation records resolved_at timestamp in database",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-normal-061",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelling memory deletion leaves memory intact",
+      "status": "PASS",
+      "durationMs": 0.86
+    },
+    {
+      "id": "approval-normal-062",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelling note deletion leaves note intact",
+      "status": "PASS",
+      "durationMs": 0.86
+    },
+    {
+      "id": "approval-normal-063",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelling automation deletion leaves automation intact",
+      "status": "PASS",
+      "durationMs": 0.86
+    },
+    {
+      "id": "approval-normal-064",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelling one proposal does not affect sibling pending proposals",
+      "status": "PASS",
+      "durationMs": 1.06
+    },
+    {
+      "id": "approval-normal-065",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Cancelled action error field remains null",
+      "status": "PASS",
+      "durationMs": 0.85
+    },
+    {
+      "id": "approval-normal-066",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "withCurrentStatus updates message tool approval cards with current action status",
+      "status": "PASS",
+      "durationMs": 0.99
+    },
+    {
+      "id": "approval-normal-067",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "withCurrentStatus preserves messages without tools or without approval cards",
+      "status": "PASS",
+      "durationMs": 0.71
+    },
+    {
+      "id": "approval-normal-068",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "withCurrentStatus handles non-existent action gracefully by falling back to stored card",
+      "status": "PASS",
+      "durationMs": 0.69
+    },
+    {
+      "id": "approval-normal-069",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Custom defined destructive tool executes prepare and commit via approval flow",
+      "status": "PASS",
+      "durationMs": 1.36
+    },
+    {
+      "id": "approval-normal-070",
+      "domain": "approval-tools",
+      "category": "normal",
+      "description": "Full turn flow: read state -> propose destructive action -> approve -> verify updated state",
+      "status": "PASS",
+      "durationMs": 1.27
+    },
+    {
+      "id": "approval-boundary-001",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_task resolves task with Korean text and punctuation in title",
+      "status": "PASS",
+      "durationMs": 0.99
+    },
+    {
+      "id": "approval-boundary-002",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_task resolves task by exact ID when multiple tasks have similar titles",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-boundary-003",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_task handles special regex characters in task title query without crashing",
+      "status": "PASS",
+      "durationMs": 1.06
+    },
+    {
+      "id": "approval-boundary-004",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_note handles multi-line markdown content note deletion",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "approval-boundary-005",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "forget_memory handles memory containing emojis and special symbols",
+      "status": "PASS",
+      "durationMs": 0.97
+    },
+    {
+      "id": "approval-boundary-006",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_task handles boundary priority values (low, medium, high)",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-boundary-007",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_task handles local date format 'YYYY-MM-DD' boundary",
+      "status": "PASS",
+      "durationMs": 1.14
+    },
+    {
+      "id": "approval-boundary-008",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_task handles local date-time format 'YYYY-MM-DDTHH:MM' boundary",
+      "status": "PASS",
+      "durationMs": 0.91
+    },
+    {
+      "id": "approval-boundary-009",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "update_task can clear due date with empty string or null",
+      "status": "PASS",
+      "durationMs": 0.87
+    },
+    {
+      "id": "approval-boundary-010",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_note handles max title length (200 chars)",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-boundary-011",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_task handles max title length (200 chars)",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-boundary-012",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "create_note handles empty string content",
+      "status": "PASS",
+      "durationMs": 0.82
+    },
+    {
+      "id": "approval-boundary-013",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "update_note append parameter correctly appends to existing content",
+      "status": "PASS",
+      "durationMs": 1.25
+    },
+    {
+      "id": "approval-boundary-014",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "notify_owner handles boundary body length (4000 chars)",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-boundary-015",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "remember handles boundary content length (1000 chars)",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "approval-boundary-016",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle normalizes multiple spaces, tabs, and newlines into single spaces",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "approval-boundary-017",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle truncates text exceeding max length with ellipsis",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "approval-boundary-018",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle does not truncate text of exactly max length",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "approval-boundary-019",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle does not truncate text shorter than max length",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "approval-boundary-020",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle handles max = 1 gracefully",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "approval-boundary-021",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle handles empty string gracefully",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "approval-boundary-022",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "quoteTitle handles giant text (10,000 characters) without stack overflow",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "approval-boundary-023",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_task proposal summary stays compact for 1000-char task title",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-boundary-024",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_note with giant content (50,000 chars) prepares and approves cleanly",
+      "status": "PASS",
+      "durationMs": 1.36
+    },
+    {
+      "id": "approval-boundary-025",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "markFailed truncates error message exceeding 300 chars",
+      "status": "PASS",
+      "durationMs": 0.79
+    },
+    {
+      "id": "approval-boundary-026",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "markFailed handles error message of exactly 300 chars without truncation",
+      "status": "PASS",
+      "durationMs": 0.74
+    },
+    {
+      "id": "approval-boundary-027",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "markFailed handles empty string error",
+      "status": "PASS",
+      "durationMs": 0.73
+    },
+    {
+      "id": "approval-boundary-028",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "100 distinct tasks can be created and tracked in DB without performance degradation",
+      "status": "PASS",
+      "durationMs": 1.34
+    },
+    {
+      "id": "approval-boundary-029",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Approval 100ms before expiration succeeds",
+      "status": "PASS",
+      "durationMs": 0.99
+    },
+    {
+      "id": "approval-boundary-030",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action approved before expiration remains approved even after expires_at passes",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-boundary-031",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action cancelled before expiration remains cancelled even after expires_at passes",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-boundary-032",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action expiring exactly at current timestamp cannot be approved",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-boundary-033",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action expired 1ms in past returns status expired in view",
+      "status": "PASS",
+      "durationMs": 0.71
+    },
+    {
+      "id": "approval-boundary-034",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action expired 1 hour in past returns status expired in view",
+      "status": "PASS",
+      "durationMs": 0.71
+    },
+    {
+      "id": "approval-boundary-035",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action expired 29 days in past returns status expired in view",
+      "status": "PASS",
+      "durationMs": 0.72
+    },
+    {
+      "id": "approval-boundary-036",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Expired action cannot be cancelled",
+      "status": "PASS",
+      "durationMs": 0.7
+    },
+    {
+      "id": "approval-boundary-037",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Pending action with future expires_at is not marked expired in view",
+      "status": "PASS",
+      "durationMs": 0.71
+    },
+    {
+      "id": "approval-boundary-038",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Action with failed status in past preserves failed status in view",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-boundary-039",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "withCurrentStatus updates expired status on message approval cards",
+      "status": "PASS",
+      "durationMs": 0.75
+    },
+    {
+      "id": "approval-boundary-040",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Attempting approval on expired action throws AppError CONFLICT with friendly message",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-boundary-041",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "pending action resolve sets resolved_at to exact ISO string",
+      "status": "PASS",
+      "durationMs": 0.79
+    },
+    {
+      "id": "approval-boundary-042",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "pending action view preserves ISO format of expires_at",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-boundary-043",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Sequential 3-step approval chain: delete task -> delete note -> forget memory",
+      "status": "PASS",
+      "durationMs": 1.34
+    },
+    {
+      "id": "approval-boundary-044",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Reverse order approval of 3 pending actions resolves all cleanly",
+      "status": "PASS",
+      "durationMs": 1.05
+    },
+    {
+      "id": "approval-boundary-045",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Dependent chain: task created in turn 1 is proposed for deletion in turn 2",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-boundary-046",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Multiple conversations maintain separate pending action sets",
+      "status": "PASS",
+      "durationMs": 1.09
+    },
+    {
+      "id": "approval-boundary-047",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Deleting conversation cascades and deletes its pending actions in DB",
+      "status": "PASS",
+      "durationMs": 0.75
+    },
+    {
+      "id": "approval-boundary-048",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Chain with interleaved cancellation: approve A, cancel B, approve C",
+      "status": "PASS",
+      "durationMs": 1.01
+    },
+    {
+      "id": "approval-boundary-049",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Deleting note belonging to project cascades note but retains project",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-boundary-050",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Deleting task belonging to project retains project",
+      "status": "PASS",
+      "durationMs": 0.91
+    },
+    {
+      "id": "approval-boundary-051",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Creating and deleting note with identical title succeeds across cycles",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "approval-boundary-052",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Multi-turn tool execution maintains separate tool limits per turn",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-boundary-053",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_task enforces maxCallsPerTurn = 3 exactly",
+      "status": "PASS",
+      "durationMs": 0.99
+    },
+    {
+      "id": "approval-boundary-054",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "delete_note enforces maxCallsPerTurn = 2 exactly",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-boundary-055",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "notify_owner enforces maxCallsPerTurn = 1 exactly",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-boundary-056",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Global budget limit = 1 allows exactly 1 call and rejects 2nd",
+      "status": "PASS",
+      "durationMs": 0.79
+    },
+    {
+      "id": "approval-boundary-057",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Global budget limit = 5 allows 5 calls across different tools and blocks 6th",
+      "status": "PASS",
+      "durationMs": 1.06
+    },
+    {
+      "id": "approval-boundary-058",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Duplicate tool calls with different key ordering in JSON payload are correctly blocked",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-boundary-059",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Duplicate tool calls with undefined properties produce matching signatures",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-boundary-060",
+      "domain": "approval-tools",
+      "category": "boundary",
+      "description": "Tool executor handles maxCallsPerTurn undefined by respecting only global budget",
+      "status": "PASS",
+      "durationMs": 1.08
+    },
+    {
+      "id": "approval-failure-001",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task directly in executor does not delete task from DB",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-002",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task with confirmed: true does NOT bypass approval card",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-failure-003",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task with force: true does NOT bypass approval card",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-failure-004",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task with sudo/admin/approve flags does NOT bypass approval card",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-failure-005",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_note directly in executor does not delete note from DB",
+      "status": "PASS",
+      "durationMs": 0.79
+    },
+    {
+      "id": "approval-failure-006",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "forget_memory directly in executor does not delete memory from DB",
+      "status": "PASS",
+      "durationMs": 0.81
+    },
+    {
+      "id": "approval-failure-007",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "cancel_automation directly in executor does not delete automation from DB",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-failure-008",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task in scheduled mode is blocked as unavailable tool",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "approval-failure-009",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_note in scheduled mode is blocked as unavailable tool",
+      "status": "PASS",
+      "durationMs": 0.75
+    },
+    {
+      "id": "approval-failure-010",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "forget_memory in scheduled mode is blocked as unavailable tool",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-failure-011",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "cancel_automation in scheduled mode is blocked as unavailable tool",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-failure-012",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Destructive tool execution without conversationId throws ToolError",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-failure-013",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction on non-existent action ID throws NotFoundError",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-failure-014",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction on empty string action ID throws NotFoundError",
+      "status": "PASS",
+      "durationMs": 0.76
+    },
+    {
+      "id": "approval-failure-015",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction rejects non-destructive tool name with NotFoundError",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-016",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction on already approved action throws AppError CONFLICT",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-failure-017",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction on cancelled action throws AppError CONFLICT",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-018",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "runApprovedAction on expired action throws AppError CONFLICT with expired text",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-019",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.resolve returns false on expired action",
+      "status": "PASS",
+      "durationMs": 0.72
+    },
+    {
+      "id": "approval-failure-020",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.resolve returns false on already approved action",
+      "status": "PASS",
+      "durationMs": 0.73
+    },
+    {
+      "id": "approval-failure-021",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.resolve returns false on already cancelled action",
+      "status": "PASS",
+      "durationMs": 0.7
+    },
+    {
+      "id": "approval-failure-022",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.resolve returns false on non-existent action ID",
+      "status": "PASS",
+      "durationMs": 0.67
+    },
+    {
+      "id": "approval-failure-023",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.view returns null on non-existent action ID",
+      "status": "PASS",
+      "durationMs": 0.69
+    },
+    {
+      "id": "approval-failure-024",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "pendingActions.get returns null on non-existent action ID",
+      "status": "PASS",
+      "durationMs": 0.66
+    },
+    {
+      "id": "approval-failure-025",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Cancelled action preserves target note from being deleted",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-failure-026",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Cancelled action preserves target memory from being deleted",
+      "status": "PASS",
+      "durationMs": 0.89
+    },
+    {
+      "id": "approval-failure-027",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Cancelled action preserves target automation from being deleted",
+      "status": "PASS",
+      "durationMs": 0.88
+    },
+    {
+      "id": "approval-failure-028",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Expired action preserves target task from being deleted",
+      "status": "PASS",
+      "durationMs": 0.85
+    },
+    {
+      "id": "approval-failure-029",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Expired action preserves target note from being deleted",
+      "status": "PASS",
+      "durationMs": 0.87
+    },
+    {
+      "id": "approval-failure-030",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Expired action preserves target memory from being deleted",
+      "status": "PASS",
+      "durationMs": 0.88
+    },
+    {
+      "id": "approval-failure-031",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "create_task without title rejects with validation error",
+      "status": "PASS",
+      "durationMs": 1.17
+    },
+    {
+      "id": "approval-failure-032",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "create_task with empty string title rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "approval-failure-033",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "create_task with invalid priority rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-034",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "create_task with title exceeding 300 chars rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-failure-035",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task without task parameter rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.87
+    },
+    {
+      "id": "approval-failure-036",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task with empty string task parameter rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-failure-037",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_task with non-existent task reference throws ToolError not found",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-failure-038",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_note without id parameter rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.74
+    },
+    {
+      "id": "approval-failure-039",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "delete_note with non-existent id throws ToolError Note not found",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-failure-040",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "forget_memory without id parameter rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-failure-041",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "forget_memory with non-existent id throws ToolError Memory not found",
+      "status": "PASS",
+      "durationMs": 0.77
+    },
+    {
+      "id": "approval-failure-042",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "cancel_automation without id parameter rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.82
+    },
+    {
+      "id": "approval-failure-043",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "cancel_automation with non-existent id throws ToolError Automation not found",
+      "status": "PASS",
+      "durationMs": 0.83
+    },
+    {
+      "id": "approval-failure-044",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "create_note with content exceeding 20000 chars rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.91
+    },
+    {
+      "id": "approval-failure-045",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "remember with invalid category rejects with validation error",
+      "status": "PASS",
+      "durationMs": 0.84
+    },
+    {
+      "id": "approval-failure-046",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Exact duplicate tool call with same arguments throws ToolError",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-failure-047",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Duplicate read tool call with empty object throws ToolError",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "approval-failure-048",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Executing completely unknown tool name throws ToolError",
+      "status": "PASS",
+      "durationMs": 0.73
+    },
+    {
+      "id": "approval-failure-049",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "When global maxToolCalls is 0 all tools are unavailable",
+      "status": "PASS",
+      "durationMs": 0.71
+    },
+    {
+      "id": "approval-failure-050",
+      "domain": "approval-tools",
+      "category": "failure",
+      "description": "Validation failures do not count against turn call budget",
+      "status": "PASS",
+      "durationMs": 1.04
+    },
+    {
+      "id": "approval-concurrency-001",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "2 concurrent runApprovedAction calls on same action: exactly 1 succeeds, 1 fails with CONFLICT",
+      "status": "PASS",
+      "durationMs": 1.07
+    },
+    {
+      "id": "approval-concurrency-002",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "3 concurrent runApprovedAction calls on same action: exactly 1 succeeds, 2 fail with CONFLICT",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-concurrency-003",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "5 concurrent runApprovedAction calls on same action: exactly 1 succeeds, 4 fail with CONFLICT",
+      "status": "PASS",
+      "durationMs": 1.18
+    },
+    {
+      "id": "approval-concurrency-004",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "10 concurrent runApprovedAction calls on same action: exactly 1 succeeds, 9 fail with CONFLICT",
+      "status": "PASS",
+      "durationMs": 1.2
+    },
+    {
+      "id": "approval-concurrency-005",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "20 concurrent runApprovedAction calls on same action: exactly 1 succeeds, 19 fail with CONFLICT",
+      "status": "PASS",
+      "durationMs": 6.23
+    },
+    {
+      "id": "approval-concurrency-006",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approval race deletes task exactly once in database without error",
+      "status": "PASS",
+      "durationMs": 1.22
+    },
+    {
+      "id": "approval-concurrency-007",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approval race creates exactly one activity log entry",
+      "status": "PASS",
+      "durationMs": 1.07
+    },
+    {
+      "id": "approval-concurrency-008",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approvals on note deletion: exactly 1 succeeds, note deleted once",
+      "status": "PASS",
+      "durationMs": 0.98
+    },
+    {
+      "id": "approval-concurrency-009",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approvals on memory deletion: exactly 1 succeeds, memory deleted once",
+      "status": "PASS",
+      "durationMs": 1.29
+    },
+    {
+      "id": "approval-concurrency-010",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approvals on automation deletion: exactly 1 succeeds, auto deleted once",
+      "status": "PASS",
+      "durationMs": 0.92
+    },
+    {
+      "id": "approval-concurrency-011",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approvals with microtask delays: first to claim wins atomically",
+      "status": "PASS",
+      "durationMs": 4.8
+    },
+    {
+      "id": "approval-concurrency-012",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "All rejected concurrent calls receive CONFLICT error code",
+      "status": "PASS",
+      "durationMs": 1.37
+    },
+    {
+      "id": "approval-concurrency-013",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Action status in DB is never corrupted during high-concurrency race",
+      "status": "PASS",
+      "durationMs": 1.07
+    },
+    {
+      "id": "approval-concurrency-014",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Subsequent calls after concurrent race continue to be rejected",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-concurrency-015",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent resolve with approved status directly in repository is atomic",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-concurrency-016",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent approval vs cancel: exactly one operation wins",
+      "status": "PASS",
+      "durationMs": 1.1
+    },
+    {
+      "id": "approval-concurrency-017",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent 5 approvals vs 5 cancellations on same action: exactly 1 total winner",
+      "status": "PASS",
+      "durationMs": 1.18
+    },
+    {
+      "id": "approval-concurrency-018",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "1 approval vs 10 parallel cancellations: exactly 1 total winner",
+      "status": "PASS",
+      "durationMs": 0.98
+    },
+    {
+      "id": "approval-concurrency-019",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent cancel vs cancel: exactly one succeeds with true, others false",
+      "status": "PASS",
+      "durationMs": 0.73
+    },
+    {
+      "id": "approval-concurrency-020",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Cancel winning race prevents task deletion and sets status cancelled",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "approval-concurrency-021",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Approve winning race prevents subsequent cancel from returning true",
+      "status": "PASS",
+      "durationMs": 1.23
+    },
+    {
+      "id": "approval-concurrency-022",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Interleaved race across 5 separate tasks: each task has exactly 1 winner",
+      "status": "PASS",
+      "durationMs": 1.39
+    },
+    {
+      "id": "approval-concurrency-023",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Race condition on note deletion maintains note consistency",
+      "status": "PASS",
+      "durationMs": 1.1
+    },
+    {
+      "id": "approval-concurrency-024",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Race condition on memory deletion maintains memory consistency",
+      "status": "PASS",
+      "durationMs": 1.09
+    },
+    {
+      "id": "approval-concurrency-025",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Race condition on automation cancellation maintains automation consistency",
+      "status": "PASS",
+      "durationMs": 1
+    },
+    {
+      "id": "approval-concurrency-026",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Cancellation race does not create orphan records in database",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-concurrency-027",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Approval race does not create duplicate rows in tal_pending_actions",
+      "status": "PASS",
+      "durationMs": 0.93
+    },
+    {
+      "id": "approval-concurrency-028",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Repeated cancellation attempts after approval continue returning false",
+      "status": "PASS",
+      "durationMs": 0.95
+    },
+    {
+      "id": "approval-concurrency-029",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "10 independent pending actions approved concurrently via Promise.all: all 10 succeed",
+      "status": "PASS",
+      "durationMs": 1.6
+    },
+    {
+      "id": "approval-concurrency-030",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "20 independent pending actions approved concurrently: all 20 succeed",
+      "status": "PASS",
+      "durationMs": 1.92
+    },
+    {
+      "id": "approval-concurrency-031",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Mixed concurrent batch: 5 independent approvals + 5 independent cancellations all succeed",
+      "status": "PASS",
+      "durationMs": 1.75
+    },
+    {
+      "id": "approval-concurrency-032",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "10 concurrent tool executions creating tasks simultaneously succeed without ID collisions",
+      "status": "PASS",
+      "durationMs": 1.25
+    },
+    {
+      "id": "approval-concurrency-033",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Parallel execution across different tool types (task, note, memory, project) succeeds",
+      "status": "PASS",
+      "durationMs": 1.78
+    },
+    {
+      "id": "approval-concurrency-034",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent queries on pendingActions.view during active state changes",
+      "status": "PASS",
+      "durationMs": 1.1
+    },
+    {
+      "id": "approval-concurrency-035",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent queries on pendingActions.get during active state changes",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-concurrency-036",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Multiple sequential approval attempts after race continuously reject with CONFLICT",
+      "status": "PASS",
+      "durationMs": 0.91
+    },
+    {
+      "id": "approval-concurrency-037",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Multiple sequential cancel attempts after race continuously return false",
+      "status": "PASS",
+      "durationMs": 1.71
+    },
+    {
+      "id": "approval-concurrency-038",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Concurrent withCurrentStatus calls return consistent snapshot",
+      "status": "PASS",
+      "durationMs": 1.14
+    },
+    {
+      "id": "approval-concurrency-039",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Resolving non-existent action in parallel across threads always returns false",
+      "status": "PASS",
+      "durationMs": 0.8
+    },
+    {
+      "id": "approval-concurrency-040",
+      "domain": "approval-tools",
+      "category": "concurrency",
+      "description": "Target item state is strictly binary: either completely intact or completely deleted",
+      "status": "PASS",
+      "durationMs": 9.91
+    },
+    {
+      "id": "approval-recovery-001",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "When tool.commit throws ToolError, status is marked failed with error message",
+      "status": "PASS",
+      "durationMs": 1.51
+    },
+    {
+      "id": "approval-recovery-002",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "When tool.commit throws generic Error, status is marked failed with generic error message",
+      "status": "PASS",
+      "durationMs": 1.64
+    },
+    {
+      "id": "approval-recovery-003",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "When action execution fails, resolved_at is recorded in database",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "approval-recovery-004",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "runApprovedAction does not throw when action fails; returns failed PendingAction",
+      "status": "PASS",
+      "durationMs": 1
+    },
+    {
+      "id": "approval-recovery-005",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "markFailed handles undefined or non-string errors safely without crashing",
+      "status": "PASS",
+      "durationMs": 0.78
+    },
+    {
+      "id": "approval-recovery-006",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Action status failed is visible in withCurrentStatus",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "approval-recovery-007",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Activity log does not record success when action execution fails",
+      "status": "PASS",
+      "durationMs": 0.98
+    },
+    {
+      "id": "approval-recovery-008",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Failed action cannot subsequently be approved",
+      "status": "PASS",
+      "durationMs": 1.17
+    },
+    {
+      "id": "approval-recovery-009",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Failed action cannot subsequently be cancelled",
+      "status": "PASS",
+      "durationMs": 1.05
+    },
+    {
+      "id": "approval-recovery-010",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Failed action preserves error details across view reloads",
+      "status": "PASS",
+      "durationMs": 0.89
+    },
+    {
+      "id": "approval-recovery-011",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Destructive tool that mutates DB before throwing error rolls back DB mutations",
+      "status": "PASS",
+      "durationMs": 1.27
+    },
+    {
+      "id": "approval-recovery-012",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Multi-table mutation rollback: task deletion and note creation rolled back atomically",
+      "status": "PASS",
+      "durationMs": 1.22
+    },
+    {
+      "id": "approval-recovery-013",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Activity log written during failed commit is rolled back atomically",
+      "status": "PASS",
+      "durationMs": 1.07
+    },
+    {
+      "id": "approval-recovery-014",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Failed commit rollback does not affect pre-existing unrelated data",
+      "status": "PASS",
+      "durationMs": 1.16
+    },
+    {
+      "id": "approval-recovery-015",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Batch deletion tool rollback restores all deleted items if one item fails",
+      "status": "PASS",
+      "durationMs": 1.01
+    },
+    {
+      "id": "approval-recovery-016",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Rollback preserves pending action status failed in DB",
+      "status": "PASS",
+      "durationMs": 0.96
+    },
+    {
+      "id": "approval-recovery-017",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Async tool commit error properly records failed status",
+      "status": "PASS",
+      "durationMs": 7.21
+    },
+    {
+      "id": "approval-recovery-018",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Async tool commit success permanently commits changes",
+      "status": "PASS",
+      "durationMs": 289.4
+    },
+    {
+      "id": "approval-recovery-019",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "When tool commit succeeds, database mutations are committed permanently",
+      "status": "PASS",
+      "durationMs": 1.17
+    },
+    {
+      "id": "approval-recovery-020",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Tool commit throwing non-Error object stringifies error message safely",
+      "status": "PASS",
+      "durationMs": 1.12
+    },
+    {
+      "id": "approval-recovery-021",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired deletes pending actions whose expires_at is in the past",
+      "status": "PASS",
+      "durationMs": 0.75
+    },
+    {
+      "id": "approval-recovery-022",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired does NOT delete active, unexpired pending actions",
+      "status": "PASS",
+      "durationMs": 0.62
+    },
+    {
+      "id": "approval-recovery-023",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired does NOT delete approved actions even if expires_at is past",
+      "status": "PASS",
+      "durationMs": 0.63
+    },
+    {
+      "id": "approval-recovery-024",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired does NOT delete cancelled actions even if expires_at is past",
+      "status": "PASS",
+      "durationMs": 0.64
+    },
+    {
+      "id": "approval-recovery-025",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired does NOT delete failed actions even if expires_at is past",
+      "status": "PASS",
+      "durationMs": 0.65
+    },
+    {
+      "id": "approval-recovery-026",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired with olderThanMs only deletes actions expired past threshold",
+      "status": "PASS",
+      "durationMs": 0.68
+    },
+    {
+      "id": "approval-recovery-027",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "pendingActions.create automatically cleans up timed-out expired pending actions",
+      "status": "PASS",
+      "durationMs": 0.66
+    },
+    {
+      "id": "approval-recovery-028",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired handles purge of 50 expired actions efficiently",
+      "status": "PASS",
+      "durationMs": 1.2
+    },
+    {
+      "id": "approval-recovery-029",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "cleanupExpired on empty database returns 0 changes without error",
+      "status": "PASS",
+      "durationMs": 0.67
+    },
+    {
+      "id": "approval-recovery-030",
+      "domain": "approval-tools",
+      "category": "recovery",
+      "description": "Referential integrity is maintained after expired action cleanup",
+      "status": "PASS",
+      "durationMs": 0.74
+    }
+  ],
+  "defects": []
+}

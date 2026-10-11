@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-10-11T23:02:46.680Z",
+  "allPassed": true,
+  "results": [
+    {
+      "domain": "recurrence-engine",
+      "description": "Re-introduce defect: Remove integer check in isValidCalendarDate allowing float dates",
+      "targetFile": "packages/shared/src/recurrence.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "security-schemas",
+      "description": "Re-introduce defect: Remove Unicode/dotAll flag in repeated char regex (bypass single char repeat with emoji)",
+      "targetFile": "packages/shared/src/password-policy.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "vector-math",
+      "description": "Re-introduce defect: Remove non-finite guards in dot() causing NaN/Infinity return",
+      "targetFile": "apps/agent/src/semantic/vectorStore.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "backup-serialization",
+      "description": "Re-introduce defect: Disable prototype pollution check on importData",
+      "targetFile": "apps/agent/src/services/backup.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "time-scheduling",
+      "description": "Re-introduce defect: Remove calendar date validation allowing invalid dates like 2026-02-31",
+      "targetFile": "apps/agent/src/services/time.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "approval-tools",
+      "description": "Re-introduce defect: Remove transaction wrapper around commit execution causing dirty rollback failure",
+      "targetFile": "apps/agent/src/tools/registry.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "computer-state",
+      "description": "Re-introduce defect: Remove session running status check in beginAction()",
+      "targetFile": "services/computer-manager/state.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    },
+    {
+      "domain": "localization-api",
+      "description": "Re-introduce defect: Remove try/catch timezone fallback in buildSystemPrompt()",
+      "targetFile": "apps/agent/src/agent/prompt.ts",
+      "mutated": true,
+      "failDetected": true,
+      "revertedClean": true
+    }
+  ]
+}

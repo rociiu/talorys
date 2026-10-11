@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-10-11T22:33:41.201Z",
+  "timestamp": "2026-10-11T22:53:41.652Z",
   "domain": "Backup & State Serialization",
   "total": 250,
   "passed": 250,
   "failed": 0,
   "errored": 0,
-  "durationMs": 296.45,
+  "durationMs": 286.57,
   "categoryBreakdown": {
     "normal": {
       "total": 70,
@@ -45,7 +45,7 @@
       "category": "normal",
       "description": "Export empty database produces valid Backup format and version",
       "status": "PASS",
-      "durationMs": 4.6
+      "durationMs": 5.46
     },
     {
       "id": "BK-NORM-002",
@@ -53,7 +53,7 @@
       "category": "normal",
       "description": "Export single task serializes all fields faithfully",
       "status": "PASS",
-      "durationMs": 1.1
+      "durationMs": 1.12
     },
     {
       "id": "BK-NORM-003",
@@ -69,7 +69,7 @@
       "category": "normal",
       "description": "Export single memory serializes category and source",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.92
     },
     {
       "id": "BK-NORM-005",
@@ -77,7 +77,7 @@
       "category": "normal",
       "description": "Export single project serializes status and timestamps",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.85
     },
     {
       "id": "BK-NORM-006",
@@ -85,7 +85,7 @@
       "category": "normal",
       "description": "Export single conversation serializes summary and summary_upto",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.91
     },
     {
       "id": "BK-NORM-007",
@@ -93,7 +93,7 @@
       "category": "normal",
       "description": "Export single message serializes tools and role",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.82
     },
     {
       "id": "BK-NORM-008",
@@ -101,7 +101,7 @@
       "category": "normal",
       "description": "Export automation serializes schedule as parsed JSON object",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.89
     },
     {
       "id": "BK-NORM-009",
@@ -109,7 +109,7 @@
       "category": "normal",
       "description": "Export with modified settings serializes custom configuration",
       "status": "PASS",
-      "durationMs": 1.76
+      "durationMs": 1.62
     },
     {
       "id": "BK-NORM-010",
@@ -117,7 +117,7 @@
       "category": "normal",
       "description": "Export roundtrip for task status 'todo'",
       "status": "PASS",
-      "durationMs": 3.37
+      "durationMs": 3.15
     },
     {
       "id": "BK-NORM-011",
@@ -125,7 +125,7 @@
       "category": "normal",
       "description": "Export roundtrip for task status 'in_progress'",
       "status": "PASS",
-      "durationMs": 1.09
+      "durationMs": 1.06
     },
     {
       "id": "BK-NORM-012",
@@ -133,7 +133,7 @@
       "category": "normal",
       "description": "Export roundtrip for task status 'done'",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 1
     },
     {
       "id": "BK-NORM-013",
@@ -141,7 +141,7 @@
       "category": "normal",
       "description": "Export roundtrip for task priority 'low'",
       "status": "PASS",
-      "durationMs": 1.07
+      "durationMs": 1.18
     },
     {
       "id": "BK-NORM-014",
@@ -149,7 +149,7 @@
       "category": "normal",
       "description": "Export roundtrip for task priority 'medium'",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 1.01
     },
     {
       "id": "BK-NORM-015",
@@ -157,7 +157,7 @@
       "category": "normal",
       "description": "Export roundtrip for task priority 'high'",
       "status": "PASS",
-      "durationMs": 1.21
+      "durationMs": 1.14
     },
     {
       "id": "BK-NORM-016",
@@ -165,7 +165,7 @@
       "category": "normal",
       "description": "Export roundtrip for task priority 'urgent'",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 1.01
     },
     {
       "id": "BK-NORM-017",
@@ -173,7 +173,7 @@
       "category": "normal",
       "description": "Export roundtrip for task with completed_at set",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 0.99
     },
     {
       "id": "BK-NORM-018",
@@ -181,7 +181,7 @@
       "category": "normal",
       "description": "Export roundtrip for task with completed_at null",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.94
     },
     {
       "id": "BK-NORM-019",
@@ -189,7 +189,7 @@
       "category": "normal",
       "description": "Export roundtrip for task linked to existing project",
       "status": "PASS",
-      "durationMs": 1.43
+      "durationMs": 1.35
     },
     {
       "id": "BK-NORM-020",
@@ -205,7 +205,7 @@
       "category": "normal",
       "description": "Export roundtrip for note linked to existing project",
       "status": "PASS",
-      "durationMs": 1.47
+      "durationMs": 1.36
     },
     {
       "id": "BK-NORM-022",
@@ -213,7 +213,7 @@
       "category": "normal",
       "description": "Export roundtrip for note unlinked from any project",
       "status": "PASS",
-      "durationMs": 1.08
+      "durationMs": 1.01
     },
     {
       "id": "BK-NORM-023",
@@ -221,7 +221,7 @@
       "category": "normal",
       "description": "Export roundtrip for memory category 'preference'",
       "status": "PASS",
-      "durationMs": 1.36
+      "durationMs": 1.27
     },
     {
       "id": "BK-NORM-024",
@@ -237,7 +237,7 @@
       "category": "normal",
       "description": "Export roundtrip for memory category 'goal'",
       "status": "PASS",
-      "durationMs": 1
+      "durationMs": 0.98
     },
     {
       "id": "BK-NORM-026",
@@ -245,7 +245,7 @@
       "category": "normal",
       "description": "Export roundtrip for memory category 'project'",
       "status": "PASS",
-      "durationMs": 0.98
+      "durationMs": 0.96
     },
     {
       "id": "BK-NORM-027",
@@ -261,7 +261,7 @@
       "category": "normal",
       "description": "Export roundtrip for memory category 'person'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.95
     },
     {
       "id": "BK-NORM-029",
@@ -269,7 +269,7 @@
       "category": "normal",
       "description": "Export roundtrip for memory category 'other'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 1
     },
     {
       "id": "BK-NORM-030",
@@ -277,7 +277,7 @@
       "category": "normal",
       "description": "Export roundtrip for project status 'active'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.93
     },
     {
       "id": "BK-NORM-031",
@@ -285,7 +285,7 @@
       "category": "normal",
       "description": "Export roundtrip for project status 'paused'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.94
     },
     {
       "id": "BK-NORM-032",
@@ -293,7 +293,7 @@
       "category": "normal",
       "description": "Export roundtrip for project status 'completed'",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 0.96
     },
     {
       "id": "BK-NORM-033",
@@ -301,7 +301,7 @@
       "category": "normal",
       "description": "Export roundtrip for project status 'archived'",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 1.04
     },
     {
       "id": "BK-NORM-034",
@@ -309,7 +309,7 @@
       "category": "normal",
       "description": "Export roundtrip for message with user role",
       "status": "PASS",
-      "durationMs": 1.63
+      "durationMs": 1.48
     },
     {
       "id": "BK-NORM-035",
@@ -317,7 +317,7 @@
       "category": "normal",
       "description": "Export roundtrip for message with assistant role",
       "status": "PASS",
-      "durationMs": 1.1
+      "durationMs": 1.01
     },
     {
       "id": "BK-NORM-036",
@@ -325,7 +325,7 @@
       "category": "normal",
       "description": "Export roundtrip for message status 'complete'",
       "status": "PASS",
-      "durationMs": 1.1
+      "durationMs": 0.96
     },
     {
       "id": "BK-NORM-037",
@@ -333,7 +333,7 @@
       "category": "normal",
       "description": "Export roundtrip for message status 'error'",
       "status": "PASS",
-      "durationMs": 1
+      "durationMs": 0.94
     },
     {
       "id": "BK-NORM-038",
@@ -349,7 +349,7 @@
       "category": "normal",
       "description": "Export roundtrip for message tool activities list",
       "status": "PASS",
-      "durationMs": 0.96
+      "durationMs": 0.93
     },
     {
       "id": "BK-NORM-040",
@@ -357,7 +357,7 @@
       "category": "normal",
       "description": "Export roundtrip for message with error text",
       "status": "PASS",
-      "durationMs": 0.98
+      "durationMs": 0.91
     },
     {
       "id": "BK-NORM-041",
@@ -365,7 +365,7 @@
       "category": "normal",
       "description": "Export roundtrip for message without error (null)",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.94
     },
     {
       "id": "BK-NORM-042",
@@ -373,7 +373,7 @@
       "category": "normal",
       "description": "Conversation conflict update updates summary and summary_upto",
       "status": "PASS",
-      "durationMs": 1.12
+      "durationMs": 1.07
     },
     {
       "id": "BK-NORM-043",
@@ -381,7 +381,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation kind 'reminder'",
       "status": "PASS",
-      "durationMs": 1.91
+      "durationMs": 1.89
     },
     {
       "id": "BK-NORM-044",
@@ -389,7 +389,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation kind 'task_digest'",
       "status": "PASS",
-      "durationMs": 1.12
+      "durationMs": 1.09
     },
     {
       "id": "BK-NORM-045",
@@ -397,7 +397,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation kind 'agent_prompt'",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.92
     },
     {
       "id": "BK-NORM-046",
@@ -405,7 +405,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation schedule 'interval'",
       "status": "PASS",
-      "durationMs": 1.23
+      "durationMs": 1.12
     },
     {
       "id": "BK-NORM-047",
@@ -413,7 +413,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation schedule 'daily'",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.94
     },
     {
       "id": "BK-NORM-048",
@@ -421,7 +421,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation schedule 'weekly'",
       "status": "PASS",
-      "durationMs": 1.39
+      "durationMs": 1.36
     },
     {
       "id": "BK-NORM-049",
@@ -429,7 +429,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation schedule 'monthly'",
       "status": "PASS",
-      "durationMs": 1.24
+      "durationMs": 1.27
     },
     {
       "id": "BK-NORM-050",
@@ -437,7 +437,7 @@
       "category": "normal",
       "description": "Export roundtrip for automation schedule 'once'",
       "status": "PASS",
-      "durationMs": 1.32
+      "durationMs": 1.29
     },
     {
       "id": "BK-NORM-051",
@@ -445,7 +445,7 @@
       "category": "normal",
       "description": "Export roundtrip for enabled automation (true)",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.93
     },
     {
       "id": "BK-NORM-052",
@@ -453,7 +453,7 @@
       "category": "normal",
       "description": "Export roundtrip for disabled automation (false)",
       "status": "PASS",
-      "durationMs": 1.04
+      "durationMs": 0.89
     },
     {
       "id": "BK-NORM-053",
@@ -461,7 +461,7 @@
       "category": "normal",
       "description": "Import summary reports accurate entity counts for mixed payload",
       "status": "PASS",
-      "durationMs": 1.3
+      "durationMs": 1.22
     },
     {
       "id": "BK-NORM-054",
@@ -469,7 +469,7 @@
       "category": "normal",
       "description": "Import roundtrip preserves markdown formatting and multiline content",
       "status": "PASS",
-      "durationMs": 0.98
+      "durationMs": 0.92
     },
     {
       "id": "BK-NORM-055",
@@ -477,7 +477,7 @@
       "category": "normal",
       "description": "Import roundtrip preserves exact created_at and updated_at timestamps",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 0.92
     },
     {
       "id": "BK-NORM-056",
@@ -485,7 +485,7 @@
       "category": "normal",
       "description": "Import roundtrip preserves core settings (timezone, theme, agentName, model, temperature)",
       "status": "PASS",
-      "durationMs": 1.02
+      "durationMs": 1
     },
     {
       "id": "BK-NORM-057",
@@ -493,7 +493,7 @@
       "category": "normal",
       "description": "Import roundtrip preserves limits settings structure",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 0.81
     },
     {
       "id": "BK-NORM-058",
@@ -501,7 +501,7 @@
       "category": "normal",
       "description": "Import roundtrip preserves autoMemory and demoMode flags",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.81
     },
     {
       "id": "BK-NORM-059",
@@ -509,7 +509,7 @@
       "category": "normal",
       "description": "Import conversations with interlinked messages maintains foreign key relationship",
       "status": "PASS",
-      "durationMs": 1.05
+      "durationMs": 0.96
     },
     {
       "id": "BK-NORM-060",
@@ -525,7 +525,7 @@
       "category": "normal",
       "description": "Import memory is immediately searchable via FTS5 virtual table",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.87
     },
     {
       "id": "BK-NORM-062",
@@ -533,7 +533,7 @@
       "category": "normal",
       "description": "Import note is immediately searchable via FTS5 virtual table",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 0.89
     },
     {
       "id": "BK-NORM-063",
@@ -541,7 +541,7 @@
       "category": "normal",
       "description": "Import records activity log entry data.imported",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.81
     },
     {
       "id": "BK-NORM-064",
@@ -549,7 +549,7 @@
       "category": "normal",
       "description": "Export signed backup generates valid HMAC-SHA256 signature",
       "status": "PASS",
-      "durationMs": 4.73
+      "durationMs": 4.29
     },
     {
       "id": "BK-NORM-065",
@@ -557,7 +557,7 @@
       "category": "normal",
       "description": "Import signed backup verifies valid HMAC and imports records",
       "status": "PASS",
-      "durationMs": 1.84
+      "durationMs": 1.9
     },
     {
       "id": "BK-NORM-066",
@@ -565,7 +565,7 @@
       "category": "normal",
       "description": "Export encrypted backup generates AES-GCM ciphertext, IV, and tag",
       "status": "PASS",
-      "durationMs": 2.06
+      "durationMs": 1.91
     },
     {
       "id": "BK-NORM-067",
@@ -573,7 +573,7 @@
       "category": "normal",
       "description": "Import encrypted backup decrypts and restores records faithfully",
       "status": "PASS",
-      "durationMs": 5.83
+      "durationMs": 4.65
     },
     {
       "id": "BK-NORM-068",
@@ -581,7 +581,7 @@
       "category": "normal",
       "description": "Simultaneous full-entity serialization roundtrip with all 8 entity types",
       "status": "PASS",
-      "durationMs": 1.65
+      "durationMs": 1.52
     },
     {
       "id": "BK-NORM-069",
@@ -597,7 +597,7 @@
       "category": "normal",
       "description": "Export excludes sensitive auth sessions and password credentials",
       "status": "PASS",
-      "durationMs": 0.95
+      "durationMs": 0.93
     },
     {
       "id": "BK-BND-001",
@@ -605,7 +605,7 @@
       "category": "boundary",
       "description": "Export database with 0 records in all tables",
       "status": "PASS",
-      "durationMs": 0.76
+      "durationMs": 0.8
     },
     {
       "id": "BK-BND-002",
@@ -613,7 +613,7 @@
       "category": "boundary",
       "description": "Import backup with all empty arrays and empty settings",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.86
     },
     {
       "id": "BK-BND-003",
@@ -621,7 +621,7 @@
       "category": "boundary",
       "description": "Note with empty content string",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 1.23
     },
     {
       "id": "BK-BND-004",
@@ -629,7 +629,7 @@
       "category": "boundary",
       "description": "Task with empty description string",
       "status": "PASS",
-      "durationMs": 1.1
+      "durationMs": 1.13
     },
     {
       "id": "BK-BND-005",
@@ -637,7 +637,7 @@
       "category": "boundary",
       "description": "Project with empty description string",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-006",
@@ -645,7 +645,7 @@
       "category": "boundary",
       "description": "Automation with empty message string",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.84
     },
     {
       "id": "BK-BND-007",
@@ -653,7 +653,7 @@
       "category": "boundary",
       "description": "Task title at max length 300 chars",
       "status": "PASS",
-      "durationMs": 1.05
+      "durationMs": 0.99
     },
     {
       "id": "BK-BND-008",
@@ -661,7 +661,7 @@
       "category": "boundary",
       "description": "Task description at max length 10,000 chars",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 0.93
     },
     {
       "id": "BK-BND-009",
@@ -669,7 +669,7 @@
       "category": "boundary",
       "description": "Note title at max length 300 chars",
       "status": "PASS",
-      "durationMs": 0.91
+      "durationMs": 0.87
     },
     {
       "id": "BK-BND-010",
@@ -677,7 +677,7 @@
       "category": "boundary",
       "description": "Note content at max length 200,000 chars",
       "status": "PASS",
-      "durationMs": 1.89
+      "durationMs": 1.78
     },
     {
       "id": "BK-BND-011",
@@ -685,7 +685,7 @@
       "category": "boundary",
       "description": "Memory content at max length 2,000 chars",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.96
     },
     {
       "id": "BK-BND-012",
@@ -693,7 +693,7 @@
       "category": "boundary",
       "description": "Project name at max length 200 chars",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 1.01
     },
     {
       "id": "BK-BND-013",
@@ -701,7 +701,7 @@
       "category": "boundary",
       "description": "Project description at max length 5,000 chars",
       "status": "PASS",
-      "durationMs": 0.89
+      "durationMs": 0.8
     },
     {
       "id": "BK-BND-014",
@@ -709,7 +709,7 @@
       "category": "boundary",
       "description": "Conversation title at max length 200 chars",
       "status": "PASS",
-      "durationMs": 1
+      "durationMs": 0.98
     },
     {
       "id": "BK-BND-015",
@@ -717,7 +717,7 @@
       "category": "boundary",
       "description": "Message content at max length 16,000 chars",
       "status": "PASS",
-      "durationMs": 1.01
+      "durationMs": 1.03
     },
     {
       "id": "BK-BND-016",
@@ -725,7 +725,7 @@
       "category": "boundary",
       "description": "Automation name at max length 200 chars",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 0.91
     },
     {
       "id": "BK-BND-017",
@@ -733,7 +733,7 @@
       "category": "boundary",
       "description": "Automation message at max length 4,000 chars",
       "status": "PASS",
-      "durationMs": 0.96
+      "durationMs": 0.9
     },
     {
       "id": "BK-BND-018",
@@ -741,7 +741,7 @@
       "category": "boundary",
       "description": "Settings agentName at max length 60 chars",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.79
     },
     {
       "id": "BK-BND-019",
@@ -749,7 +749,7 @@
       "category": "boundary",
       "description": "Multilingual Korean content in titles, descriptions, and content",
       "status": "PASS",
-      "durationMs": 0.89
+      "durationMs": 0.84
     },
     {
       "id": "BK-BND-020",
@@ -757,7 +757,7 @@
       "category": "boundary",
       "description": "Multilingual Japanese kanji and kana in all fields",
       "status": "PASS",
-      "durationMs": 1.04
+      "durationMs": 0.98
     },
     {
       "id": "BK-BND-021",
@@ -765,7 +765,7 @@
       "category": "boundary",
       "description": "Multilingual Arabic RTL content with mixed punctuation",
       "status": "PASS",
-      "durationMs": 1.04
+      "durationMs": 0.91
     },
     {
       "id": "BK-BND-022",
@@ -773,7 +773,7 @@
       "category": "boundary",
       "description": "Multi-byte emojis and skin-tone modifiers in task titles and notes",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.78
     },
     {
       "id": "BK-BND-023",
@@ -781,7 +781,7 @@
       "category": "boundary",
       "description": "Zero-width joiner sequences in message content",
       "status": "PASS",
-      "durationMs": 0.96
+      "durationMs": 0.87
     },
     {
       "id": "BK-BND-024",
@@ -789,7 +789,7 @@
       "category": "boundary",
       "description": "Control characters, escaped tabs, and newlines in note content",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.86
     },
     {
       "id": "BK-BND-025",
@@ -797,7 +797,7 @@
       "category": "boundary",
       "description": "Message with deeply nested tool activities and arguments",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 0.82
     },
     {
       "id": "BK-BND-026",
@@ -805,7 +805,7 @@
       "category": "boundary",
       "description": "Automation schedule with nested recurrence specification",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 0.91
     },
     {
       "id": "BK-BND-027",
@@ -813,7 +813,7 @@
       "category": "boundary",
       "description": "Settings with nested limits structure",
       "status": "PASS",
-      "durationMs": 0.91
+      "durationMs": 0.77
     },
     {
       "id": "BK-BND-028",
@@ -821,7 +821,7 @@
       "category": "boundary",
       "description": "Settings temperature at exact lower bound 0.0",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.76
     },
     {
       "id": "BK-BND-029",
@@ -829,7 +829,7 @@
       "category": "boundary",
       "description": "Settings temperature at exact upper bound 1.5",
       "status": "PASS",
-      "durationMs": 0.96
+      "durationMs": 0.82
     },
     {
       "id": "BK-BND-030",
@@ -837,7 +837,7 @@
       "category": "boundary",
       "description": "Settings limits at minimal valid values (tokens=64, tools=0, iterations=1, context=1000)",
       "status": "PASS",
-      "durationMs": 0.8
+      "durationMs": 0.76
     },
     {
       "id": "BK-BND-031",
@@ -845,7 +845,7 @@
       "category": "boundary",
       "description": "Settings limits at ceiling values (from LIMIT_CEILINGS)",
       "status": "PASS",
-      "durationMs": 0.78
+      "durationMs": 0.75
     },
     {
       "id": "BK-BND-032",
@@ -853,7 +853,7 @@
       "category": "boundary",
       "description": "Timestamps on leap day (2028-02-29T12:00:00.000Z)",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.81
     },
     {
       "id": "BK-BND-033",
@@ -861,7 +861,7 @@
       "category": "boundary",
       "description": "Timestamps at Unix epoch boundary (1970-01-01T00:00:00.000Z)",
       "status": "PASS",
-      "durationMs": 0.95
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-034",
@@ -869,7 +869,7 @@
       "category": "boundary",
       "description": "Timestamps at far future boundary (2099-12-31T23:59:59.999Z)",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-035",
@@ -877,7 +877,7 @@
       "category": "boundary",
       "description": "Timestamps with positive and negative timezone offsets (+09:00, -05:00)",
       "status": "PASS",
-      "durationMs": 0.81
+      "durationMs": 0.79
     },
     {
       "id": "BK-BND-036",
@@ -885,7 +885,7 @@
       "category": "boundary",
       "description": "Task due_at timestamp matching exact current millisecond",
       "status": "PASS",
-      "durationMs": 0.98
+      "durationMs": 0.87
     },
     {
       "id": "BK-BND-037",
@@ -893,7 +893,7 @@
       "category": "boundary",
       "description": "Batch import with 500 tasks in a single backup",
       "status": "PASS",
-      "durationMs": 6.19
+      "durationMs": 4.76
     },
     {
       "id": "BK-BND-038",
@@ -901,7 +901,7 @@
       "category": "boundary",
       "description": "Batch import with 500 notes in a single backup",
       "status": "PASS",
-      "durationMs": 8.61
+      "durationMs": 7.59
     },
     {
       "id": "BK-BND-039",
@@ -909,7 +909,7 @@
       "category": "boundary",
       "description": "Batch import with 50 conversations and 500 messages",
       "status": "PASS",
-      "durationMs": 4.38
+      "durationMs": 3.93
     },
     {
       "id": "BK-BND-040",
@@ -917,7 +917,7 @@
       "category": "boundary",
       "description": "Batch import with 100 interconnected projects",
       "status": "PASS",
-      "durationMs": 1.83
+      "durationMs": 1.48
     },
     {
       "id": "BK-BND-041",
@@ -925,7 +925,7 @@
       "category": "boundary",
       "description": "Batch import with 300 memories",
       "status": "PASS",
-      "durationMs": 5.2
+      "durationMs": 4.69
     },
     {
       "id": "BK-BND-042",
@@ -933,7 +933,7 @@
       "category": "boundary",
       "description": "Legacy schema backup omitting optional app_version",
       "status": "PASS",
-      "durationMs": 1.14
+      "durationMs": 0.93
     },
     {
       "id": "BK-BND-043",
@@ -941,7 +941,7 @@
       "category": "boundary",
       "description": "Legacy schema backup with minimal required fields only",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.87
     },
     {
       "id": "BK-BND-044",
@@ -949,7 +949,7 @@
       "category": "boundary",
       "description": "Legacy schema backup with unexpected extra properties on entities",
       "status": "PASS",
-      "durationMs": 1.41
+      "durationMs": 0.8
     },
     {
       "id": "BK-BND-045",
@@ -957,7 +957,7 @@
       "category": "boundary",
       "description": "Task title containing single quotes, double quotes, and semicolons",
       "status": "PASS",
-      "durationMs": 0.95
+      "durationMs": 0.84
     },
     {
       "id": "BK-BND-046",
@@ -965,7 +965,7 @@
       "category": "boundary",
       "description": "Entity with SQL injection payloads safely escaped via parameterized queries",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.79
     },
     {
       "id": "BK-BND-047",
@@ -973,7 +973,7 @@
       "category": "boundary",
       "description": "Field values with literal string 'null', 'true', 'false', '0'",
       "status": "PASS",
-      "durationMs": 1.51
+      "durationMs": 1.2
     },
     {
       "id": "BK-BND-048",
@@ -981,7 +981,7 @@
       "category": "boundary",
       "description": "Message tools field containing empty array string vs parsed array",
       "status": "PASS",
-      "durationMs": 0.95
+      "durationMs": 0.83
     },
     {
       "id": "BK-BND-049",
@@ -989,7 +989,7 @@
       "category": "boundary",
       "description": "Tool activity with approval in status 'pending'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-050",
@@ -997,7 +997,7 @@
       "category": "boundary",
       "description": "Tool activity with approval in status 'approved'",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-051",
@@ -1005,7 +1005,7 @@
       "category": "boundary",
       "description": "Tool activity with approval in status 'cancelled'",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 1.19
     },
     {
       "id": "BK-BND-052",
@@ -1013,7 +1013,7 @@
       "category": "boundary",
       "description": "Tool activity with approval in status 'expired'",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.83
     },
     {
       "id": "BK-BND-053",
@@ -1021,7 +1021,7 @@
       "category": "boundary",
       "description": "Tool activity with approval in status 'failed'",
       "status": "PASS",
-      "durationMs": 1.05
+      "durationMs": 1.03
     },
     {
       "id": "BK-BND-054",
@@ -1029,7 +1029,7 @@
       "category": "boundary",
       "description": "Automation schedule monthly on day 31 (month-end boundary)",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-055",
@@ -1037,7 +1037,7 @@
       "category": "boundary",
       "description": "Automation schedule weekly spanning all 7 days",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.91
     },
     {
       "id": "BK-BND-056",
@@ -1045,7 +1045,7 @@
       "category": "boundary",
       "description": "Project status unknown string falls back safely to 'active'",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.78
     },
     {
       "id": "BK-BND-057",
@@ -1053,7 +1053,7 @@
       "category": "boundary",
       "description": "Task priority unknown string falls back safely to 'medium'",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.83
     },
     {
       "id": "BK-BND-058",
@@ -1061,7 +1061,7 @@
       "category": "boundary",
       "description": "Memory category unknown string falls back safely to 'other'",
       "status": "PASS",
-      "durationMs": 0.85
+      "durationMs": 0.82
     },
     {
       "id": "BK-BND-059",
@@ -1069,7 +1069,7 @@
       "category": "boundary",
       "description": "Message status unknown string falls back safely to 'complete'",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.85
     },
     {
       "id": "BK-BND-060",
@@ -1077,7 +1077,7 @@
       "category": "boundary",
       "description": "Note with non-existent foreign project_id safely normalizes to null",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.85
     },
     {
       "id": "BK-FAIL-001",
@@ -1085,7 +1085,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: single bit flipped in encrypted payload rejected",
       "status": "PASS",
-      "durationMs": 3.67
+      "durationMs": 4.07
     },
     {
       "id": "BK-FAIL-002",
@@ -1093,7 +1093,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: truncated ciphertext rejected during decryption",
       "status": "PASS",
-      "durationMs": 2.84
+      "durationMs": 2.39
     },
     {
       "id": "BK-FAIL-003",
@@ -1101,7 +1101,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: modified IV in encrypted payload rejected",
       "status": "PASS",
-      "durationMs": 2.5
+      "durationMs": 2.49
     },
     {
       "id": "BK-FAIL-004",
@@ -1109,7 +1109,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: empty ciphertext string rejected by schema",
       "status": "PASS",
-      "durationMs": 0.21
+      "durationMs": 0.19
     },
     {
       "id": "BK-FAIL-005",
@@ -1117,7 +1117,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: non-base64 malformed ciphertext rejected",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.74
     },
     {
       "id": "BK-FAIL-006",
@@ -1125,7 +1125,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: altered authentication tag in AES-GCM rejected",
       "status": "PASS",
-      "durationMs": 2.61
+      "durationMs": 2.51
     },
     {
       "id": "BK-FAIL-007",
@@ -1133,7 +1133,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: completely corrupted random bytes ciphertext rejected",
       "status": "PASS",
-      "durationMs": 0.9
+      "durationMs": 0.87
     },
     {
       "id": "BK-FAIL-008",
@@ -1141,7 +1141,7 @@
       "category": "failure",
       "description": "Tampered ciphertext: ciphertext swapped between two different backups rejected",
       "status": "PASS",
-      "durationMs": 4.22
+      "durationMs": 2.89
     },
     {
       "id": "BK-FAIL-009",
@@ -1149,7 +1149,7 @@
       "category": "failure",
       "description": "HMAC mismatch: altered data payload with original HMAC rejected",
       "status": "PASS",
-      "durationMs": 1.18
+      "durationMs": 1.69
     },
     {
       "id": "BK-FAIL-010",
@@ -1157,7 +1157,7 @@
       "category": "failure",
       "description": "HMAC mismatch: single character changed in task title causes rejection",
       "status": "PASS",
-      "durationMs": 0.79
+      "durationMs": 1
     },
     {
       "id": "BK-FAIL-011",
@@ -1165,7 +1165,7 @@
       "category": "failure",
       "description": "HMAC mismatch: single character changed in exported_at timestamp causes rejection",
       "status": "PASS",
-      "durationMs": 0.81
+      "durationMs": 0.73
     },
     {
       "id": "BK-FAIL-012",
@@ -1173,7 +1173,7 @@
       "category": "failure",
       "description": "HMAC mismatch: format string changed causes rejection",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 0.71
     },
     {
       "id": "BK-FAIL-013",
@@ -1181,7 +1181,7 @@
       "category": "failure",
       "description": "HMAC mismatch: empty HMAC string rejected",
       "status": "PASS",
-      "durationMs": 0.73
+      "durationMs": 0.67
     },
     {
       "id": "BK-FAIL-014",
@@ -1189,7 +1189,7 @@
       "category": "failure",
       "description": "HMAC mismatch: invalid length or non-hex HMAC string rejected",
       "status": "PASS",
-      "durationMs": 0.66
+      "durationMs": 0.7
     },
     {
       "id": "BK-FAIL-015",
@@ -1197,7 +1197,7 @@
       "category": "failure",
       "description": "HMAC mismatch: verification with wrong secret key fails",
       "status": "PASS",
-      "durationMs": 0.77
+      "durationMs": 0.71
     },
     {
       "id": "BK-FAIL-016",
@@ -1205,7 +1205,7 @@
       "category": "failure",
       "description": "HMAC mismatch: truncated HMAC string rejected",
       "status": "PASS",
-      "durationMs": 0.85
+      "durationMs": 0.74
     },
     {
       "id": "BK-FAIL-017",
@@ -1213,7 +1213,7 @@
       "category": "failure",
       "description": "Prototype pollution: __proto__ injected at root of backup data rejected",
       "status": "PASS",
-      "durationMs": 0.91
+      "durationMs": 0.88
     },
     {
       "id": "BK-FAIL-018",
@@ -1221,7 +1221,7 @@
       "category": "failure",
       "description": "Prototype pollution: __proto__ injected inside settings rejected",
       "status": "PASS",
-      "durationMs": 0.67
+      "durationMs": 0.72
     },
     {
       "id": "BK-FAIL-019",
@@ -1229,7 +1229,7 @@
       "category": "failure",
       "description": "Prototype pollution: constructor property injected inside settings rejected",
       "status": "PASS",
-      "durationMs": 0.72
+      "durationMs": 0.7
     },
     {
       "id": "BK-FAIL-020",
@@ -1261,7 +1261,7 @@
       "category": "failure",
       "description": "Prototype pollution: __proto__ injected inside memories entity rejected",
       "status": "PASS",
-      "durationMs": 0.74
+      "durationMs": 0.86
     },
     {
       "id": "BK-FAIL-024",
@@ -1269,7 +1269,7 @@
       "category": "failure",
       "description": "Prototype pollution: __proto__ injected inside automations entity rejected",
       "status": "PASS",
-      "durationMs": 0.72
+      "durationMs": 0.73
     },
     {
       "id": "BK-FAIL-025",
@@ -1285,7 +1285,7 @@
       "category": "failure",
       "description": "Prototype pollution: nested __proto__ inside limits settings rejected",
       "status": "PASS",
-      "durationMs": 0.74
+      "durationMs": 0.76
     },
     {
       "id": "BK-FAIL-027",
@@ -1293,7 +1293,7 @@
       "category": "failure",
       "description": "Prototype pollution: prototype property injected in settings rejected",
       "status": "PASS",
-      "durationMs": 0.75
+      "durationMs": 0.68
     },
     {
       "id": "BK-FAIL-028",
@@ -1301,7 +1301,7 @@
       "category": "failure",
       "description": "Prototype pollution: __proto__ in message entity rejected",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 0.71
     },
     {
       "id": "BK-FAIL-029",
@@ -1309,7 +1309,7 @@
       "category": "failure",
       "description": "Missing required fields: backup missing 'format' rejected by schema",
       "status": "PASS",
-      "durationMs": 1.25
+      "durationMs": 1.89
     },
     {
       "id": "BK-FAIL-030",
@@ -1317,7 +1317,7 @@
       "category": "failure",
       "description": "Missing required fields: backup missing 'version' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 1.42
     },
     {
       "id": "BK-FAIL-031",
@@ -1325,7 +1325,7 @@
       "category": "failure",
       "description": "Missing required fields: backup missing 'exported_at' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.78
+      "durationMs": 0.77
     },
     {
       "id": "BK-FAIL-032",
@@ -1333,7 +1333,7 @@
       "category": "failure",
       "description": "Missing required fields: backup missing 'data' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.75
     },
     {
       "id": "BK-FAIL-033",
@@ -1341,7 +1341,7 @@
       "category": "failure",
       "description": "Missing required fields: task missing 'id' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 1.58
     },
     {
       "id": "BK-FAIL-034",
@@ -1349,7 +1349,7 @@
       "category": "failure",
       "description": "Missing required fields: task missing 'title' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 1.25
     },
     {
       "id": "BK-FAIL-035",
@@ -1357,7 +1357,7 @@
       "category": "failure",
       "description": "Missing required fields: task missing 'created_at' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.85
+      "durationMs": 1.18
     },
     {
       "id": "BK-FAIL-036",
@@ -1365,7 +1365,7 @@
       "category": "failure",
       "description": "Missing required fields: task missing 'updated_at' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.92
+      "durationMs": 1.24
     },
     {
       "id": "BK-FAIL-037",
@@ -1373,7 +1373,7 @@
       "category": "failure",
       "description": "Missing required fields: note missing 'id' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.81
+      "durationMs": 1.2
     },
     {
       "id": "BK-FAIL-038",
@@ -1381,7 +1381,7 @@
       "category": "failure",
       "description": "Missing required fields: note missing 'title' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.99
     },
     {
       "id": "BK-FAIL-039",
@@ -1397,7 +1397,7 @@
       "category": "failure",
       "description": "Missing required fields: note missing 'created_at' rejected by schema",
       "status": "PASS",
-      "durationMs": 1.04
+      "durationMs": 0.84
     },
     {
       "id": "BK-FAIL-041",
@@ -1405,7 +1405,7 @@
       "category": "failure",
       "description": "Missing required fields: memory missing 'id' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.89
     },
     {
       "id": "BK-FAIL-042",
@@ -1413,7 +1413,7 @@
       "category": "failure",
       "description": "Missing required fields: memory missing 'content' rejected by schema",
       "status": "PASS",
-      "durationMs": 1.08
+      "durationMs": 1.03
     },
     {
       "id": "BK-FAIL-043",
@@ -1421,7 +1421,7 @@
       "category": "failure",
       "description": "Missing required fields: memory missing 'category' rejected by schema",
       "status": "PASS",
-      "durationMs": 1.2
+      "durationMs": 0.89
     },
     {
       "id": "BK-FAIL-044",
@@ -1437,7 +1437,7 @@
       "category": "failure",
       "description": "Missing required fields: conversation missing 'title' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.76
     },
     {
       "id": "BK-FAIL-046",
@@ -1445,7 +1445,7 @@
       "category": "failure",
       "description": "Missing required fields: message missing 'id' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.85
     },
     {
       "id": "BK-FAIL-047",
@@ -1453,7 +1453,7 @@
       "category": "failure",
       "description": "Missing required fields: message missing 'conversation_id' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 1.18
     },
     {
       "id": "BK-FAIL-048",
@@ -1461,7 +1461,7 @@
       "category": "failure",
       "description": "Missing required fields: message missing 'role' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.94
     },
     {
       "id": "BK-FAIL-049",
@@ -1469,7 +1469,7 @@
       "category": "failure",
       "description": "Missing required fields: project missing 'name' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.8
     },
     {
       "id": "BK-FAIL-050",
@@ -1477,7 +1477,7 @@
       "category": "failure",
       "description": "Missing required fields: automation missing 'schedule' rejected by schema",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.91
     },
     {
       "id": "BK-CONC-001",
@@ -1485,7 +1485,7 @@
       "category": "concurrency",
       "description": "5 concurrent export requests return identical state snapshots",
       "status": "PASS",
-      "durationMs": 0.91
+      "durationMs": 0.84
     },
     {
       "id": "BK-CONC-002",
@@ -1493,7 +1493,7 @@
       "category": "concurrency",
       "description": "10 concurrent export requests execute without database lock errors",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 0.86
     },
     {
       "id": "BK-CONC-003",
@@ -1501,7 +1501,7 @@
       "category": "concurrency",
       "description": "5 concurrent imports of the same backup maintain idempotent upsert",
       "status": "PASS",
-      "durationMs": 1.34
+      "durationMs": 1.33
     },
     {
       "id": "BK-CONC-004",
@@ -1509,7 +1509,7 @@
       "category": "concurrency",
       "description": "Concurrent import of two non-overlapping backups succeeds cleanly",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.84
     },
     {
       "id": "BK-CONC-005",
@@ -1517,7 +1517,7 @@
       "category": "concurrency",
       "description": "Concurrent import of overlapping backups with conflicting titles converges deterministically",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 0.85
     },
     {
       "id": "BK-CONC-006",
@@ -1525,7 +1525,7 @@
       "category": "concurrency",
       "description": "Read tasks during active restore receives consistent snapshot",
       "status": "PASS",
-      "durationMs": 1.52
+      "durationMs": 1.3
     },
     {
       "id": "BK-CONC-007",
@@ -1533,7 +1533,7 @@
       "category": "concurrency",
       "description": "Read notes during active restore receives consistent snapshot",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.88
     },
     {
       "id": "BK-CONC-008",
@@ -1541,7 +1541,7 @@
       "category": "concurrency",
       "description": "Read settings during active restore receives consistent snapshot",
       "status": "PASS",
-      "durationMs": 0.75
+      "durationMs": 0.76
     },
     {
       "id": "BK-CONC-009",
@@ -1549,7 +1549,7 @@
       "category": "concurrency",
       "description": "Read memories during active restore receives consistent snapshot",
       "status": "PASS",
-      "durationMs": 0.88
+      "durationMs": 0.83
     },
     {
       "id": "BK-CONC-010",
@@ -1557,7 +1557,7 @@
       "category": "concurrency",
       "description": "Read conversations during active restore receives consistent snapshot",
       "status": "PASS",
-      "durationMs": 0.81
+      "durationMs": 0.79
     },
     {
       "id": "BK-CONC-011",
@@ -1565,7 +1565,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same task count",
       "status": "PASS",
-      "durationMs": 1.18
+      "durationMs": 0.94
     },
     {
       "id": "BK-CONC-012",
@@ -1573,7 +1573,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same note count",
       "status": "PASS",
-      "durationMs": 1.16
+      "durationMs": 1.01
     },
     {
       "id": "BK-CONC-013",
@@ -1581,7 +1581,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same memory count",
       "status": "PASS",
-      "durationMs": 1.08
+      "durationMs": 1.09
     },
     {
       "id": "BK-CONC-014",
@@ -1589,7 +1589,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same conversation count",
       "status": "PASS",
-      "durationMs": 1.08
+      "durationMs": 0.96
     },
     {
       "id": "BK-CONC-015",
@@ -1597,7 +1597,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same message count",
       "status": "PASS",
-      "durationMs": 1.12
+      "durationMs": 1.03
     },
     {
       "id": "BK-CONC-016",
@@ -1605,7 +1605,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same project count",
       "status": "PASS",
-      "durationMs": 1.1
+      "durationMs": 0.93
     },
     {
       "id": "BK-CONC-017",
@@ -1613,7 +1613,7 @@
       "category": "concurrency",
       "description": "Idempotency: 1x, 2x, 3x import producing exact same automation count",
       "status": "PASS",
-      "durationMs": 1.08
+      "durationMs": 0.95
     },
     {
       "id": "BK-CONC-018",
@@ -1621,7 +1621,7 @@
       "category": "concurrency",
       "description": "Idempotency: importing backup twice does not alter existing task completion timestamp",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.86
     },
     {
       "id": "BK-CONC-019",
@@ -1629,7 +1629,7 @@
       "category": "concurrency",
       "description": "Idempotency: importing backup twice does not duplicate activity logs unnecessarily",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.85
     },
     {
       "id": "BK-CONC-020",
@@ -1637,7 +1637,7 @@
       "category": "concurrency",
       "description": "Idempotency: importing backup twice preserves message statuses",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 0.83
     },
     {
       "id": "BK-CONC-021",
@@ -1645,7 +1645,7 @@
       "category": "concurrency",
       "description": "Export during active concurrent task creation produces valid snapshot",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.77
     },
     {
       "id": "BK-CONC-022",
@@ -1653,7 +1653,7 @@
       "category": "concurrency",
       "description": "Export during active concurrent note creation produces valid snapshot",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.77
     },
     {
       "id": "BK-CONC-023",
@@ -1661,7 +1661,7 @@
       "category": "concurrency",
       "description": "Export during active concurrent memory recording produces valid snapshot",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 0.88
     },
     {
       "id": "BK-CONC-024",
@@ -1677,7 +1677,7 @@
       "category": "concurrency",
       "description": "Concurrent import with interleaving task queries maintains integrity",
       "status": "PASS",
-      "durationMs": 1.23
+      "durationMs": 1.17
     },
     {
       "id": "BK-CONC-026",
@@ -1685,7 +1685,7 @@
       "category": "concurrency",
       "description": "Concurrent import with interleaving note queries maintains integrity",
       "status": "PASS",
-      "durationMs": 1.41
+      "durationMs": 1.31
     },
     {
       "id": "BK-CONC-027",
@@ -1693,7 +1693,7 @@
       "category": "concurrency",
       "description": "Concurrent import with interleaving memory search queries maintains integrity",
       "status": "PASS",
-      "durationMs": 0.94
+      "durationMs": 0.87
     },
     {
       "id": "BK-CONC-028",
@@ -1701,7 +1701,7 @@
       "category": "concurrency",
       "description": "Multiple rapid sequential imports (10 in loop) maintain DB consistency",
       "status": "PASS",
-      "durationMs": 1.21
+      "durationMs": 1.29
     },
     {
       "id": "BK-CONC-029",
@@ -1709,7 +1709,7 @@
       "category": "concurrency",
       "description": "Multiple rapid sequential exports (10 in loop) produce consistent checksums",
       "status": "PASS",
-      "durationMs": 0.8
+      "durationMs": 0.89
     },
     {
       "id": "BK-CONC-030",
@@ -1717,7 +1717,7 @@
       "category": "concurrency",
       "description": "Message ordering in backup: message referencing conversation in same backup resolves correctly",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.85
     },
     {
       "id": "BK-CONC-031",
@@ -1725,7 +1725,7 @@
       "category": "concurrency",
       "description": "Task referencing project in same backup resolves foreign key correctly",
       "status": "PASS",
-      "durationMs": 0.77
+      "durationMs": 0.94
     },
     {
       "id": "BK-CONC-032",
@@ -1733,7 +1733,7 @@
       "category": "concurrency",
       "description": "Note referencing project in same backup resolves foreign key correctly",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.85
     },
     {
       "id": "BK-CONC-033",
@@ -1741,7 +1741,7 @@
       "category": "concurrency",
       "description": "Concurrent import with partial duplicates updates existing without creating orphans",
       "status": "PASS",
-      "durationMs": 0.76
+      "durationMs": 0.84
     },
     {
       "id": "BK-CONC-034",
@@ -1749,7 +1749,7 @@
       "category": "concurrency",
       "description": "Concurrent encrypted export and plaintext export produce matching decrypted data",
       "status": "PASS",
-      "durationMs": 5.04
+      "durationMs": 5.86
     },
     {
       "id": "BK-CONC-035",
@@ -1757,7 +1757,7 @@
       "category": "concurrency",
       "description": "Concurrent signed export and verification pipeline succeeds under load",
       "status": "PASS",
-      "durationMs": 1.27
+      "durationMs": 1.38
     },
     {
       "id": "BK-CONC-036",
@@ -1765,7 +1765,7 @@
       "category": "concurrency",
       "description": "Atomic transaction isolation: uncommitted writes during failed import not visible to readers",
       "status": "PASS",
-      "durationMs": 1.35
+      "durationMs": 1.84
     },
     {
       "id": "BK-CONC-037",
@@ -1773,7 +1773,7 @@
       "category": "concurrency",
       "description": "Lock contention resilience: busy database recovers cleanly during backup operations",
       "status": "PASS",
-      "durationMs": 0.9
+      "durationMs": 1.27
     },
     {
       "id": "BK-CONC-038",
@@ -1781,7 +1781,7 @@
       "category": "concurrency",
       "description": "Simultaneous settings update and export preserves atomic settings snapshot",
       "status": "PASS",
-      "durationMs": 0.77
+      "durationMs": 1.09
     },
     {
       "id": "BK-CONC-039",
@@ -1789,7 +1789,7 @@
       "category": "concurrency",
       "description": "Parallel imports with different timezones converge on last applied timezone",
       "status": "PASS",
-      "durationMs": 1.06
+      "durationMs": 1.64
     },
     {
       "id": "BK-CONC-040",
@@ -1797,7 +1797,7 @@
       "category": "concurrency",
       "description": "Parallel automations rearm triggers only after data transaction completion",
       "status": "PASS",
-      "durationMs": 1.4
+      "durationMs": 0.95
     },
     {
       "id": "BK-RECOV-001",
@@ -1805,7 +1805,7 @@
       "category": "recovery",
       "description": "Corrupted backup JSON string syntax rejected with error",
       "status": "PASS",
-      "durationMs": 0.71
+      "durationMs": 1.28
     },
     {
       "id": "BK-RECOV-002",
@@ -1813,7 +1813,7 @@
       "category": "recovery",
       "description": "Corrupted backup with invalid data type (string instead of object) rejected",
       "status": "PASS",
-      "durationMs": 0.76
+      "durationMs": 0.95
     },
     {
       "id": "BK-RECOV-003",
@@ -1821,7 +1821,7 @@
       "category": "recovery",
       "description": "Unknown future format version (version 999) rejected with ValidationError",
       "status": "PASS",
-      "durationMs": 0.75
+      "durationMs": 0.87
     },
     {
       "id": "BK-RECOV-004",
@@ -1829,7 +1829,7 @@
       "category": "recovery",
       "description": "Unknown negative format version (version -1) rejected by schema",
       "status": "PASS",
-      "durationMs": 0.81
+      "durationMs": 0.9
     },
     {
       "id": "BK-RECOV-005",
@@ -1837,7 +1837,7 @@
       "category": "recovery",
       "description": "Unknown zero format version (version 0) rejected by schema",
       "status": "PASS",
-      "durationMs": 0.71
+      "durationMs": 0.74
     },
     {
       "id": "BK-RECOV-006",
@@ -1845,7 +1845,7 @@
       "category": "recovery",
       "description": "Format name mismatch (other-agent-backup) rejected with ValidationError",
       "status": "PASS",
-      "durationMs": 0.75
+      "durationMs": 0.72
     },
     {
       "id": "BK-RECOV-007",
@@ -1853,7 +1853,7 @@
       "category": "recovery",
       "description": "Corrupted settings in backup (invalid timezone) causes rollback",
       "status": "PASS",
-      "durationMs": 0.9
+      "durationMs": 0.85
     },
     {
       "id": "BK-RECOV-008",
@@ -1861,7 +1861,7 @@
       "category": "recovery",
       "description": "Corrupted settings in backup (invalid model id regex) causes rollback",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.76
     },
     {
       "id": "BK-RECOV-009",
@@ -1869,7 +1869,7 @@
       "category": "recovery",
       "description": "Corrupted settings in backup (temperature out of range) causes rollback",
       "status": "PASS",
-      "durationMs": 0.79
+      "durationMs": 0.76
     },
     {
       "id": "BK-RECOV-010",
@@ -1877,7 +1877,7 @@
       "category": "recovery",
       "description": "Corrupted settings in backup (invalid limits token count) causes rollback",
       "status": "PASS",
-      "durationMs": 0.75
+      "durationMs": 0.76
     },
     {
       "id": "BK-RECOV-011",
@@ -1885,7 +1885,7 @@
       "category": "recovery",
       "description": "Rollback verification: tasks inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 1.33
+      "durationMs": 0.86
     },
     {
       "id": "BK-RECOV-012",
@@ -1893,7 +1893,7 @@
       "category": "recovery",
       "description": "Rollback verification: notes inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 1.32
     },
     {
       "id": "BK-RECOV-013",
@@ -1901,7 +1901,7 @@
       "category": "recovery",
       "description": "Rollback verification: memories inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.86
+      "durationMs": 0.83
     },
     {
       "id": "BK-RECOV-014",
@@ -1909,7 +1909,7 @@
       "category": "recovery",
       "description": "Rollback verification: projects inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.81
     },
     {
       "id": "BK-RECOV-015",
@@ -1917,7 +1917,7 @@
       "category": "recovery",
       "description": "Rollback verification: conversations inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.84
     },
     {
       "id": "BK-RECOV-016",
@@ -1925,7 +1925,7 @@
       "category": "recovery",
       "description": "Rollback verification: messages inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.9
+      "durationMs": 0.8
     },
     {
       "id": "BK-RECOV-017",
@@ -1933,7 +1933,7 @@
       "category": "recovery",
       "description": "Rollback verification: automations inserted before settings failure are completely rolled back",
       "status": "PASS",
-      "durationMs": 0.93
+      "durationMs": 0.83
     },
     {
       "id": "BK-RECOV-018",
@@ -1941,7 +1941,7 @@
       "category": "recovery",
       "description": "Database constraint violation inside import rolls back all state",
       "status": "PASS",
-      "durationMs": 0.97
+      "durationMs": 0.87
     },
     {
       "id": "BK-RECOV-019",
@@ -1949,7 +1949,7 @@
       "category": "recovery",
       "description": "Corrupted automation schedule string does not crash import (invalid schedule safely skipped)",
       "status": "PASS",
-      "durationMs": 0.99
+      "durationMs": 0.82
     },
     {
       "id": "BK-RECOV-020",
@@ -1957,7 +1957,7 @@
       "category": "recovery",
       "description": "Corrupted automation schedule in database does not crash exportData (safely handled)",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.75
     },
     {
       "id": "BK-RECOV-021",
@@ -1965,7 +1965,7 @@
       "category": "recovery",
       "description": "Backup with orphaned message (conversation does not exist) skips message safely",
       "status": "PASS",
-      "durationMs": 1.34
+      "durationMs": 0.75
     },
     {
       "id": "BK-RECOV-022",
@@ -1973,7 +1973,7 @@
       "category": "recovery",
       "description": "Backup with orphaned task (project does not exist) sets project_id to null and succeeds",
       "status": "PASS",
-      "durationMs": 0.85
+      "durationMs": 1.23
     },
     {
       "id": "BK-RECOV-023",
@@ -1981,7 +1981,7 @@
       "category": "recovery",
       "description": "Backup with orphaned note (project does not exist) sets project_id to null and succeeds",
       "status": "PASS",
-      "durationMs": 0.82
+      "durationMs": 0.78
     },
     {
       "id": "BK-RECOV-024",
@@ -1989,7 +1989,7 @@
       "category": "recovery",
       "description": "Backup with invalid task status falls back to 'todo' safely",
       "status": "PASS",
-      "durationMs": 0.8
+      "durationMs": 0.72
     },
     {
       "id": "BK-RECOV-025",
@@ -1997,7 +1997,7 @@
       "category": "recovery",
       "description": "Backup with invalid task priority falls back to 'medium' safely",
       "status": "PASS",
-      "durationMs": 0.73
+      "durationMs": 0.68
     },
     {
       "id": "BK-RECOV-026",
@@ -2005,7 +2005,7 @@
       "category": "recovery",
       "description": "Backup with invalid memory category falls back to 'other' safely",
       "status": "PASS",
-      "durationMs": 0.83
+      "durationMs": 0.74
     },
     {
       "id": "BK-RECOV-027",
@@ -2013,7 +2013,7 @@
       "category": "recovery",
       "description": "Backup with invalid message status falls back to 'complete' safely",
       "status": "PASS",
-      "durationMs": 0.84
+      "durationMs": 0.75
     },
     {
       "id": "BK-RECOV-028",
@@ -2021,7 +2021,7 @@
       "category": "recovery",
       "description": "Backup with invalid automation kind falls back to 'reminder' safely",
       "status": "PASS",
-      "durationMs": 0.87
+      "durationMs": 0.75
     },
     {
       "id": "BK-RECOV-029",
@@ -2029,7 +2029,7 @@
       "category": "recovery",
       "description": "Re-arming failure during import does not corrupt already-committed data",
       "status": "PASS",
-      "durationMs": 0.85
+      "durationMs": 0.77
     },
     {
       "id": "BK-RECOV-030",
@@ -2037,7 +2037,7 @@
       "category": "recovery",
       "description": "Activity log entry correctly captures import failure/recovery without partial state leak",
       "status": "PASS",
-      "durationMs": 0.95
+      "durationMs": 0.85
     }
   ],
   "defects": []

@@ -1,0 +1,2044 @@
+{
+  "timestamp": "2026-10-11T22:53:40.571Z",
+  "domain": "security-schemas",
+  "total": 250,
+  "passed": 250,
+  "failed": 0,
+  "errored": 0,
+  "durationMs": 110.05,
+  "categoryBreakdown": {
+    "normal": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "errored": 0
+    },
+    "boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "errored": 0
+    },
+    "failure": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "errored": 0
+    },
+    "concurrency": {
+      "total": 40,
+      "passed": 40,
+      "failed": 0,
+      "errored": 0
+    },
+    "recovery": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "errored": 0
+    }
+  },
+  "results": [
+    {
+      "id": "SEC-NORM-001",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts strong mixed password with letters, numbers, and symbols",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "SEC-NORM-002",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts lowercase passphrase >= 16 chars with spaces",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-003",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts mixed-case passphrase >= 16 chars with hyphens",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-004",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts exactly 10 chars with lowercase + uppercase",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-005",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts exactly 10 chars with lowercase + number",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-006",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts exactly 10 chars with lowercase + symbol",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-007",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts exactly 10 chars with uppercase + number",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-008",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts exactly 10 chars with uppercase + symbol",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-009",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts 15 chars mixed password with 3 classes",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-010",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts 20 chars complex mixed password",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-011",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts 32 chars random token-style password",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "SEC-NORM-012",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts passphrase containing numbers and spaces",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-013",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts 16+ chars password containing common substring 'password'",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "SEC-NORM-014",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts 16+ chars passphrase containing common substring 'admin'",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-015",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "Accepts strong password with Korean unicode characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-016",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hashPassword generates standard pbkdf2 format string",
+      "status": "PASS",
+      "durationMs": 2.41
+    },
+    {
+      "id": "SEC-NORM-017",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "isPasswordHash recognizes valid generated hash",
+      "status": "PASS",
+      "durationMs": 0.82
+    },
+    {
+      "id": "SEC-NORM-018",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "verifyPassword succeeds with correct password and generated hash",
+      "status": "PASS",
+      "durationMs": 1.62
+    },
+    {
+      "id": "SEC-NORM-019",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "verifyPassword returns false for wrong password",
+      "status": "PASS",
+      "durationMs": 1.44
+    },
+    {
+      "id": "SEC-NORM-020",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hashPassword generates unique salts for identical passwords",
+      "status": "PASS",
+      "durationMs": 1.45
+    },
+    {
+      "id": "SEC-NORM-021",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "PBKDF2 roundtrip with 10,000 iterations (minimum threshold)",
+      "status": "PASS",
+      "durationMs": 1.46
+    },
+    {
+      "id": "SEC-NORM-022",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "PBKDF2 roundtrip with 25,000 iterations",
+      "status": "PASS",
+      "durationMs": 3.69
+    },
+    {
+      "id": "SEC-NORM-023",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "PBKDF2 roundtrip with 50,000 iterations",
+      "status": "PASS",
+      "durationMs": 8
+    },
+    {
+      "id": "SEC-NORM-024",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "toBase64Url and fromBase64Url roundtrip on 16-byte buffer",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "SEC-NORM-025",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "toBase64Url and fromBase64Url roundtrip on 32-byte buffer",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-NORM-026",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "toBase64Url produces URL-safe characters without +, /, or =",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-NORM-027",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "randomToken(16) generates 22 characters of base64url",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-NORM-028",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "randomToken(32) generates 43 characters of base64url",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-029",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "randomToken produces distinct tokens on consecutive invocations",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-030",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "timingSafeEqual returns true for identical byte arrays",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-031",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "timingSafeEqual returns false for distinct byte arrays of same length",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-032",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "sha256Hex matches standard SHA-256 digest of empty string",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "SEC-NORM-033",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "sha256Hex matches standard SHA-256 digest of 'hello world'",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-NORM-034",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "sha256Hex outputs exactly 64 lowercase hex characters",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "SEC-NORM-035",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hmacSha256Hex generates 64-character lowercase hex signature",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "SEC-NORM-036",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hmacSha256Hex is deterministic for identical secret and message",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "SEC-NORM-037",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hmacSha256Hex varies with message",
+      "status": "PASS",
+      "durationMs": 0.34
+    },
+    {
+      "id": "SEC-NORM-038",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "hmacSha256Hex varies with secret",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "SEC-NORM-039",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "PBKDF2 derives identically for NFKC normalized unicode equivalents",
+      "status": "PASS",
+      "durationMs": 1.44
+    },
+    {
+      "id": "SEC-NORM-040",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "PBKDF2 default iterations equals constant PBKDF2_ITERATIONS (100,000)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-041",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskCreateSchema parses minimal valid task with title only",
+      "status": "PASS",
+      "durationMs": 1.32
+    },
+    {
+      "id": "SEC-NORM-042",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskCreateSchema parses full task with all fields",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "SEC-NORM-043",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskUpdateSchema parses partial title update",
+      "status": "PASS",
+      "durationMs": 0.28
+    },
+    {
+      "id": "SEC-NORM-044",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskUpdateSchema parses explicit null for nullable fields",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-045",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskListQuerySchema provides default query values",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "SEC-NORM-046",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "taskListQuerySchema coerces string limit to number",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "SEC-NORM-047",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "memoryCreateSchema parses default category 'other'",
+      "status": "PASS",
+      "durationMs": 0.16
+    },
+    {
+      "id": "SEC-NORM-048",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "memoryCreateSchema parses explicit category",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-049",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "memoryUpdateSchema parses partial content update",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "SEC-NORM-050",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "noteCreateSchema parses minimal note",
+      "status": "PASS",
+      "durationMs": 0.16
+    },
+    {
+      "id": "SEC-NORM-051",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "noteCreateSchema parses full note with project_id",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-052",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "noteUpdateSchema parses partial content update",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "SEC-NORM-053",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "projectCreateSchema parses minimal project with default status 'active'",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "SEC-NORM-054",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "projectCreateSchema parses project with description and status",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-NORM-055",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "projectUpdateSchema parses status update",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "SEC-NORM-056",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "conversationCreateSchema parses empty object",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "SEC-NORM-057",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "conversationCreateSchema parses optional title",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-NORM-058",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "conversationUpdateSchema parses title update",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-NORM-059",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "chatRequestSchema parses message only",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "SEC-NORM-060",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "chatRequestSchema parses conversation_id and retry flag",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "SEC-NORM-061",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "automationCreateSchema parses daily automation schedule",
+      "status": "PASS",
+      "durationMs": 0.62
+    },
+    {
+      "id": "SEC-NORM-062",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "automationCreateSchema parses weekly automation schedule",
+      "status": "PASS",
+      "durationMs": 0.24
+    },
+    {
+      "id": "SEC-NORM-063",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "automationCreateSchema parses interval automation schedule",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "SEC-NORM-064",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "automationCreateSchema parses once automation schedule with valid date",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "SEC-NORM-065",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "automationUpdateSchema parses partial enabled toggle",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "SEC-NORM-066",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "limitsSchema validates DEFAULT_LIMITS",
+      "status": "PASS",
+      "durationMs": 0.25
+    },
+    {
+      "id": "SEC-NORM-067",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "settingsSchema parses valid standard settings",
+      "status": "PASS",
+      "durationMs": 1.44
+    },
+    {
+      "id": "SEC-NORM-068",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "settingsUpdateSchema parses partial settings update",
+      "status": "PASS",
+      "durationMs": 0.41
+    },
+    {
+      "id": "SEC-NORM-069",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "loginSchema parses valid login password",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "SEC-NORM-070",
+      "domain": "security-schemas",
+      "category": "normal",
+      "description": "changePasswordSchema parses current and new passwords",
+      "status": "PASS",
+      "durationMs": 0.16
+    },
+    {
+      "id": "SEC-BOUND-001",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with exactly PASSWORD_MIN_LENGTH (10) characters accepted",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-BOUND-002",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with length 9 rejected at boundary",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-003",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with length 15 requires at least 2 character classes",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-004",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with length 16 allows single class (passphrase boundary)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-005",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with exactly 256 characters accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-006",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with exactly 257 characters rejected (upper boundary)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-007",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with Cyrillic unicode characters accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-008",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with CJK ideographs accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-009",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with Arabic characters accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-010",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with combining diacritics accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-011",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password containing all printable ASCII symbols",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-012",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Passphrase with multiple internal spaces accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-013",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password preserving leading/trailing spaces for length",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-014",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password containing tab characters accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-015",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Repeating unicode emoji character must be rejected as repeating [REPRODUCTION]",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-016",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Repeating newline characters must be rejected as repeating [REPRODUCTION]",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-017",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Alternating repeating characters ('abababababab') accepted",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "SEC-BOUND-018",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Password with exactly 255 characters accepted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-019",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Single character repeated 9 times rejected by length",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-020",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "Common word substring allowed at length 16 boundary",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-021",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "PBKDF2 exactly 10,000 iterations accepted",
+      "status": "PASS",
+      "durationMs": 1.48
+    },
+    {
+      "id": "SEC-BOUND-022",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "PBKDF2 exactly 100,000 iterations accepted",
+      "status": "PASS",
+      "durationMs": 13.48
+    },
+    {
+      "id": "SEC-BOUND-023",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "fromBase64Url handles empty string returning empty Uint8Array",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-BOUND-024",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "fromBase64Url handles 1 byte encoded (2 chars: 'AQ')",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-025",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "fromBase64Url handles 2 bytes encoded (3 chars: 'AQI')",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-026",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "fromBase64Url handles 3 bytes encoded (4 chars: 'AQID')",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-027",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "randomToken(1) generates exactly 2 base64url characters",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-028",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "randomToken(256) generates large random token without error",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-BOUND-029",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "sha256Hex processes 64KB string correctly",
+      "status": "PASS",
+      "durationMs": 0.27
+    },
+    {
+      "id": "SEC-BOUND-030",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "hmacSha256Hex processes 64KB message payload",
+      "status": "PASS",
+      "durationMs": 0.23
+    },
+    {
+      "id": "SEC-BOUND-031",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "timingSafeEqual handles empty Uint8Arrays (0 bytes) returning true",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-032",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "timingSafeEqual handles 1-byte equal buffers",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-033",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "timingSafeEqual handles 256-byte identical buffers",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-BOUND-034",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "timingSafeEqual detects mismatch on last byte of 256-byte buffer",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-035",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "timingSafeEqual detects mismatch on first byte of 256-byte buffer",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-036",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "id accepts exactly 1 character",
+      "status": "PASS",
+      "durationMs": 0.14
+    },
+    {
+      "id": "SEC-BOUND-037",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "id accepts exactly 64 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-038",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "taskCreateSchema accepts title with exactly 1 character",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-039",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "taskCreateSchema accepts title with exactly 300 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-040",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "taskCreateSchema accepts description with exactly 10,000 characters",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-BOUND-041",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "noteCreateSchema accepts content with exactly 200,000 characters",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "SEC-BOUND-042",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "chatRequestSchema accepts message with exactly 16,000 characters",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-BOUND-043",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "projectCreateSchema accepts name with exactly 200 characters",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-BOUND-044",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "projectCreateSchema accepts description with exactly 5,000 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-045",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "memoryCreateSchema accepts content with exactly 2,000 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-046",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "automationCreateSchema accepts message with exactly 4,000 characters",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "SEC-BOUND-047",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxOutputTokens at minimum (64)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-BOUND-048",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxOutputTokens at ceiling (4096)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-049",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxToolCalls at minimum (0)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-050",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxToolCalls at ceiling (20)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-051",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxAgentIterations at minimum (1)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-052",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxAgentIterations at ceiling (10)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-053",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxContextTokens at minimum (1000)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-054",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxContextTokens at ceiling (32000)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-055",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxScheduledAiRunsPerDay at minimum (0)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-BOUND-056",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxScheduledAiRunsPerDay at ceiling (48)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-057",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxAiRequestsPerDay at minimum (1)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-058",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "limitsSchema accepts maxAiRequestsPerDay at ceiling (2000)",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-BOUND-059",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "settingsSchema accepts temperature at lower boundary (0.0)",
+      "status": "PASS",
+      "durationMs": 0.16
+    },
+    {
+      "id": "SEC-BOUND-060",
+      "domain": "security-schemas",
+      "category": "boundary",
+      "description": "settingsSchema accepts temperature at upper boundary (1.5)",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-FAIL-001",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password with length 9",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-002",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects empty password string",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-003",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password with length 257",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-004",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password repeating single lowercase character 'aaaaaaaaaa'",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-005",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password repeating single digit '1111111111'",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-006",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects single-class lowercase password under 16 characters",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-007",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects single-class uppercase password under 16 characters",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-008",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password containing common word 'password' when < 16 chars",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-009",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password containing common word '123456' when < 16 chars",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-010",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "Rejects password containing common word 'admin' when < 16 chars",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-011",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "verifyPassword returns false when salt is tampered in stored hash",
+      "status": "PASS",
+      "durationMs": 0.9
+    },
+    {
+      "id": "SEC-FAIL-012",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "verifyPassword returns false when hash bytes are tampered in stored hash",
+      "status": "PASS",
+      "durationMs": 1.58
+    },
+    {
+      "id": "SEC-FAIL-013",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "verifyPassword rejects iterations below minimum (9,999)",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-FAIL-014",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "verifyPassword rejects iterations exceeding ceiling (100,001)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-015",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "verifyPassword rejects non-integer iterations ('10000.5')",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-016",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash rejects plaintext string without prefix",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-017",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash rejects unsupported algorithm prefix ('bcrypt$...')",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-018",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash rejects hash missing hash segment",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-019",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash rejects hash with superfluous segments",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-020",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "timingSafeEqual returns false for buffers with unequal lengths",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-021",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "timingSafeEqual returns false when all bytes are inverted",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-022",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "hmacSha256Hex throws DataError when key is empty string",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "SEC-FAIL-023",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash returns false for empty string",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-024",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash returns false for null",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "SEC-FAIL-025",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "isPasswordHash returns false for undefined",
+      "status": "PASS",
+      "durationMs": 0
+    },
+    {
+      "id": "SEC-FAIL-026",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "id rejects empty string",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "SEC-FAIL-027",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "id rejects string longer than 64 characters",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-FAIL-028",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects empty title",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-029",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects whitespace-only title",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-030",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects title longer than 300 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-031",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects invalid status ('archived' not in task statuses)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-032",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects invalid priority ('critical')",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-033",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects invalid due_at datetime string",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-FAIL-034",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects due_at missing timezone offset",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-035",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "taskCreateSchema rejects description exceeding 10,000 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-036",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "memoryCreateSchema rejects invalid category",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-037",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "noteCreateSchema rejects content exceeding 200,000 characters",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "SEC-FAIL-038",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "projectCreateSchema rejects invalid status ('deleted')",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-039",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "chatRequestSchema rejects message exceeding 16,000 characters",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-040",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "chatRequestSchema rejects empty message",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-041",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "settingsSchema rejects invalid IANA timezone ('Mars/Base')",
+      "status": "PASS",
+      "durationMs": 0.4
+    },
+    {
+      "id": "SEC-FAIL-042",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "settingsSchema rejects invalid theme ('solarized')",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-FAIL-043",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "settingsSchema rejects model id without @cf/ or @hf/ prefix",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-FAIL-044",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "settingsSchema rejects negative temperature (-0.1)",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-045",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "settingsSchema rejects temperature > 1.5",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-046",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "limitsSchema rejects maxOutputTokens < 64",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-047",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "limitsSchema rejects maxOutputTokens > 4096",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-FAIL-048",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "limitsSchema rejects maxToolCalls > 20",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-FAIL-049",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "backupSchema rejects invalid format ('unauthorized-backup')",
+      "status": "PASS",
+      "durationMs": 0.73
+    },
+    {
+      "id": "SEC-FAIL-050",
+      "domain": "security-schemas",
+      "category": "failure",
+      "description": "backupSchema rejects version < 1",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "SEC-CONC-001",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent verifyPassword calls with valid password",
+      "status": "PASS",
+      "durationMs": 8.12
+    },
+    {
+      "id": "SEC-CONC-002",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent verifyPassword calls with invalid password",
+      "status": "PASS",
+      "durationMs": 10.31
+    },
+    {
+      "id": "SEC-CONC-003",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent verifyPassword calls alternating valid and invalid",
+      "status": "PASS",
+      "durationMs": 3.77
+    },
+    {
+      "id": "SEC-CONC-004",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "20 concurrent hashPassword calls generate all unique hashes & salts",
+      "status": "PASS",
+      "durationMs": 2.19
+    },
+    {
+      "id": "SEC-CONC-005",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent sha256Hex calls with distinct inputs",
+      "status": "PASS",
+      "durationMs": 0.64
+    },
+    {
+      "id": "SEC-CONC-006",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent hmacSha256Hex calls with identical secret",
+      "status": "PASS",
+      "durationMs": 0.7
+    },
+    {
+      "id": "SEC-CONC-007",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent hmacSha256Hex calls with distinct secrets",
+      "status": "PASS",
+      "durationMs": 0.63
+    },
+    {
+      "id": "SEC-CONC-008",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent randomToken(32) generations verify zero collision",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "SEC-CONC-009",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent timingSafeEqual invocations on identical buffers",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-CONC-010",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent timingSafeEqual invocations on different buffers",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-CONC-011",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent base64url encode/decode roundtrips",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "SEC-CONC-012",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent taskCreateSchema.safeParse calls",
+      "status": "PASS",
+      "durationMs": 0.21
+    },
+    {
+      "id": "SEC-CONC-013",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent settingsSchema.safeParse calls",
+      "status": "PASS",
+      "durationMs": 0.59
+    },
+    {
+      "id": "SEC-CONC-014",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent backupSchema.safeParse calls",
+      "status": "PASS",
+      "durationMs": 0.36
+    },
+    {
+      "id": "SEC-CONC-015",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent checkPasswordStrength calls",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "SEC-CONC-016",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "20 concurrent PBKDF2 hash verifications with 10k iterations",
+      "status": "PASS",
+      "durationMs": 2.97
+    },
+    {
+      "id": "SEC-CONC-017",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "20 concurrent PBKDF2 hash verifications with 12k iterations",
+      "status": "PASS",
+      "durationMs": 3.55
+    },
+    {
+      "id": "SEC-CONC-018",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "20 concurrent PBKDF2 hash verifications with 15k iterations",
+      "status": "PASS",
+      "durationMs": 3.74
+    },
+    {
+      "id": "SEC-CONC-019",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent SHA-256 digests of random 1KB payloads",
+      "status": "PASS",
+      "durationMs": 2.31
+    },
+    {
+      "id": "SEC-CONC-020",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent HMAC signatures of random 1KB payloads",
+      "status": "PASS",
+      "durationMs": 2.13
+    },
+    {
+      "id": "SEC-CONC-021",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent randomToken(32) generations verify uniqueness",
+      "status": "PASS",
+      "durationMs": 0.17
+    },
+    {
+      "id": "SEC-CONC-022",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "100 concurrent randomToken(64) generations verify uniqueness",
+      "status": "PASS",
+      "durationMs": 0.26
+    },
+    {
+      "id": "SEC-CONC-023",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent Unicode normalizations in PBKDF2 verification",
+      "status": "PASS",
+      "durationMs": 5.25
+    },
+    {
+      "id": "SEC-CONC-024",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent taskUpdateSchema validations with partial inputs",
+      "status": "PASS",
+      "durationMs": 0.22
+    },
+    {
+      "id": "SEC-CONC-025",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent memoryCreateSchema validations",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-CONC-026",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent projectCreateSchema validations",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-CONC-027",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent noteCreateSchema validations with 10KB content",
+      "status": "PASS",
+      "durationMs": 0.15
+    },
+    {
+      "id": "SEC-CONC-028",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent chatRequestSchema validations with 1KB messages",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "SEC-CONC-029",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent automationCreateSchema validations (daily)",
+      "status": "PASS",
+      "durationMs": 0.28
+    },
+    {
+      "id": "SEC-CONC-030",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent automationCreateSchema validations (weekly)",
+      "status": "PASS",
+      "durationMs": 0.38
+    },
+    {
+      "id": "SEC-CONC-031",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent automationCreateSchema validations (interval)",
+      "status": "PASS",
+      "durationMs": 0.2
+    },
+    {
+      "id": "SEC-CONC-032",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent automationCreateSchema validations (once)",
+      "status": "PASS",
+      "durationMs": 0.25
+    },
+    {
+      "id": "SEC-CONC-033",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent loginSchema validations",
+      "status": "PASS",
+      "durationMs": 0.09
+    },
+    {
+      "id": "SEC-CONC-034",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent changePasswordSchema validations",
+      "status": "PASS",
+      "durationMs": 0.12
+    },
+    {
+      "id": "SEC-CONC-035",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent settingsUpdateSchema validations",
+      "status": "PASS",
+      "durationMs": 0.18
+    },
+    {
+      "id": "SEC-CONC-036",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent taskListQuerySchema validations with query string conversions",
+      "status": "PASS",
+      "durationMs": 0.2
+    },
+    {
+      "id": "SEC-CONC-037",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent timingSafeEqual comparisons with variable length buffers",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-CONC-038",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent timingSafeEqual comparisons with 32-byte hash buffers",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-CONC-039",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent checkPasswordStrength calls on long passphrases",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-CONC-040",
+      "domain": "security-schemas",
+      "category": "concurrency",
+      "description": "50 concurrent checkPasswordStrength calls on weak passwords",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-RECOV-001",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with single-char salt/hash safely returns false without crashing [REPRODUCTION]",
+      "status": "PASS",
+      "durationMs": 0.13
+    },
+    {
+      "id": "SEC-RECOV-002",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with invalid base64 salt (length%4==1) safely returns false",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "SEC-RECOV-003",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with invalid base64 hash (length%4==1) safely returns false",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-RECOV-004",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with null password input returns false without throwing [REPRODUCTION]",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-RECOV-005",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with undefined password input returns false without throwing",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-006",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with number password input returns false without throwing",
+      "status": "PASS",
+      "durationMs": 0.03
+    },
+    {
+      "id": "SEC-RECOV-007",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with empty salt string returns false",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-008",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with empty hash string returns false",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-009",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with salt containing invalid characters returns false",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-010",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with hash containing invalid characters returns false",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-011",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with truncated 1-byte salt returns false",
+      "status": "PASS",
+      "durationMs": 1.06
+    },
+    {
+      "id": "SEC-RECOV-012",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword with truncated 1-byte hash returns false",
+      "status": "PASS",
+      "durationMs": 1.02
+    },
+    {
+      "id": "SEC-RECOV-013",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "timingSafeEqual with null as first argument returns false without throwing",
+      "status": "PASS",
+      "durationMs": 0.04
+    },
+    {
+      "id": "SEC-RECOV-014",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "timingSafeEqual with null as second argument returns false without throwing",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-RECOV-015",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "timingSafeEqual with non-Uint8Array inputs returns false without throwing",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-016",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "taskCreateSchema.safeParse recovers with validation errors on malformed object",
+      "status": "PASS",
+      "durationMs": 0.11
+    },
+    {
+      "id": "SEC-RECOV-017",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "taskCreateSchema.safeParse recovers gracefully on null input",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-RECOV-018",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "taskCreateSchema.safeParse recovers gracefully on array input",
+      "status": "PASS",
+      "durationMs": 0.01
+    },
+    {
+      "id": "SEC-RECOV-019",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "settingsSchema.safeParse recovers gracefully on corrupted object",
+      "status": "PASS",
+      "durationMs": 0.06
+    },
+    {
+      "id": "SEC-RECOV-020",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "backupSchema.safeParse recovers gracefully on missing data field",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "SEC-RECOV-021",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "backupSchema.safeParse recovers gracefully on invalid tasks array in data",
+      "status": "PASS",
+      "durationMs": 0.57
+    },
+    {
+      "id": "SEC-RECOV-022",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "chatRequestSchema.safeParse recovers gracefully on numeric message",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-023",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "automationCreateSchema.safeParse recovers gracefully on invalid schedule type",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-RECOV-024",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "loginSchema.safeParse recovers gracefully on boolean password",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-025",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "changePasswordSchema.safeParse recovers gracefully on missing new_password",
+      "status": "PASS",
+      "durationMs": 0.02
+    },
+    {
+      "id": "SEC-RECOV-026",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword handles malformed UTF-8 characters safely without crash",
+      "status": "PASS",
+      "durationMs": 0.94
+    },
+    {
+      "id": "SEC-RECOV-027",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "checkPasswordStrength handles 100,000 char input without ReDoS or hang",
+      "status": "PASS",
+      "durationMs": 0.1
+    },
+    {
+      "id": "SEC-RECOV-028",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "verifyPassword handles 10,000 char stored hash without ReDoS or hang",
+      "status": "PASS",
+      "durationMs": 1.31
+    },
+    {
+      "id": "SEC-RECOV-029",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "settingsUpdateSchema safely strips or ignores unknown keys",
+      "status": "PASS",
+      "durationMs": 0.05
+    },
+    {
+      "id": "SEC-RECOV-030",
+      "domain": "security-schemas",
+      "category": "recovery",
+      "description": "backupSchema passthrough preserves unknown entity properties safely",
+      "status": "PASS",
+      "durationMs": 0.23
+    }
+  ],
+  "defects": []
+}
