@@ -1,7 +1,7 @@
 # Security
 
 Talorys is single-user. The threat model assumes the internet can reach your
-`pages.dev` URL; only the owner should be able to read or change data.
+`workers.dev` URL; only the owner should be able to read or change data.
 
 ## Authentication
 
@@ -35,10 +35,16 @@ request origin (or a same-origin `Sec-Fetch-Site`), and the cookie is
 
 ## Backend exposure
 
-The Worker is deployed with `workers_dev: false` and `preview_urls: false`. It is
-reachable only through the Pages service binding. Authorization is enforced in
-the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
-`GET /api/auth/session`. The agent instance name is fixed server-side.
+One Worker serves the web app and the API at its workers.dev URL;
+`preview_urls` is disabled so no other version is reachable. Static assets are
+public by design and contain no secrets. Only `/api/*` runs Worker code, and
+authorization is enforced there for every route except `GET /api/health`,
+`POST /api/auth/login` and `GET /api/auth/session`. Anything else that reaches
+the Worker gets a 404. The agent instance name is fixed server-side.
+
+(Earlier versions put a Pages Function in front of a Worker without a public
+URL. That function forwarded every request unchanged and added no checks, so
+the reachable surface was the same as today.)
 
 ## XSS and browser hardening
 
@@ -64,7 +70,10 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 ## Installer
 
 - Commands are spawned with argument arrays (no shell).
-- Secrets go to Wrangler via stdin only.
+- `cf` reads secrets only from files: the installer writes them to a private
+  (`0600`) file in a fresh system temp directory and deletes it as soon as the
+  command returns. They never appear in arguments or the project directory.
+- `cf` telemetry is disabled for every command it runs.
 - `talorys.json` is checked to contain no secret-like values before writing.
 - Error output is sanitized of token-like strings.
 

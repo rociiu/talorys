@@ -1,18 +1,27 @@
-// Local development configuration for the Talorys agent Worker.
+// Local development configuration for the Talorys Worker.
 // The installer generates the production equivalent with unique names.
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
+  // Kept from the two-Worker layout: local Durable Object state is stored per Worker name.
   "name": "talorys-dev-agent",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
-  // Private backend: reachable only through the Pages service binding.
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
+  // One Worker serves the web app and the API. Static assets never invoke the Worker;
+  // only /api/* runs Worker code. Unknown paths fall back to index.html (client-side routes).
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
   "ai": { "binding": "AI" },
   "durable_objects": {
     "bindings": [{ "name": "TalorysAgent", "class_name": "TalorysAgent" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TalorysAgent"] }],
+  // Declarative Durable Object lifecycle, as in production (cf). Never remove the class:
+  // that deletes its namespace and data.
+  "exports": { "TalorysAgent": { "type": "durable-object", "storage": "sqlite" } },
   "observability": { "enabled": true }
 }

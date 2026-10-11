@@ -473,7 +473,7 @@ function AboutTab() {
       <Row label="Version">
         <p className="text-right font-mono text-sm">{info.data?.deployed_version ?? TALORYS_VERSION}</p>
       </Row>
-      <Row label="Deployment" hint="Your own Cloudflare account. Pages frontend → service binding → private Worker → Durable Object.">
+      <Row label="Deployment" hint="Your own Cloudflare account. One Worker serves the app and the API; your data lives in its Durable Object.">
         <div className="space-y-1 text-right text-xs text-fg-muted">
           {info.data ? (
             <>

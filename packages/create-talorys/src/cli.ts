@@ -3,13 +3,13 @@ import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { CancelledError, CliError } from "./errors";
 import { formatChecks, install, resetPassword, ensureAuthenticated, type Deps } from "./install";
-import { MANIFEST_FILE, readManifest } from "./manifest";
+import { MANIFEST_FILE, needsWorkerMigration, readManifest } from "./manifest";
 import { checkNodeVersion, detectGlobalClis } from "./requirements";
 import { readTemplateInfo } from "./scaffold";
 import { REQUIRED_SECRETS } from "./secrets";
 import { ClackUi } from "./ui";
 import { runChecks } from "./verify";
-import { Wrangler } from "./wrangler";
+import { CloudflareCli } from "./cf";
 
 const HELP = `create-talorys — deploy Talorys, your personal AI agent, to your own Cloudflare account.
 
@@ -53,8 +53,10 @@ async function status(dir: string, deps: Deps): Promise<number> {
       `Version        ${manifest.deployment_version ?? "unknown"}`,
       `Account        ${manifest.account_name ?? manifest.account_id}`,
       `Worker         ${manifest.worker_name}`,
-      `Pages project  ${manifest.pages_project_name}`,
       `URL            ${manifest.public_url ?? "(not deployed yet)"}`,
+      ...(manifest.pages_project_name
+        ? [`Old Pages site ${manifest.pages_project_name} (${needsWorkerMigration(manifest) ? "still in use — run update to move to one Worker" : "no longer used; delete it when ready"})`]
+        : []),
     ].join("\n"),
   );
   if (!manifest.public_url) return 1;
@@ -65,7 +67,7 @@ async function status(dir: string, deps: Deps): Promise<number> {
 }
 
 async function doctor(dir: string, deps: Deps): Promise<number> {
-  const { ui, wrangler } = deps;
+  const { ui, cf } = deps;
   ui.intro("◆ Talorys doctor");
   const problems: string[] = [];
   try {
@@ -76,7 +78,7 @@ async function doctor(dir: string, deps: Deps): Promise<number> {
     ui.error((e as Error).message);
   }
   try {
-    ui.success(`Bundled Wrangler ${await wrangler.version()}; templates ${readTemplateInfo().version}`);
+    ui.success(`Bundled cf ${await cf.version()}; templates ${readTemplateInfo().version}`);
   } catch (e) {
     problems.push((e as Error).message);
     ui.error((e as Error).message);
@@ -94,11 +96,11 @@ async function doctor(dir: string, deps: Deps): Promise<number> {
     problems.push("The installation's Cloudflare account is not accessible with the current login.");
     ui.error(problems.at(-1)!);
   } else {
-    wrangler.accountId = account.id;
+    cf.accountId = account.id;
     ui.success(`Account ${account.name}`);
-    if (await wrangler.workerExists(manifest.worker_name)) {
+    if (await cf.workerExists(manifest.worker_name)) {
       ui.success(`Worker ${manifest.worker_name} exists`);
-      const secrets = await wrangler.listSecrets(manifest.worker_name);
+      const secrets = await cf.listSecrets(manifest.worker_name);
       const missing = REQUIRED_SECRETS.filter((s) => !secrets.includes(s));
       if (missing.length) {
         problems.push(`Missing secrets: ${missing.join(", ")} — re-run the installer to configure them.`);
@@ -108,11 +110,10 @@ async function doctor(dir: string, deps: Deps): Promise<number> {
       problems.push(`Worker ${manifest.worker_name} not found — re-run the installer to deploy it.`);
       ui.error(problems.at(-1)!);
     }
-    const projects = await wrangler.listPagesProjects();
-    if (projects.some((p) => p.name === manifest.pages_project_name)) ui.success(`Pages project ${manifest.pages_project_name} exists`);
-    else {
-      problems.push(`Pages project ${manifest.pages_project_name} not found — re-run the installer.`);
-      ui.error(problems.at(-1)!);
+    if (needsWorkerMigration(manifest)) {
+      ui.warn(`This installation still serves its web app from the Pages project ${manifest.pages_project_name}. Run \`npx create-talorys@latest update\` to move to a single Worker.`);
+    } else if (manifest.pages_project_name) {
+      ui.info(`The old Pages project ${manifest.pages_project_name} is no longer used. Delete it when ready: \`npx cf pages delete ${manifest.pages_project_name}\``);
     }
   }
   if (manifest.public_url) {
@@ -158,7 +159,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
 
   const ui = new ClackUi();
-  const deps: Deps = { ui, wrangler: new Wrangler() };
+  const deps: Deps = { ui, cf: new CloudflareCli() };
   const password = process.env.TALORYS_OWNER_PASSWORD;
 
   try {

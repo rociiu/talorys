@@ -3,7 +3,7 @@ import { getAgentByName } from "agents";
 import { runInDurableObject } from "cloudflare:test";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 
-export const BASE = "https://talorys.example.pages.dev";
+export const BASE = "https://talorys.example.workers.dev";
 export const password = () => (env as unknown as { TEST_PASSWORD: string }).TEST_PASSWORD;
 
 let ipCounter = 1;

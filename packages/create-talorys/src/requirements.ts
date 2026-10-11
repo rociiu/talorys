@@ -15,7 +15,7 @@ export interface DetectedCli {
   version: string | null;
 }
 
-/** Reports globally installed Cloudflare CLIs (informational; the bundled Wrangler is used for deployment). */
+/** Reports globally installed Cloudflare CLIs (informational; the bundled cf is used for deployment). */
 export async function detectGlobalClis(execFn: Exec = defaultExec): Promise<DetectedCli[]> {
   const found: DetectedCli[] = [];
   for (const name of ["wrangler", "cf"]) {

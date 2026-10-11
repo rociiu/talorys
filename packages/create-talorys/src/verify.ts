@@ -14,12 +14,12 @@ export interface VerifyOptions {
 }
 
 /**
- * Non-inference post-deploy verification through the public Pages URL:
- *  1. the frontend responds,
- *  2. the session endpoint is reachable (Pages Function → service binding → Worker),
+ * Non-inference post-deploy verification through the public Worker URL:
+ *  1. the web app responds (static assets),
+ *  2. the session endpoint is reachable (Worker → agent Durable Object),
  *  3. an unauthenticated private request is rejected,
  *  4. storage is initialized and owner credentials are configured (/api/health).
- * Retries with backoff to absorb pages.dev / certificate propagation delays.
+ * Retries with backoff to absorb workers.dev / certificate propagation delays.
  */
 export async function verifyDeployment(baseUrl: string, opts: VerifyOptions = {}): Promise<CheckResult[]> {
   const fetchFn = opts.fetch ?? fetch;
@@ -73,7 +73,7 @@ export async function runChecks(baseUrl: string, fetchFn: FetchLike, deadline = 
     if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as { authenticated?: boolean };
     if (data.authenticated !== false) throw new Error("Unexpected session state");
-    return "Pages Function reached the private Worker";
+    return "API reached the agent";
   });
   await check("Private API rejects anonymous requests", async (get) => {
     const res = await get(`${url}/api/tasks`);

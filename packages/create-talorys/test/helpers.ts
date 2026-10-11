@@ -4,20 +4,41 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { SelectChoice, Ui } from "../src/ui";
 import { CancelledError } from "../src/errors";
-import { Wrangler } from "../src/wrangler";
+import { CloudflareCli } from "../src/cf";
 import { exec } from "../src/exec";
 import type { FetchLike } from "../src/verify";
 
-export const FAKE_WRANGLER = join(dirname(fileURLToPath(import.meta.url)), "fake-wrangler.mjs");
+export const FAKE_CF = join(dirname(fileURLToPath(import.meta.url)), "fake-cf.mjs");
 
 export interface FakeState {
   loggedIn: boolean;
   accounts: { id: string; name: string }[];
-  workers: Record<string, Record<string, { secrets: Record<string, { length: number; prefix: string }>; migrations: unknown[]; workers_dev: boolean; vars: Record<string, string>; deploys: number; durableObjectData: string }>>;
-  pages: Record<string, Record<string, { subdomain: string; deployments: number }>>;
-  calls: { key: string; args: string[]; account: string }[];
+  workers: Record<string, Record<string, FakeWorker>>;
+  /** Pages projects of older installations; the installer must never touch them. */
+  pages: Record<string, Record<string, { subdomain: string; deployments: number; services?: unknown[] }>>;
+  calls: { key: string; args: string[]; cwd: string; env: Record<string, string | undefined> }[];
   failNext: Record<string, string>;
-  subdomainSuffix?: string;
+  /** The account's workers.dev subdomain ("owner" when unset); null = never registered. */
+  workersSubdomain?: string | null;
+  /** Simulate Cloudflare marking deploys / secret changes as "via the script API" (cf strict mode then aborts). */
+  deployMarksApi?: boolean;
+  secretsBulkMarksApi?: boolean;
+  /** Path of the last secrets file cf was given, to check it was removed. */
+  lastSecretsFile?: string;
+}
+
+export interface FakeWorker {
+  secrets: Record<string, { length: number; prefix: string; tail?: string }>;
+  /** Wrangler-era Durable Object migrations (kept as history; cf never sends them). */
+  migrations: { tag: string; new_sqlite_classes?: string[] }[];
+  exports?: Record<string, { type: string; storage?: string; state?: string }>;
+  workers_dev: boolean;
+  assets?: { notFoundHandling?: string; runWorkerFirst?: string[]; files?: string[] } | null;
+  env?: Record<string, { type: string; value?: string; worker?: string; exportName?: string }>;
+  vars: Record<string, string>;
+  deploys: number;
+  durableObjectData: string;
+  lastDeployedFrom?: string;
 }
 
 export function makeSandbox(initial: Partial<FakeState> = {}) {
@@ -45,20 +66,79 @@ export function makeSandbox(initial: Partial<FakeState> = {}) {
       fn(s);
       writeFileSync(statePath, JSON.stringify(s));
     },
-    wrangler: () => new Wrangler(exec, FAKE_WRANGLER),
+    cf: () => new CloudflareCli(exec, FAKE_CF),
   };
 }
 
 export function makeTemplates(root: string, version: string): string {
   const dir = join(root, `templates-${version}`);
-  mkdirSync(join(dir, "agent"), { recursive: true });
-  mkdirSync(join(dir, "web/dist"), { recursive: true });
-  mkdirSync(join(dir, "web/functions/api"), { recursive: true });
+  mkdirSync(join(dir, "public"), { recursive: true });
   writeFileSync(join(dir, "version.json"), JSON.stringify({ version, built_at: "test" }));
-  writeFileSync(join(dir, "agent/worker.js"), `export default {}; // ${version}`);
-  writeFileSync(join(dir, "web/dist/index.html"), "<title>Talorys</title>");
-  writeFileSync(join(dir, "web/functions/api/[[path]].ts"), "export const onRequest = () => new Response('ok');");
+  writeFileSync(join(dir, "worker.js"), `export default {}; // ${version}`);
+  writeFileSync(join(dir, "public/index.html"), "<title>Talorys</title>");
+  writeFileSync(join(dir, "public/_headers"), "/*\n  X-Frame-Options: DENY\n");
   return dir;
+}
+
+/**
+ * Recreates an installation made by create-talorys 0.1.x (Wrangler, before the
+ * single-Worker layout): a private agent Worker created with the `v1` Durable
+ * Object migration (with secrets and data), a Pages project bound to it, the
+ * old manifest and the old agent/ + web/ directories.
+ */
+export function makeLegacyInstallation(sb: ReturnType<typeof makeSandbox>) {
+  const id = "abcd1234";
+  const workerName = `talorys-${id}-agent`;
+  const pagesProjectName = `talorys-${id}-web`;
+  sb.update((s) => {
+    s.workers.acc1 = {
+      [workerName]: {
+        secrets: { OWNER_PASSWORD_HASH: { length: 90, prefix: "pbkdf2-sha256$" }, SESSION_SECRET: { length: 43, prefix: "legacy-session" } },
+        migrations: [{ tag: "v1", new_sqlite_classes: ["TalorysAgent"] }],
+        workers_dev: false,
+        assets: null,
+        vars: { TALORYS_DEPLOYED_VERSION: "0.1.4" },
+        deploys: 3,
+        durableObjectData: "legacy-owner-data",
+        lastDeployedFrom: "wrangler",
+      },
+    };
+    s.pages.acc1 = {
+      [pagesProjectName]: { subdomain: `${pagesProjectName}.pages.dev`, deployments: 3, services: [{ binding: "AGENT", service: workerName }] },
+    };
+  });
+  for (const [file, text] of Object.entries({
+    "agent/worker.js": "export default {}; // 0.1.4",
+    "agent/wrangler.jsonc": JSON.stringify({ name: workerName, workers_dev: false }),
+    "web/wrangler.jsonc": JSON.stringify({ name: pagesProjectName, services: [{ binding: "AGENT", service: workerName }] }),
+    "web/dist/index.html": "<title>Talorys</title>",
+    "web/functions/api/[[path]].ts": "export const onRequest = () => new Response('ok');",
+  })) {
+    mkdirSync(dirname(join(sb.dir, file)), { recursive: true });
+    writeFileSync(join(sb.dir, file), text);
+  }
+  const now = "2026-09-01T00:00:00.000Z";
+  writeFileSync(
+    join(sb.dir, "talorys.json"),
+    JSON.stringify({
+      manifest_version: 1,
+      installation_id: id,
+      account_id: "acc1",
+      account_name: "Personal Account",
+      worker_name: workerName,
+      pages_project_name: pagesProjectName,
+      public_url: `https://${pagesProjectName}.pages.dev`,
+      deployment_version: "0.1.4",
+      agent_name: "Talorys",
+      timezone: "Europe/London",
+      semantic: false,
+      status: "deployed",
+      steps: ["scaffold", "worker", "secrets", "pages", "verified"],
+      created_at: now,
+      updated_at: now,
+    }),
+  );
+  return { workerName, pagesProjectName };
 }
 
 /** Scripted, non-TTY-free UI for tests. Answers are consumed in order. */
@@ -138,7 +218,7 @@ export const CANCEL = Symbol("cancel");
 
 export const STRONG_PASSWORD = "correct-horse-Battery-9";
 
-/** Simulates a healthy (or unhealthy) deployed Talorys behind pages.dev. */
+/** Simulates a healthy (or unhealthy) deployed Talorys at its workers.dev URL. */
 export function fakeSite(opts: { healthy?: boolean; failFirst?: number } = {}): FetchLike & { calls: string[] } {
   let failures = opts.failFirst ?? 0;
   const calls: string[] = [];

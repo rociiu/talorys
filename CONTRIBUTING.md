@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-This runs the agent Worker, the Pages Function proxy and the Vite UI locally
+This runs the Talorys Worker and the Vite UI locally
 with a mock AI provider; no Cloudflare account is needed. Open
 http://localhost:5173 and sign in with `talorys-dev-password`. See
 [docs/development.md](docs/development.md) for details.

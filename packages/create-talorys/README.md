@@ -8,11 +8,11 @@ npx create-talorys@latest
 ```
 
 The installer signs you in to Cloudflare (browser OAuth), asks for an agent name
-and an owner password, then deploys a private Worker with a SQLite Durable
-Object, configures secrets, deploys the Cloudflare Pages frontend with a service
-binding, verifies the live deployment and prints your `pages.dev` URL.
+and an owner password, then deploys a single Worker that serves the web app and
+the API with a SQLite Durable Object, configures secrets, verifies the live
+deployment and prints your `workers.dev` URL.
 
-It ships its own Wrangler and prebuilt artifacts, so no build tools are needed.
+It ships Cloudflare's [`cf`](https://www.npmjs.com/package/cf) CLI and prebuilt artifacts, so no build tools are needed.
 
 | Chat | Tasks |
 | --- | --- |
@@ -36,5 +36,10 @@ Environment: `TALORYS_OWNER_PASSWORD` (non-interactive), `CLOUDFLARE_API_TOKEN`.
 Re-running is idempotent: existing resources are reconciled, existing passwords
 are kept, and data is never deleted. The local `talorys.json` manifest contains
 no secrets.
+
+Installed with 0.1.x (Pages project + private Worker)? `update` migrates you
+to one Worker deployed with `cf`, keeping all data; you then delete the old
+Pages project yourself. See the
+[migration guide](https://github.com/rociiu/talorys/blob/main/docs/migrating-to-a-single-worker.md).
 
 MIT licensed.

@@ -39,11 +39,10 @@ npx create-talorys@latest
 ## 2. How it works
 
 ```
-Browser ──HTTPS──▶ Cloudflare Pages (React app + /api Pages Function)
-                         │  service binding (no public URL)
-                         ▼
-                   Private Worker (Hono router)
-                         │  getAgentByName("personal-agent")
+Browser ──HTTPS──▶ Talorys Worker (*.workers.dev)
+                         ├─ static assets: React app (no Worker code runs)
+                         └─ /api/*: Hono router
+                               │  getAgentByName("personal-agent")
                          ▼
                    TalorysAgent — Cloudflare Agents SDK Durable Object
                      ├─ SQLite: conversations, memories, tasks, notes, projects,
@@ -52,10 +51,10 @@ Browser ──HTTPS──▶ Cloudflare Pages (React app + /api Pages Function)
                      └─ Alarms: reminders and recurring schedules
 ```
 
-- The browser only ever talks to your `*.pages.dev` site. `/api/*` requests run a
-  Pages Function that forwards them over a **service binding** to the agent Worker.
-- The agent Worker is deployed with `workers_dev: false` and `preview_urls: false`:
-  it has **no public URL**.
+- Everything runs in **one Worker** at your `*.workers.dev` address. The web app
+  is served as static assets (no Worker invocation); only `/api/*` runs Worker
+  code, which forwards to the agent Durable Object.
+- Preview URLs are disabled, so old versions are never reachable.
 - Authentication and authorization happen in the Worker, not the frontend.
 - Chat responses stream as Server-Sent Events end-to-end.
 
@@ -65,8 +64,7 @@ More detail: [docs/architecture.md](docs/architecture.md).
 
 | Service | Used for | Free plan |
 | --- | --- | --- |
-| Cloudflare Pages | Frontend + Pages Function | Yes |
-| Cloudflare Workers | Private API Worker | Yes |
+| Cloudflare Workers | Web app (static assets) + API | Yes |
 | Durable Objects (SQLite) | All data, scheduling alarms | Yes |
 | Workers AI | Chat model (`@cf/zai-org/glm-4.7-flash`) | Yes, daily allocation |
 
@@ -81,14 +79,14 @@ npx create-talorys@latest
 
 The installer:
 
-1. Checks Node.js (22+) and uses its bundled Wrangler CLI (any globally installed `wrangler`/`cf` is detected but not required).
+1. Checks Node.js (22+) and uses its bundled [`cf`](https://www.npmjs.com/package/cf) CLI, Cloudflare's new command-line tool (any globally installed `wrangler`/`cf` is detected but not required).
 2. Verifies your Cloudflare login, or **opens Cloudflare's authorization page in your browser**.
 3. Lets you choose an account (if you have several) and an agent name.
 4. Asks for an owner password (hidden input, strength-checked). It is hashed locally with PBKDF2-SHA256 and stored only as a Cloudflare secret.
-5. Generates a 256-bit session secret and unique resource names (`talorys-<id>-agent`, `talorys-<id>-web`).
-6. Deploys the private Worker (creating its SQLite Durable Object), stores secrets, creates and deploys the Pages project with the service binding.
-7. Verifies the live deployment (frontend, auth endpoint, unauthenticated rejection, storage health) **without** running any AI inference.
-8. Prints the real `https://….pages.dev` URL reported by Cloudflare.
+5. Generates a 256-bit session secret and a unique Worker name (`talorys-<id>`).
+6. Deploys the Worker with `cf deploy --prebuilt`: the web app as static assets, its SQLite Durable Object, and the secrets in the same upload.
+7. Verifies the live deployment (web app, auth endpoint, unauthenticated rejection, storage health) **without** running any AI inference.
+8. Prints the real `https://….workers.dev` URL reported by Cloudflare.
 
 It writes a `talorys/` directory containing `talorys.json` (installation id,
 account id, resource names, URL — **no secrets**) and the deployable artifacts.
@@ -103,11 +101,10 @@ Non-interactive installs: `TALORYS_OWNER_PASSWORD=... npx create-talorys@latest 
 
 ### Permissions
 
-Browser login uses Wrangler's standard OAuth flow — no Global API Key. If you
+Browser login uses Cloudflare's OAuth flow (`cf auth login`) — no Global API Key. If you
 use an API token instead, it needs:
 
 - Account › Workers Scripts › Edit
-- Account › Cloudflare Pages › Edit
 - Account › Workers AI › Read
 - Account › Account Settings › Read
 - User › User Details › Read (optional; shows your email)
@@ -169,9 +166,8 @@ npm install
 npm run dev
 ```
 
-`npm run dev` starts the agent Worker (`wrangler dev`, port 8787), the Pages
-Function proxy with its service binding (`wrangler pages dev`, port 8788) and
-the Vite UI (http://localhost:5173) in one terminal. It creates
+`npm run dev` starts the Talorys Worker (`wrangler dev`, port 8787) and the Vite
+UI (http://localhost:5173, proxying `/api` to the Worker) in one terminal. It creates
 `apps/agent/.dev.vars` with a local password (`talorys-dev-password`, override
 with `TALORYS_DEV_PASSWORD`) and uses the deterministic mock AI provider, so no
 Cloudflare login is needed. State persists in `.wrangler/state`.
@@ -196,18 +192,27 @@ From your `talorys/` directory:
 npx create-talorys@latest update
 ```
 
-This redeploys the latest Worker and frontend to the **same** resources. The
+This redeploys the latest Worker and web app to the **same** Worker. The
 Durable Object namespace is never recreated (migrations are append-only), the
 owner password and sessions are kept, and schema migrations run automatically
 and transactionally on first request. Also available: `status` and `doctor`.
+
+**Installed with create-talorys 0.1.x?** Your next `update` moves the web app
+from the separate Pages project into the Worker and switches deployment to
+`cf`, keeping all data and your password. The app moves to a workers.dev
+address, and you delete the old Pages project when you're ready. See
+[docs/migrating-to-a-single-worker.md](docs/migrating-to-a-single-worker.md),
+especially if you use a custom domain.
 
 ## 11. Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
 | Installer stopped midway | Re-run the same command; it resumes. |
-| "did not pass its health checks yet" | New `pages.dev` sites can take a few minutes. Re-run. |
-| Permission errors | Use an account where you can edit Workers and Pages, or a token with the permissions above. |
+| "did not pass its health checks yet" | New `workers.dev` addresses can take a few minutes. Re-run. |
+| "no workers.dev subdomain yet" | Choose one under Workers & Pages in the Cloudflare dashboard, then re-run. |
+| "changed outside the installer" | Run `npx cf deploy --prebuilt` in your Talorys directory, confirm, then re-run. |
+| Permission errors | Use an account where you can edit Workers, or a token with the permissions above. |
 | Chat says the AI allocation is used up | Wait for the daily reset; or enable Demo mode in Settings → AI. |
 | Locked out after failed logins | Wait 15 minutes, or reset the password with the CLI. |
 
@@ -217,8 +222,8 @@ and transactionally on first request. Also available: `status` and `doctor`.
 ## Repository layout
 
 ```
-apps/agent              Private Worker: Hono API, TalorysAgent, tools, SQLite repositories
-apps/web                React + Vite app, Pages Function (functions/api/[[path]].ts)
+apps/agent              The Worker: Hono API, TalorysAgent, tools, SQLite repositories
+apps/web                React + Vite app (built into the Worker's static assets)
 packages/shared         Zod schemas, types, recurrence/DST logic, password hashing
 packages/create-talorys The one-command installer (npm package)
 tests/e2e               Playwright UI tests

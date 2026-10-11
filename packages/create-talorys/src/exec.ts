@@ -7,7 +7,7 @@ export interface ExecOptions {
   input?: string;
   /**
    * Show output live (for flows such as browser login). stdin is ignored so
-   * Wrangler sees no TTY and never blocks on its own unrelated prompts.
+   * the CLI sees no TTY and never blocks on its own unrelated prompts.
    */
   interactive?: boolean;
   timeoutMs?: number;

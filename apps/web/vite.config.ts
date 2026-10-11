@@ -2,13 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-// In development, /api is proxied to `wrangler pages dev` (port 8788), which runs the
-// real Pages Function and reaches the agent Worker through its service binding.
+// In development, /api is proxied to the Talorys Worker (`wrangler dev`, port 8787),
+// the same Worker that serves the built web app in production.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/api": { target: "http://127.0.0.1:8788", changeOrigin: false },
+      "/api": { target: "http://127.0.0.1:8787", changeOrigin: false },
     },
   },
   build: {

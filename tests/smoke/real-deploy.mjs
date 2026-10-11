@@ -2,9 +2,11 @@
 //
 // Creates a new Talorys deployment with the locally built create-talorys CLI,
 // then exercises it over HTTPS: login, private API, task CRUD, and (optionally)
-// one streamed chat turn through Pages Function → service binding → Worker.
+// one streamed chat turn through the Worker to the agent Durable Object. It also runs
+// two further updates, so consecutive cf deploys are covered.
 //
-// Required: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+// Required: CLOUDFLARE_ACCOUNT_ID, plus credentials: CLOUDFLARE_API_TOKEN (CI), or an
+// existing `npx cf auth login` on this machine.
 // Optional: TALORYS_SMOKE_AI=1 to also run one Workers AI chat turn (uses Neurons)
 //
 // Resources are left in place for inspection; the script prints how to remove them.
@@ -16,9 +18,9 @@ import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
-const { CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID } = process.env;
-if (!CLOUDFLARE_API_TOKEN || !CLOUDFLARE_ACCOUNT_ID) {
-  console.log("Skipping real-account smoke test: set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to run it.");
+const { CLOUDFLARE_ACCOUNT_ID } = process.env;
+if (!CLOUDFLARE_ACCOUNT_ID) {
+  console.log("Skipping real-account smoke test: set CLOUDFLARE_ACCOUNT_ID (and CLOUDFLARE_API_TOKEN, or sign in with `npx cf auth login`) to run it.");
   process.exit(0);
 }
 
@@ -52,6 +54,13 @@ const login = await call("/api/auth/login", { method: "POST", body: JSON.stringi
 assert.equal(login.status, 200, "login failed");
 assert.match(login.headers.get("set-cookie") ?? "", /__Host-talorys_session=.*HttpOnly.*SameSite=Strict/i);
 
+const home = await fetch(base);
+assert.equal(home.status, 200, "web app must be served by the Worker");
+assert.match(await home.text(), /<title>Talorys<\/title>/);
+assert.match(home.headers.get("content-security-policy") ?? "", /default-src 'self'/, "_headers must apply to static assets");
+const deepLink = await fetch(`${base}/tasks`, { headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
+assert.equal(deepLink.status, 200, "client-side routes must fall back to index.html");
+
 const created = await (await call("/api/tasks", { method: "POST", body: JSON.stringify({ title: "Smoke test task" }) })).json();
 assert.equal(created.task.title, "Smoke test task");
 assert.equal((await call(`/api/tasks/${created.task.id}`, { method: "DELETE" })).status, 200);
@@ -76,9 +85,18 @@ if (process.env.TALORYS_SMOKE_AI === "1") {
   if (/event: error/.test(text)) console.log(text.split("event: error")[1].slice(0, 300));
 }
 
+// cf always runs in strict mode without a TTY: make sure Cloudflare does not treat our own
+// deploys as "changed outside the installer", which would abort every later update.
+console.log("• Updating twice more (consecutive cf deploys must not trip strict mode)");
+for (let i = 0; i < 2; i++) {
+  const again = spawnSync(process.execPath, [cli, "update", "--yes", "--dir", join(work, "agent")], { env: process.env, stdio: "inherit" });
+  assert.equal(again.status, 0, `update ${i + 1} failed`);
+}
+assert.equal((await call("/api/auth/login", { method: "POST", body: JSON.stringify({ password }) })).status, 200, "password must survive updates");
+console.log("✓ Repeated updates keep the deployment and its secrets");
+
 console.log(`
 ✓ Smoke test passed for ${base}
 To remove the test deployment:
-  npx wrangler pages project delete ${manifest.pages_project_name}
-  npx wrangler delete --name ${manifest.worker_name}
+  npx cf workers delete ${manifest.worker_name}
 `);

@@ -52,7 +52,7 @@ chatRoutes.delete("/conversations", async (c) => {
 
 /**
  * Streams one agent turn as Server-Sent Events. The stream is produced inside the
- * Durable Object and passes unbuffered through the Worker and the Pages Function.
+ * Durable Object and passes unbuffered through the Worker.
  */
 chatRoutes.post("/chat", async (c) => {
   const input = await body(c, chatRequestSchema, 64 * 1024);

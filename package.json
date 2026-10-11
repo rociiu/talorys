@@ -13,18 +13,18 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "node scripts/dev-setup.mjs && node scripts/ensure-dist.mjs && concurrently -k -n agent,pages,web -c cyan,magenta,green \"npm:dev:agent\" \"npm:dev:pages\" \"npm:dev:web\"",
+    "dev": "node scripts/dev-setup.mjs && node scripts/ensure-dist.mjs && concurrently -k -n worker,web -c cyan,green \"npm:dev:agent\" \"npm:dev:web\"",
     "dev:agent": "npm run dev -w @talorys/agent",
-    "dev:pages": "npm run dev:pages -w @talorys/web",
     "dev:web": "npm run dev -w @talorys/web",
     "build": "npm run build -w @talorys/web && npm run build -w @talorys/agent && npm run build -w create-talorys",
-    "typecheck": "tsc --noEmit -p packages/shared && npm run typecheck -w @talorys/agent && npm run typecheck -w @talorys/web && tsc --noEmit -p apps/web/functions && npm run typecheck -w create-talorys",
+    "typecheck": "tsc --noEmit -p packages/shared && npm run typecheck -w @talorys/agent && npm run typecheck -w @talorys/web && npm run typecheck -w create-talorys",
     "lint": "biome lint .",
-    "test": "npm run test:shared && npm run test -w @talorys/agent && npm run test -w @talorys/web && npm run test -w create-talorys",
+    "test": "npm run test:shared && npm run test -w @talorys/agent && npm run test -w create-talorys",
     "test:shared": "vitest run --root packages/shared",
     "test:e2e": "playwright test",
     "test:pack": "npm run test:pack -w create-talorys",
     "test:smoke": "node tests/smoke/real-deploy.mjs",
+    "test:smoke:migrate": "node tests/smoke/real-migrate.mjs",
     "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {

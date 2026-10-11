@@ -1,4 +1,5 @@
-// `wrangler pages dev` needs the output directory to exist; Vite serves the UI in dev.
+// The Worker serves apps/web/dist as static assets, so `wrangler dev` (and the agent tests)
+// need the directory to exist. In development Vite serves the UI on :5173 instead.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 const dir = new URL("../apps/web/dist/", import.meta.url);
 if (!existsSync(dir)) {

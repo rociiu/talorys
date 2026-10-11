@@ -1,9 +1,0 @@
-// Local development configuration for the Talorys Pages frontend.
-// The installer generates the production equivalent with unique names.
-{
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "talorys-dev-web",
-  "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-10-01",
-  "services": [{ "binding": "AGENT", "service": "talorys-dev-agent" }]
-}

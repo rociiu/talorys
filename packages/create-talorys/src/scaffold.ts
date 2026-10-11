@@ -2,7 +2,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CliError } from "./errors";
-import { generateAgentConfig, generatePagesConfig, toJsonc } from "./config";
+import { BUILD_OUTPUT_DIR, generateBuildOutputConfig, generateWorkerConfig, toJson, WORKER_OUTPUT_DIR } from "./config";
 import { MANIFEST_FILE } from "./manifest";
 
 export interface TemplateInfo {
@@ -37,35 +37,40 @@ export function assertSafeTarget(dir: string): "new" | "existing" {
 
 export interface ScaffoldInput {
   dir: string;
+  accountId: string;
   workerName: string;
-  pagesProjectName: string;
   installationId: string;
   version: string;
   timezone: string;
   agentName: string;
   semanticDefault?: boolean;
+  /** Pages project left over from an installation created before the single-Worker layout. */
+  legacyPagesProject?: string;
 }
 
 /**
- * Writes the deployable project: the prebuilt agent Worker bundle, the static
- * frontend with its Pages Function, and generated Wrangler configs.
- * Generated artifacts are replaced on every run; the manifest is left alone.
+ * Writes the deployable project as a cf Build Output (.cloudflare/output/v0):
+ * the prebuilt Worker bundle, the static frontend and the Worker config, ready
+ * for `cf deploy --prebuilt`. Generated artifacts are replaced on every run;
+ * the manifest is left alone.
  */
 export function scaffoldProject(input: ScaffoldInput, templates = templatesDir()): void {
   const { dir } = input;
-  mkdirSync(join(dir, "agent"), { recursive: true });
-  mkdirSync(join(dir, "web"), { recursive: true });
+  mkdirSync(dir, { recursive: true });
+  removeTwoResourceLayout(dir);
 
-  cpSync(join(templates, "agent", "worker.js"), join(dir, "agent", "worker.js"));
-  for (const sub of ["dist", "functions"]) {
-    rmSync(join(dir, "web", sub), { recursive: true, force: true });
-    cpSync(join(templates, "web", sub), join(dir, "web", sub), { recursive: true });
-  }
+  const output = join(dir, BUILD_OUTPUT_DIR);
+  const worker = join(dir, WORKER_OUTPUT_DIR);
+  rmSync(output, { recursive: true, force: true });
+  mkdirSync(join(worker, "bundle"), { recursive: true });
+  cpSync(join(templates, "worker.js"), join(worker, "bundle", "worker.js"));
+  cpSync(join(templates, "public"), join(worker, "assets"), { recursive: true });
 
+  writeFileSync(join(output, "config.json"), toJson(generateBuildOutputConfig({ accountId: input.accountId })));
   writeFileSync(
-    join(dir, "agent", "wrangler.jsonc"),
-    toJsonc(
-      generateAgentConfig({
+    join(worker, "worker.config.json"),
+    toJson(
+      generateWorkerConfig({
         workerName: input.workerName,
         installationId: input.installationId,
         version: input.version,
@@ -75,25 +80,57 @@ export function scaffoldProject(input: ScaffoldInput, templates = templatesDir()
       }),
     ),
   );
-  writeFileSync(
-    join(dir, "web", "wrangler.jsonc"),
-    toJsonc(generatePagesConfig({ pagesProjectName: input.pagesProjectName, workerName: input.workerName })),
-  );
   writeFileSync(join(dir, ".gitignore"), ".wrangler/\nnode_modules/\n");
   writeFileSync(join(dir, "README.md"), projectReadme(input));
 }
 
+/**
+ * Installations created before the single-Worker layout kept a Wrangler Worker
+ * project in agent/ and a Pages project in web/. Removes those generated files
+ * (and the folders, once empty) so only the current layout remains. Nothing
+ * else is touched.
+ */
+function removeTwoResourceLayout(dir: string): void {
+  const generated: Record<string, string[]> = {
+    agent: ["worker.js", "wrangler.jsonc", ".wrangler"],
+    web: ["dist", "functions", "wrangler.jsonc", ".wrangler"],
+  };
+  for (const [folder, entries] of Object.entries(generated)) {
+    const path = join(dir, folder);
+    if (!existsSync(path)) continue;
+    for (const entry of entries) rmSync(join(path, entry), { recursive: true, force: true });
+    if (readdirSync(path).length === 0) rmSync(path, { recursive: true, force: true });
+  }
+}
+
 function projectReadme(input: ScaffoldInput): string {
+  const legacy = input.legacyPagesProject
+    ? `
+## Old Pages project
+
+This installation was created when Talorys used a separate Cloudflare Pages
+frontend (\`${input.legacyPagesProject}\`). The Worker now serves the web app
+itself, so that project is no longer needed. It still shows the previous
+version of the web app, so delete it once you have switched to the Worker URL.
+The installer never deletes anything, so run this yourself:
+
+\`\`\`bash
+npx cf pages delete ${input.legacyPagesProject}
+\`\`\`
+`
+    : "";
   return `# Your Talorys deployment
 
 This directory was created by \`create-talorys\` and identifies your deployment
 (\`${input.installationId}\`). Keep it — it contains no secrets, but the
 installer uses \`talorys.json\` to find your Cloudflare resources.
 
-| Resource | Name |
-| --- | --- |
-| Agent Worker (private) | \`${input.workerName}\` |
-| Pages project | \`${input.pagesProjectName}\` |
+Talorys runs as one Cloudflare Worker, \`${input.workerName}\`. It serves the web
+app as static assets, handles \`/api/*\`, and holds your data in a SQLite Durable
+Object. The deployable files are a prebuilt
+[cf](https://www.npmjs.com/package/cf) Build Output in \`${BUILD_OUTPUT_DIR}/\`
+(Worker config, bundle and web app); the installer regenerates them on every
+update.
 
 Commands (run inside this directory):
 
@@ -104,5 +141,5 @@ Commands (run inside this directory):
 
 Your data lives in a Durable Object inside your Cloudflare account, not in this folder.
 Use Settings → Privacy → Export in the app to download a backup.
-`;
+${legacy}`;
 }

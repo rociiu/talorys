@@ -1,7 +1,6 @@
 // Builds the deployable artifacts shipped inside the npm package:
-//   templates/agent/worker.js        prebundled private agent Worker
-//   templates/web/dist/**            static frontend
-//   templates/web/functions/**       Pages Function (service-binding proxy)
+//   templates/worker.js              prebundled Talorys Worker (API + agent Durable Object)
+//   templates/public/**              static frontend, served by the same Worker as static assets
 //   templates/version.json
 // The owner's machine therefore needs no build toolchain: only the bundled Wrangler.
 import { execFileSync } from "node:child_process";
@@ -34,14 +33,12 @@ const bundleDir = mkdtempSync(join(tmpdir(), "talorys-agent-"));
 run(process.execPath, [join(root, "node_modules/wrangler/bin/wrangler.js"), "deploy", "--dry-run", "--outdir", bundleDir, "--config", "wrangler.jsonc"], join(root, "apps/agent"));
 
 rmSync(out, { recursive: true, force: true });
-mkdirSync(join(out, "agent"), { recursive: true });
-mkdirSync(join(out, "web/functions/api"), { recursive: true });
-cpSync(join(bundleDir, "index.js"), join(out, "agent/worker.js"));
+mkdirSync(out, { recursive: true });
+cpSync(join(bundleDir, "index.js"), join(out, "worker.js"));
 const extra = readdirSync(bundleDir).filter((f) => !["index.js", "index.js.map", "README.md"].includes(f));
 if (extra.length) throw new Error(`Unexpected additional Worker modules: ${extra.join(", ")}`);
 rmSync(bundleDir, { recursive: true, force: true });
-cpSync(join(root, "apps/web/dist"), join(out, "web/dist"), { recursive: true });
-cpSync(join(root, "apps/web/functions/api/[[path]].ts"), join(out, "web/functions/api/[[path]].ts"));
+cpSync(join(root, "apps/web/dist"), join(out, "public"), { recursive: true });
 writeFileSync(join(out, "version.json"), `${JSON.stringify({ version: pkg.version, built_at: new Date().toISOString() }, null, 2)}\n`);
 
 // Safety net: no secrets or local dev values may ever ship in the package.
@@ -57,5 +54,5 @@ function scan(dir) {
   }
 }
 scan(out);
-if (!existsSync(join(out, "web/dist/index.html"))) throw new Error("Frontend build missing");
+if (!existsSync(join(out, "public/index.html"))) throw new Error("Frontend build missing");
 console.log(`✓ Templates ready (${pkg.version})`);

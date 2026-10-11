@@ -7,9 +7,12 @@ npm run dev
 
 | Process | Port | Purpose |
 | --- | --- | --- |
-| `wrangler dev --local` (apps/agent) | 8787 | Agent Worker + Durable Object (state in `.wrangler/state`) |
-| `wrangler pages dev` (apps/web) | 8788 | Real Pages Function + `AGENT` service binding |
-| Vite | 5173 | UI with HMR; proxies `/api` to 8788 |
+| `wrangler dev --local` (apps/agent) | 8787 | The Talorys Worker + Durable Object (state in `.wrangler/state`) |
+| Vite | 5173 | UI with HMR; proxies `/api` to 8787 |
+
+The Worker also serves `apps/web/dist` as static assets, exactly as in
+production. Run `npm run build -w @talorys/web` and open http://localhost:8787
+to try the production build without Vite.
 
 `scripts/dev-setup.mjs` creates `apps/agent/.dev.vars` (git-ignored) with
 `TALORYS_ENV=development`, the mock AI provider, a local password hash and a
@@ -28,10 +31,11 @@ npm run dev:remote-ai -w @talorys/agent   # instead of dev:agent
 | Script | What it does |
 | --- | --- |
 | `npm run build` | Web build, Worker bundle (dry run), CLI + templates |
-| `npm test` | Shared, agent (inside workerd), Pages Function and installer tests |
+| `npm test` | Shared, agent (inside workerd) and installer tests |
 | `npm run test:e2e` | Playwright UI tests on an isolated local stack |
 | `npm run test:pack` | `npm pack` the installer and run it outside the monorepo |
-| `npm run test:smoke` | Optional real Cloudflare deployment test |
+| `npm run test:smoke` | Optional real Cloudflare deployment test (install + repeated updates) |
+| `npm run test:smoke:migrate` | Optional real Cloudflare test: 0.1.x two-resource install migrated to one cf-deployed Worker, data checked |
 | `npm run typecheck` | TypeScript across all workspaces |
 | `npm run lint` | Biome |
 

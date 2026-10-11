@@ -4,24 +4,37 @@
 
 | Component | Location | Runs on |
 | --- | --- | --- |
-| Web app (React, Vite, Tailwind, TanStack Query, React Router) | `apps/web/src` | Cloudflare Pages (static) |
-| API proxy | `apps/web/functions/api/[[path]].ts` | Pages Function |
-| Agent Worker (Hono API + `TalorysAgent`) | `apps/agent/src` | Cloudflare Workers + Durable Objects |
+| Web app (React, Vite, Tailwind, TanStack Query, React Router) | `apps/web/src` | Workers Static Assets of the Talorys Worker |
+| Talorys Worker (Hono API + `TalorysAgent`) | `apps/agent/src` | Cloudflare Workers + Durable Objects |
 | Shared schemas, recurrence, crypto | `packages/shared` | Bundled into all of the above |
-| Installer | `packages/create-talorys` | The owner's machine (Node.js) |
+| Installer | `packages/create-talorys` | The owner's machine (Node.js); deploys with the bundled `cf` CLI |
 
 ## Request flow
 
-1. The browser loads static assets from `https://<project>.pages.dev`.
-2. Calls to `/api/*` (same origin, cookie auth) invoke the Pages Function.
-3. The function forwards the **original request** to `env.AGENT.fetch(request)` —
-   a service binding to the private Worker. URL, method, headers and body are
-   preserved, so the Worker can validate `Origin`. Responses (including SSE
-   streams) are returned without buffering.
-4. The Worker forwards `/api/*` to `getAgentByName(env.TalorysAgent, "personal-agent")`.
+One Worker serves everything at `https://<worker>.<subdomain>.workers.dev`.
+Its config declares the built web app as static assets (shown here as in
+`apps/agent/wrangler.jsonc`; the installer generates the same settings for
+`cf`):
+
+```jsonc
+"assets": {
+  "directory": "../web/dist",
+  "not_found_handling": "single-page-application",
+  "run_worker_first": ["/api/*"]
+}
+```
+
+1. The browser requests the app. Cloudflare serves matching files from the
+   asset store directly, with the headers from `_headers` (CSP, HSTS, caching),
+   without invoking the Worker. Unknown paths (client-side routes such as
+   `/tasks`) get `index.html`.
+2. Calls to `/api/*` (same origin, cookie auth) run the Worker's `fetch`
+   handler, because `run_worker_first` routes them past the asset store.
+3. The Worker forwards `/api/*` to `getAgentByName(env.TalorysAgent, "personal-agent")`.
    The instance name is fixed server-side; clients cannot address other agents.
    WebSocket upgrades are refused (the app uses HTTP + SSE only).
-5. `TalorysAgent.onRequest` runs the Hono app next to its SQLite database.
+4. `TalorysAgent.onRequest` runs the Hono app next to its SQLite database.
+   Responses, including SSE chat streams, are returned without buffering.
 
 ## TalorysAgent
 
@@ -79,7 +92,7 @@ shell, code execution, network or credentials.
 
 ## Free-tier choices
 
-No KV/D1/R2/Vectorize/Workflows. One Durable Object holds everything. Static
-assets are served without invoking Functions (Pages routes only `/api/*` to the
-function). Reminders and digests are deterministic. Chat context is bounded and
+No KV/D1/R2/Vectorize/Workflows. One Worker, one Durable Object. Static asset
+requests are free and never invoke the Worker; only `/api/*` counts against the
+Workers request allowance, once per call. Reminders and digests are deterministic. Chat context is bounded and
 summarized only after enough history overflows.

@@ -5,11 +5,13 @@ import type { Env } from "./env";
 export { TalorysAgent } from "./agent/talorys-agent";
 
 /**
- * Private backend entry point. Deployed with workers_dev and preview URLs
- * disabled, so it is reachable only through the Pages Function service binding.
+ * Worker entry point. The same Worker serves the web app as static assets; with
+ * `run_worker_first: ["/api/*"]` only API requests reach this code, so anything
+ * else arriving here is refused.
  *
  * Every /api request is forwarded to the single owner agent ("personal-agent").
  * The instance name is fixed server-side; clients cannot choose agent identities.
+ * Authentication and authorization happen inside the agent (see api/middleware.ts).
  */
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

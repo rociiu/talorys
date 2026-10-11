@@ -8,6 +8,6 @@ export default defineConfig({
   clean: true,
   // Shared code (password policy and hashing) is bundled; runtime deps stay external.
   noExternal: ["@talorys/shared"],
-  external: ["@clack/prompts", "wrangler"],
+  external: ["@clack/prompts", "cf"],
   banner: { js: "#!/usr/bin/env node" },
 });

@@ -17,7 +17,7 @@ deploys, receives security fixes. Users update with
 
 Please include:
 
-- affected component (installer, agent Worker, Pages Function, web app)
+- affected component (installer, Worker, web app)
 - steps to reproduce or a proof of concept
 - impact, and any suggested fix
 
