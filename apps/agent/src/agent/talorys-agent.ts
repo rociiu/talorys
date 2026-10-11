@@ -8,6 +8,7 @@ import { AgentRunner } from "./runner";
 import { createApi } from "../api/app";
 import { CloudflareWorkersAIProvider } from "../ai/workers-ai";
 import { MockAIProvider } from "../ai/mock";
+import { OpenAICompatibleProvider } from "../ai/openai-compatible";
 import type { AIProvider } from "../ai/provider";
 import { localDayBounds, formatLocal } from "../services/time";
 import { semanticExtensions } from "../semantic";
@@ -78,6 +79,13 @@ export class TalorysAgent extends Agent<Env, AgentState> {
   aiProvider(): AIProvider | null {
     const settings = this.services.settings.get();
     if (settings.demoMode) return new MockAIProvider();
+    if (this.env.TALORYS_AI_PROVIDER === "openai-compatible" || this.env.OPENAI_BASE_URL) {
+      return new OpenAICompatibleProvider({
+        baseUrl: this.env.OPENAI_BASE_URL || "http://127.0.0.1:8088/v1",
+        model: this.env.OPENAI_MODEL || "qwen3.8-27b",
+        apiKey: this.env.OPENAI_API_KEY,
+      });
+    }
     if (this.env.TALORYS_ENV === "development" && this.env.TALORYS_MOCK_AI === "1") return new MockAIProvider();
     if (!this.env.AI) return null;
     return new CloudflareWorkersAIProvider(this.env.AI, settings.model);

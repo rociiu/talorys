@@ -1,0 +1,42 @@
+desktop:
+  resolution:
+    width: 1280
+    height: 800
+  allow_resize: true
+  pixel_depth: 24
+
+network:
+  protocol: http
+  interface: 0.0.0.0
+  websocket_port: 8444
+  use_ipv4: true
+  use_ipv6: false
+  ssl:
+    require_ssl: false
+    pem_certificate: /home/computer/.vnc/self.crt
+    pem_key: /home/computer/.vnc/self.key
+
+user_session:
+  idle_timeout: never
+  concurrent_connections_prompt: false
+
+pointer:
+  enabled: true
+
+data_loss_prevention:
+  clipboard:
+    server_to_client:
+      enabled: true
+      size: unlimited
+    client_to_server:
+      enabled: true
+      size: unlimited
+
+command_line:
+  prompt: false
+
+server:
+  http:
+    httpd_directory: /usr/share/kasmvnc/www
+  advanced:
+    kasm_password_file: /home/computer/.kasmpasswd

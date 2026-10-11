@@ -10,6 +10,7 @@ import {
   Copy,
   History,
   Loader2,
+  Monitor,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -23,6 +24,8 @@ import {
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
+import { ComputerViewer } from "../components/ComputerViewer";
+import { useComputerStatus } from "../hooks/computer";
 import { keys, useApiMutation, useConversation, useConversations, useSettings } from "../hooks/queries";
 import { api, ApiError, streamChat } from "../lib/api";
 import { cn, copyText, relativeTime } from "../lib/utils";
@@ -39,9 +42,9 @@ interface StreamState {
 
 const SUGGESTIONS = [
   "오늘 무엇을 해야 할까요?",
+  "위키백과에서 대한민국의 수도와 인구를 검색해줘",
   "내일 프로젝트 검토할 일 추가해줘",
   "짧고 간결하게 대답하는 걸 선호한다고 기억해줘",
-  "매주 금요일 오후 5시에 다음 주 계획 세우라고 알려줘",
 ];
 
 export function ChatPage() {
@@ -50,8 +53,10 @@ export function ChatPage() {
   const qc = useQueryClient();
   const settings = useSettings();
   const conversation = useConversation(conversationId);
+  const computerStatus = useComputerStatus();
   const [stream, setStream] = useState<StreamState | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [computerOpen, setComputerOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -107,6 +112,9 @@ export function ChatPage() {
               setStream((s) => s && { ...s, text: s.text + event.delta });
               break;
             case "tool":
+              if (event.tool?.name?.startsWith("computer_")) {
+                setComputerOpen(true);
+              }
               setStream((s) => {
                 if (!s) return s;
                 const tools = s.tools.some((t) => t.id === event.tool.id)
@@ -170,6 +178,8 @@ export function ChatPage() {
           conversation={conversation.data?.conversation}
           onOpenHistory={() => setHistoryOpen(true)}
           onNew={() => navigate("/chat")}
+          onToggleComputer={() => setComputerOpen((v) => !v)}
+          computerActive={computerStatus.data?.session?.status === "running"}
         />
 
         <div
@@ -226,6 +236,8 @@ export function ChatPage() {
           <ConversationList activeId={conversationId} onNavigate={() => setHistoryOpen(false)} />
         </div>
       </Dialog>
+
+      <ComputerViewer open={computerOpen} onClose={() => setComputerOpen(false)} />
     </div>
   );
 }
@@ -234,10 +246,14 @@ function ChatHeader({
   conversation,
   onOpenHistory,
   onNew,
+  onToggleComputer,
+  computerActive,
 }: {
   conversation?: Conversation;
   onOpenHistory: () => void;
   onNew: () => void;
+  onToggleComputer: () => void;
+  computerActive: boolean;
 }) {
   return (
     <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-3 md:px-4">
@@ -247,10 +263,23 @@ function ChatHeader({
         </button>
         <h2 className="truncate text-sm font-medium text-fg">{conversation?.title ?? "새 대화"}</h2>
       </div>
-      <Button variant="ghost" size="sm" onClick={onNew}>
-        <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">새 대화</span>
-      </Button>
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant={computerActive ? "secondary" : "outline"}
+          size="sm"
+          onClick={onToggleComputer}
+          className="gap-1.5"
+          title="클라우드 컴퓨터 데스크톱 열기"
+        >
+          <Monitor className="h-4 w-4" />
+          <span className="hidden sm:inline">컴퓨터</span>
+          {computerActive && <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onNew}>
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">새 대화</span>
+        </Button>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { noteTools, projectTools } from "./notes";
 import { memoryTools } from "./memories";
 import { reminderTools } from "./reminders";
 import { searchTools } from "./search";
+import { computerTools } from "./computer";
 
 /**
  * Every tool available to the agent. To add a capability, create a module with
@@ -18,6 +19,7 @@ export const ALL_TOOLS: ToolDefinition[] = [
   ...memoryTools,
   ...reminderTools,
   ...searchTools,
+  ...computerTools,
 ] as ToolDefinition[];
 
 const names = new Set<string>();

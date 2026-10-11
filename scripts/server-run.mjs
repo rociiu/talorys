@@ -9,6 +9,7 @@ const env = { ...process.env, WRANGLER_SEND_METRICS: "false" };
 let agentProc = null;
 let pagesProc = null;
 let relayProc = null;
+let computerProc = null;
 let exiting = false;
 
 function cleanup() {
@@ -16,6 +17,9 @@ function cleanup() {
   exiting = true;
   console.log("[talorys-server] Shutting down all services...");
 
+  if (computerProc && !computerProc.killed) {
+    try { computerProc.kill("SIGTERM"); } catch (_) {}
+  }
   if (relayProc && !relayProc.killed) {
     try { relayProc.kill("SIGTERM"); } catch (_) {}
   }
@@ -31,7 +35,8 @@ function cleanup() {
   }
 
   try {
-    execSync("fuser -k 28787/tcp 28788/tcp 8790/tcp 2>/dev/null || true");
+    execSync("fuser -k 28787/tcp 28788/tcp 28789/tcp 8790/tcp 2>/dev/null || true");
+    execSync("docker rm -f talorys-computer-sandbox 2>/dev/null || true");
   } catch (_) {}
 }
 
@@ -44,11 +49,11 @@ process.on("exit", cleanup);
 
 // Step 0: Ensure ports are completely clean before startup
 try {
-  execSync("fuser -k 28787/tcp 28788/tcp 8790/tcp 2>/dev/null || true");
+  execSync("fuser -k 28787/tcp 28788/tcp 28789/tcp 8790/tcp 2>/dev/null || true");
 } catch (_) {}
 
 // Step 1: Start Bridge Relay
-console.log("[talorys-server] Starting Bridge Relay on 172.17.0.1:8790 -> 127.0.0.1:28788...");
+console.log("[talorys-server] Starting Bridge Relay on 172.17.0.1:8790 -> 127.0.0.1:28788 & 28789...");
 relayProc = spawn("python3", ["/home/wasuphj/.local/bin/talorys-relay"], {
   stdio: ["ignore", "pipe", "pipe"]
 });
@@ -57,6 +62,19 @@ relayProc.stderr.on("data", (d) => process.stderr.write(`[relay-err] ${d}`));
 relayProc.on("exit", (code, signal) => {
   console.error(`[talorys-server] Relay process exited with code=${code}, signal=${signal}`);
   if (!exiting) { cleanup(); process.exit(1); }
+});
+
+// Step 1.5: Start Computer Manager on port 28789
+console.log("[talorys-server] Starting Computer Manager on port 28789...");
+computerProc = spawn(process.execPath, [join(root, "services/computer-manager/dist/server.mjs")], {
+  cwd: root,
+  env,
+  stdio: ["ignore", "pipe", "pipe"]
+});
+computerProc.stdout.on("data", (d) => process.stdout.write(`[computer] ${d}`));
+computerProc.stderr.on("data", (d) => process.stderr.write(`[computer-err] ${d}`));
+computerProc.on("exit", (code, signal) => {
+  console.error(`[talorys-server] Computer Manager exited with code=${code}, signal=${signal}`);
 });
 
 // Step 2: Start Agent Worker

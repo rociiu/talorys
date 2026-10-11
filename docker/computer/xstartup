@@ -1,0 +1,22 @@
+#!/bin/bash
+openbox-session &
+
+# 127.0.0.1:9223의 Chromium CDP를 0.0.0.0:9222로 투명 릴레이
+socat TCP-LISTEN:9222,fork,reuseaddr TCP:127.0.0.1:9223 &
+
+# 약간 대기 후 브라우저 기동
+(
+  sleep 1
+  chromium \
+    --no-sandbox \
+    --disable-dev-shm-usage \
+    --disable-gpu \
+    --remote-debugging-port=9223 \
+    --window-position=0,0 \
+    --window-size=1280,800 \
+    --start-maximized \
+    --no-first-run \
+    --no-default-browser-check \
+    --password-store=basic \
+    "https://www.google.co.kr" &
+) &
