@@ -1,4 +1,20 @@
-import { BACKUP_FORMAT, BACKUP_VERSION, type Backup, TALORYS_VERSION, backupSchema, scheduleSpecSchema } from "@talorys/shared";
+import {
+  BACKUP_FORMAT,
+  BACKUP_VERSION,
+  ENCRYPTED_BACKUP_FORMAT,
+  type Backup,
+  type SignedBackup,
+  type EncryptedBackup,
+  TALORYS_VERSION,
+  backupSchema,
+  signedBackupSchema,
+  encryptedBackupSchema,
+  hasPrototypePollution,
+  scheduleSpecSchema,
+  hmacSha256Hex,
+  toBase64Url,
+  fromBase64Url,
+} from "@talorys/shared";
 import type { Services } from "./container";
 import { ValidationError } from "../api/errors";
 
@@ -20,7 +36,15 @@ export function exportData(s: Services): Backup {
       projects: db.all(`SELECT * FROM tal_projects ORDER BY created_at`),
       automations: db
         .all<Record<string, unknown>>(`SELECT id, name, kind, message, schedule, enabled, created_at, updated_at FROM tal_automations`)
-        .map((a) => ({ ...a, schedule: JSON.parse(String(a.schedule)), enabled: a.enabled === 1 })),
+        .map((a) => {
+          let schedule: unknown = null;
+          try {
+            schedule = JSON.parse(String(a.schedule));
+          } catch {
+            schedule = null;
+          }
+          return { ...a, schedule, enabled: a.enabled === 1 };
+        }),
     },
   } as unknown as Backup;
 }
@@ -46,6 +70,10 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T):
  * that exists only locally is deleted. Imported automations are re-armed afterwards.
  */
 export async function importData(s: Services, raw: unknown): Promise<ImportSummary> {
+  if (hasPrototypePollution(raw)) {
+    throw new ValidationError("Prototype pollution attempt detected");
+  }
+
   const parsed = backupSchema.safeParse(raw);
   if (!parsed.success) throw ValidationError.fromZod(parsed.error);
   const backup = parsed.data;
@@ -69,7 +97,7 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
     for (const c of d.conversations) {
       db.run(
         `INSERT INTO tal_conversations (id, title, summary, summary_upto, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET title = excluded.title, updated_at = excluded.updated_at`,
+         ON CONFLICT(id) DO UPDATE SET title = excluded.title, summary = excluded.summary, summary_upto = excluded.summary_upto, updated_at = excluded.updated_at`,
         c.id, c.title, strOrNull(c.summary), strOrNull(c.summary_upto), c.created_at, c.updated_at,
       );
     }
@@ -123,7 +151,7 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
          ON CONFLICT(id) DO UPDATE SET name = excluded.name, kind = excluded.kind, message = excluded.message,
            schedule = excluded.schedule, enabled = excluded.enabled, updated_at = excluded.updated_at`,
         a.id, a.name, kind, str(a.message), JSON.stringify(schedule.data), enabled ? 1 : 0, enabled ? "scheduled" : "paused",
-        str(a.created_at, now), now,
+        str(a.created_at, now), str(a.updated_at, now),
       );
       automations++;
     }
@@ -147,4 +175,163 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
   if (summary.automations > 0 || s.settings.get().timezone !== previousTimezone) await s.automations.rearmAll();
   s.activity.record("data.imported", `Imported backup from ${backup.exported_at}`);
   return summary;
+}
+
+// ---------- Cryptographic Signed & Encrypted Backup Services ----------
+
+export async function exportSignedData(s: Services, secret: string): Promise<SignedBackup> {
+  const plain = exportData(s);
+  const hmac = await hmacSha256Hex(secret, `${plain.format}$${plain.version}$${plain.exported_at}$${JSON.stringify(plain.data)}`);
+  return {
+    ...plain,
+    hmac,
+  };
+}
+
+export async function verifyBackupHmac(backup: any, secret: string): Promise<boolean> {
+  if (!backup || typeof backup !== "object" || !backup.hmac || typeof backup.hmac !== "string") return false;
+  if (!/^[0-9a-f]{64}$/i.test(backup.hmac)) return false;
+
+  if ("ciphertext" in backup) {
+    const enc = backup as EncryptedBackup;
+    const expected = await hmacSha256Hex(secret, `${enc.format}$${enc.version}$${enc.exported_at}$${enc.iv}$${enc.ciphertext}`);
+    return enc.hmac.toLowerCase() === expected.toLowerCase();
+  }
+
+  if ("data" in backup) {
+    if (backup.format !== BACKUP_FORMAT) return false;
+    const expected = await hmacSha256Hex(secret, `${backup.format}$${backup.version}$${backup.exported_at}$${JSON.stringify(backup.data)}`);
+    return backup.hmac.toLowerCase() === expected.toLowerCase();
+  }
+
+  return false;
+}
+
+export async function importSignedData(s: Services, raw: unknown, secret: string): Promise<ImportSummary> {
+  if (hasPrototypePollution(raw)) {
+    throw new ValidationError("Prototype pollution attempt detected");
+  }
+  const valid = await verifyBackupHmac(raw, secret);
+  if (!valid) {
+    throw new ValidationError("HMAC verification failed. The backup data may be tampered or the key is incorrect.");
+  }
+  const parsed = signedBackupSchema.safeParse(raw);
+  if (!parsed.success) throw ValidationError.fromZod(parsed.error);
+  return importData(s, parsed.data);
+}
+
+export async function exportEncryptedData(s: Services, secret: string): Promise<EncryptedBackup> {
+  const plain = exportData(s);
+  const jsonStr = JSON.stringify(plain.data);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"],
+  );
+  const salt = new Uint8Array(16);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 10000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"],
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(jsonStr);
+  const encryptedBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+  const ctBytes = new Uint8Array(encryptedBuf);
+  const tagBytes = ctBytes.slice(ctBytes.length - 16);
+
+  const b64Iv = toBase64Url(iv);
+  const b64Ct = toBase64Url(ctBytes);
+  const b64Tag = toBase64Url(tagBytes);
+
+  const exported_at = new Date().toISOString();
+  const hmac = await hmacSha256Hex(secret, `${ENCRYPTED_BACKUP_FORMAT}$${BACKUP_VERSION}$${exported_at}$${b64Iv}$${b64Ct}`);
+
+  return {
+    format: ENCRYPTED_BACKUP_FORMAT,
+    version: BACKUP_VERSION,
+    exported_at,
+    app_version: TALORYS_VERSION,
+    algorithm: "AES-GCM-256",
+    iv: b64Iv,
+    ciphertext: b64Ct,
+    tag: b64Tag,
+    hmac,
+  };
+}
+
+export async function importEncryptedData(s: Services, raw: unknown, secret: string): Promise<ImportSummary> {
+  if (hasPrototypePollution(raw)) {
+    throw new ValidationError("Prototype pollution attempt detected");
+  }
+  const parsed = encryptedBackupSchema.safeParse(raw);
+  if (!parsed.success) throw ValidationError.fromZod(parsed.error);
+  const enc = parsed.data;
+
+  const validHmac = await verifyBackupHmac(enc, secret);
+  if (!validHmac) throw new ValidationError("HMAC verification failed on encrypted backup.");
+
+  let ctBytes: Uint8Array;
+  let ivBytes: Uint8Array;
+  try {
+    ctBytes = fromBase64Url(enc.ciphertext);
+    ivBytes = fromBase64Url(enc.iv);
+  } catch {
+    throw new ValidationError("Malformed base64url encoding in encrypted backup.");
+  }
+
+  if (ctBytes.length < 16) {
+    throw new ValidationError("Ciphertext is too short.");
+  }
+
+  if (enc.tag) {
+    const expectedTag = toBase64Url(ctBytes.slice(ctBytes.length - 16));
+    if (enc.tag !== expectedTag) {
+      throw new ValidationError("Authentication tag mismatch in encrypted backup.");
+    }
+  }
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"],
+  );
+  const salt = new Uint8Array(16);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 10000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"],
+  );
+
+  let decrypted: ArrayBuffer;
+  try {
+    decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ivBytes }, key, ctBytes);
+  } catch {
+    throw new ValidationError("Decryption failed. The ciphertext may be corrupted or tampered.");
+  }
+
+  const jsonStr = new TextDecoder().decode(decrypted);
+  let data: unknown;
+  try {
+    data = JSON.parse(jsonStr);
+  } catch {
+    throw new ValidationError("Decrypted payload is not valid JSON.");
+  }
+
+  return importData(s, {
+    format: BACKUP_FORMAT,
+    version: enc.version,
+    exported_at: enc.exported_at,
+    app_version: enc.app_version,
+    data,
+  });
 }

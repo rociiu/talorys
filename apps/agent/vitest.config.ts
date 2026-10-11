@@ -12,7 +12,14 @@ async function pbkdf2(password: string): Promise<string> {
   return `pbkdf2-sha256$100000$${b64(salt)}$${b64(new Uint8Array(bits))}`;
 }
 
+import path from "node:path";
+
 export default defineConfig(async () => ({
+  resolve: {
+    alias: {
+      "@talorys/shared": path.resolve(__dirname, "../../packages/shared/src/index.ts"),
+    },
+  },
   plugins: [
     cloudflareTest({
       wrangler: { configPath: "./wrangler.jsonc" },
@@ -31,3 +38,4 @@ export default defineConfig(async () => ({
   ],
   test: { include: ["test/**/*.test.ts"], testTimeout: 30_000 },
 }));
+
