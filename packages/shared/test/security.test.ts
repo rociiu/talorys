@@ -11,6 +11,7 @@ describe("password policy", () => {
     expect(checkPasswordStrength("password1234")).toMatch(/common/);
     expect(checkPasswordStrength("Sunny-Garden-42")).toBeNull();
     expect(checkPasswordStrength("a long passphrase of words")).toBeNull();
+    expect(checkPasswordStrength("🚀".repeat(10))).toMatch(/repeating/);
   });
 });
 
@@ -27,6 +28,8 @@ describe("password hashing", () => {
     expect(await verifyPassword("Sunny-Garden-42", tampered)).toBe(false);
     expect(await verifyPassword("x", "plaintext")).toBe(false);
     expect(await verifyPassword("x", "pbkdf2-sha256$1$abc$def")).toBe(false); // too few iterations
+    expect(await verifyPassword("x", "pbkdf2-sha256$10000$A$B")).toBe(false); // corrupted base64 salt/hash safe recovery
+    expect(await verifyPassword(null as any, hash)).toBe(false); // non-string password safe recovery
   });
 
   it("uses unique salts", async () => {
@@ -37,6 +40,7 @@ describe("password hashing", () => {
     expect(await hmacSha256Hex("k", "v")).toMatch(/^[0-9a-f]{64}$/);
     expect(timingSafeEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2]))).toBe(true);
     expect(timingSafeEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))).toBe(false);
+    expect(timingSafeEqual(null as any, new Uint8Array([1, 2]))).toBe(false);
   });
 });
 
