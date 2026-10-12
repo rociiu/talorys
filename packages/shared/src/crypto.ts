@@ -49,13 +49,17 @@ export function isPasswordHash(value: string | undefined | null): boolean {
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  if (!isPasswordHash(stored)) return false;
-  const [, iterStr, saltStr, hashStr] = stored.split("$");
-  const iterations = Number(iterStr);
-  if (!Number.isInteger(iterations) || iterations < 10_000 || iterations > PBKDF2_ITERATIONS) return false;
-  const expected = fromBase64Url(hashStr!);
-  const actual = await derive(password, fromBase64Url(saltStr!), iterations);
-  return timingSafeEqual(actual, expected);
+  try {
+    if (!isPasswordHash(stored)) return false;
+    const [, iterStr, saltStr, hashStr] = stored.split("$");
+    const iterations = Number(iterStr);
+    if (!Number.isInteger(iterations) || iterations < 10_000 || iterations > PBKDF2_ITERATIONS) return false;
+    const expected = fromBase64Url(hashStr!);
+    const actual = await derive(password, fromBase64Url(saltStr!), iterations);
+    return timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
 }
 
 export function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {

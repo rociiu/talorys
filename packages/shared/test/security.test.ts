@@ -27,6 +27,8 @@ describe("password hashing", () => {
     expect(await verifyPassword("Sunny-Garden-42", tampered)).toBe(false);
     expect(await verifyPassword("x", "plaintext")).toBe(false);
     expect(await verifyPassword("x", "pbkdf2-sha256$1$abc$def")).toBe(false); // too few iterations
+    expect(await verifyPassword("x", "pbkdf2-sha256$50000$bad!salt$bad!hash")).toBe(false); // invalid base64
+    expect(await verifyPassword("x", "pbkdf2-sha256$50000$c2FsdA$aGFzaA")).toBe(false); // malformed hash
   });
 
   it("uses unique salts", async () => {
