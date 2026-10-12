@@ -9,7 +9,7 @@ export function checkPasswordStrength(password: string): string | null {
     return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
   }
   if (password.length > 256) return "Use at most 256 characters.";
-  if (/^(.)\1+$/su.test(password)) return "Avoid repeating a single character.";
+  if (isRepeatedGrapheme(password)) return "Avoid repeating a single character.";
   const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
   if (password.length < 16 && classes < 2) {
     return "Mix letters with numbers or symbols, or use a passphrase of 16+ characters.";
@@ -20,4 +20,13 @@ export function checkPasswordStrength(password: string): string | null {
     return "Avoid common words such as 'password'.";
   }
   return null;
+}
+
+function isRepeatedGrapheme(password: string): boolean {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter();
+    const graphemes = Array.from(segmenter.segment(password), (s) => s.segment);
+    return graphemes.length > 0 && graphemes.every((g) => g === graphemes[0]);
+  }
+  return /^(.)\1+$/su.test(password);
 }
