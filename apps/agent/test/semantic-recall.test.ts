@@ -840,12 +840,13 @@ describe("semanticNeighbors", () => {
       s.memories.clear();
       writeSemanticConfig(s.settings, { enabled: true }, s.db);
       invalidateSemanticCache(s);
-      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
       const others = [
         s.memories.create({ content: "I live in Porto", category: "fact" }),
         s.memories.create({ content: "My favourite colour is green", category: "preference" }),
         s.memories.create({ content: "The dog is called Rex", category: "fact" }),
       ];
+      // Neighbors are older memories, so the target is created last.
+      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
       await runIndexer(createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!));
       const out = await semanticNeighbors(s, workerEnv, m, { minCosine: -1, limit: 10, exclude: new Set() });
       expect(out.map((n) => n.id).sort()).toEqual(others.map((o) => o.id).sort());
