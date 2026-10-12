@@ -59,7 +59,7 @@ same `AI` binding as chat. No new key or service.
 
 With it on, the wording rules and semantic recall only *nominate* older
 memories: the rule hits, plus up to 3 current memories with a cosine of 0.60 or
-more to the new one (semantic recall on only; the vectors are already there).
+more to the new one (semantic recall on only; only up-to-date vectors are used).
 One Clef call per save asks how the new memory relates to each of them, and
 Clef returns a probability for every answer:
 
@@ -67,7 +67,7 @@ Clef returns a probability for every answer:
 | --- | --- |
 | Replaces it, probability 0.8 or more | Old becomes past (reversible) |
 | Replaces it, below 0.8, or conflicts | **Both kept**; shown under *Needs review* |
-| More detail, compatible, or unrelated | Nothing changes |
+| More detail, compatible, or unrelated | Nothing changes, unless the wording rules would have replaced it: then **both kept**; shown under *Needs review* |
 
 The facts are sent as data, and only Clef's probabilities are read, never free
 text. Each call counts as one request against your daily AI request limit
@@ -75,8 +75,14 @@ text. Each call counts as one request against your daily AI request limit
 runs only when there is something to compare against.
 
 When Clef can't answer (mock AI or demo mode, the daily limit is reached, an
-error or an unexpected response), nothing changes by itself: rule hits wait for
-review, and memories nominated only by similarity are left alone.
+error or an unexpected response), the check falls back to the wording rules:
+rule hits are handled exactly as with the check off, and memories nominated
+only by similarity are left alone. Clef and the daily limit are checked before
+any similarity lookup, so such a save spends no embeddings. The new memory is
+embedded on its own if its vector is missing or out of date (counted against
+the daily embedding limit); older memories whose vectors are out of date are
+skipped until the background index catches up. A save cancelled while Clef is
+answering finishes with the wording rules and is not counted as an AI error.
 
 With the check off, detection is the wording rules alone, as described above.
 
