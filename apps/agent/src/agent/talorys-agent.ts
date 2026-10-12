@@ -12,6 +12,8 @@ import type { AIProvider } from "../ai/provider";
 import { localDayBounds, formatLocal } from "../services/time";
 import { semanticExtensions } from "../semantic";
 import { AppError } from "../api/errors";
+import { semanticNeighbors } from "../semantic/neighbors";
+import { CLEF_MODEL, type ClefRun } from "../memory/conflict";
 
 interface AgentState {
   /** Unread notifications, kept in agent state for cheap polling. */
@@ -47,7 +49,11 @@ export class TalorysAgent extends Agent<Env, AgentState> {
         },
         exists: async (id) => (await this.getScheduleById(id)) !== undefined,
       };
-      this._services = createServices(this.ctx.storage, this.env, scheduler, { provider: () => this.aiProvider() });
+      this._services = createServices(this.ctx.storage, this.env, scheduler, {
+        clef: () => this.clefRun(),
+        neighbors: (memory) => semanticNeighbors(this.services, this.env, memory),
+        ...(this.env.TALORYS_ENV === "development" ? { onAiCheck: (check) => console.info("memory.ai_check", JSON.stringify(check)) } : {}),
+      });
       migrate(this._services.db);
     }
     return this._services;
@@ -82,6 +88,13 @@ export class TalorysAgent extends Agent<Env, AgentState> {
     if (this.env.TALORYS_ENV === "development" && this.env.TALORYS_MOCK_AI === "1") return new MockAIProvider();
     if (!this.env.AI) return null;
     return new CloudflareWorkersAIProvider(this.env.AI, settings.model);
+  }
+
+  /** Clef for the memory-history AI check: only with real Workers AI (not mock AI or demo mode). */
+  clefRun(): ClefRun | null {
+    if (!this.env.AI || !(this.aiProvider() instanceof CloudflareWorkersAIProvider)) return null;
+    const ai = this.env.AI as unknown as { run(model: string, input: unknown, options?: { signal?: AbortSignal }): Promise<unknown> };
+    return (request, signal) => ai.run(CLEF_MODEL, request, { signal });
   }
 
   runner(): AgentRunner {

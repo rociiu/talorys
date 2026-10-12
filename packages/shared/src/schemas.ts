@@ -310,7 +310,7 @@ export type Limits = z.infer<typeof limitsSchema>;
 export const memoryHistorySettingsSchema = z.object({
   /** Detect when a new memory replaces or may contradict an older one (rule-based, no AI). */
   conflictReview: z.boolean(),
-  /** Ask the chat model to double-check ambiguous conflicts (uses one AI request per check). */
+  /** Let Clef (Workers AI decision model) decide conflicts that rules or semantic recall nominate (one AI request per check). */
   aiConflictCheck: z.boolean(),
 });
 export type MemoryHistorySettings = z.infer<typeof memoryHistorySettingsSchema>;

@@ -55,7 +55,7 @@ user-facing description.
 
 | Module | Responsibility |
 | --- | --- |
-| `conflict.ts` | Deterministic relationship rules; optional, validated AI double-check |
+| `conflict.ts` | Deterministic relationship rules; optional Clef (Workers AI decision model) check: request, response validation, decision |
 | `lifecycle.ts` | Supersede / status changes / history / review resolution; cycle prevention; stated-date extraction |
 | `intent.ts` | Detects questions about the past |
 | `service.ts` | `MemoryHistoryService`: write paths, conflict pipeline, complete deletion (incl. semantic vectors), prompt labels |
@@ -63,7 +63,8 @@ user-facing description.
 Write paths (`POST/PATCH /api/memories`, `/correct`, the `remember` and
 `update_memory` tools) save the memory first, then run conflict detection. It
 never runs per chat message and uses no AI unless the owner enables the
-double-check. Both recall paths leave past (`historical`) memories out unless
+AI conflict check. Then rule hits and semantically similar memories
+(`semantic/neighbors.ts`) only nominate, and one Clef call per save decides. Both recall paths leave past (`historical`) memories out unless
 the question is about the past; then earlier versions of the recalled facts are
 added.
 

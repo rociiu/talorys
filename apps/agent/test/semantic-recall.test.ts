@@ -53,6 +53,7 @@ import { env } from "cloudflare:workers";
 import golden from "./fixtures/recall-golden.json";
 import { AgentRunner } from "../src/agent/runner";
 import { selectRelevantMemories } from "../src/agent/memory";
+import { semanticNeighbors } from "../src/semantic/neighbors";
 import { buildSystemPrompt } from "../src/agent/prompt";
 import type { Services } from "../src/services/container";
 import type { Env } from "../src/env";
@@ -814,5 +815,41 @@ describe("golden recall replay", () => {
     const c = cases.find((x) => x.id === "S-mountain")!;
     const { lines, vectorHits } = await replay(c, c.memories);
     console.info(`[golden] S-mountain (gate: false) selected:\n${lines.join("\n") || "(none)"}\nvector hits: ${vectorHits.length}`);
+  });
+});
+
+describe("semanticNeighbors", () => {
+  it("returns nothing while semantic recall was never enabled", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      dropSemanticData(s.db);
+      deleteSemanticConfig(s.settings);
+      invalidateSemanticCache(s);
+      s.memories.clear();
+      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      s.memories.create({ content: "I live in Porto", category: "fact" });
+      expect(await semanticNeighbors(s, workerEnv, m)).toEqual([]);
+    });
+  });
+
+  it("ranks other memories by cosine, best first, without the memory itself", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      dropSemanticData(s.db);
+      deleteSemanticConfig(s.settings);
+      s.memories.clear();
+      writeSemanticConfig(s.settings, { enabled: true }, s.db);
+      invalidateSemanticCache(s);
+      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      const others = [
+        s.memories.create({ content: "I live in Porto", category: "fact" }),
+        s.memories.create({ content: "My favourite colour is green", category: "preference" }),
+        s.memories.create({ content: "The dog is called Rex", category: "fact" }),
+      ];
+      const out = await semanticNeighbors(s, workerEnv, m);
+      expect(out.map((n) => n.id).sort()).toEqual(others.map((o) => o.id).sort());
+      expect(out.some((n) => n.id === m.id)).toBe(false);
+      for (let i = 1; i < out.length; i++) expect(out[i]!.cosine).toBeLessThanOrEqual(out[i - 1]!.cosine);
+    });
   });
 });

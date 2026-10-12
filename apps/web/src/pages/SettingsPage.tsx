@@ -305,9 +305,9 @@ function MemoryHistorySection({ settings }: { settings: Settings }) {
         </div>
       </Row>
       {mh.conflictReview && (
-        <Row label="Double-check conflicts with AI" hint="For unclear conflicts only, ask the chat model whether they really conflict. Uses one AI request per check. It never changes memories by itself.">
+        <Row label="Check conflicts with AI" hint="Let Clef, Cloudflare's decision model, decide whether a new memory replaces an older one. Only a confident replacement marks the older one as past; unclear cases wait for review. Uses one AI request per save that has possible conflicts.">
           <div className="flex justify-end">
-            <Switch checked={mh.aiConflictCheck} onChange={(v) => save.mutate({ memoryHistory: { aiConflictCheck: v } })} label="Double-check conflicts with AI" />
+            <Switch checked={mh.aiConflictCheck} onChange={(v) => save.mutate({ memoryHistory: { aiConflictCheck: v } })} label="Check conflicts with AI" />
           </div>
         </Row>
       )}
