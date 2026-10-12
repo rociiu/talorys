@@ -6,7 +6,7 @@
   "name": "talorys",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",

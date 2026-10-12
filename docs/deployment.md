@@ -34,7 +34,7 @@ refers to it.
   "name": "talorys-<id>-agent",
   "main": "worker.js",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "ai": { "binding": "AI" },

@@ -114,7 +114,7 @@ describe("requirements", () => {
 });
 
 describe("PR #22 hardening", () => {
-  it.fails("H2 no agent Worker config turns on the request-signal flag", () => {
+  it("H2 no agent Worker config turns on the request-signal flag", () => {
     const generated = stripJsonc(toJsonc(generateAgentConfig({ workerName: "w", installationId: "abcd1234", version: "1", timezone: "Europe/Paris", agentName: "Ada" })));
     const dev = stripJsonc(readFileSync(join(__dirname, "../../../apps/agent/wrangler.jsonc"), "utf8"));
     const standalone = stripJsonc(readFileSync(join(__dirname, "../../../apps/agent/wrangler.standalone.jsonc"), "utf8"));

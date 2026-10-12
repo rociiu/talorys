@@ -5,7 +5,7 @@
   "name": "talorys-dev-agent",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "compatibility_flags": ["nodejs_compat"],
   // Private backend: reachable only through the Pages service binding.
   "workers_dev": false,
   "preview_urls": false,
