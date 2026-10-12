@@ -243,6 +243,10 @@ Thanks to everyone who has contributed to Talorys:
   cancelled-turn fixes, Windows build support
 - [Rudy Celekli (@rudycelekli)](https://github.com/rudycelekli) — automation lifecycle, deployment
   verification, and portable backup settings fixes
+- [Andrew B (@who)](https://github.com/who) — opt-in semantic recall for memories
+- [Mendy Landa (@MendyLanda)](https://github.com/MendyLanda) — single-Worker deployment
+- [Michael Tuszynski (@michaeltuszynski)](https://github.com/michaeltuszynski) — untrusted backup import
+  handling and daily AI budget accounting
 
 ## License
 
