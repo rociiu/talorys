@@ -48,6 +48,16 @@ export interface PromptMemory {
 
 const CONFLICT_CANDIDATES = 8;
 
+/** What to do with one older memory after a conflict check. */
+type ConflictDecision =
+  | { oldId: string; action: "supersede" }
+  | { oldId: string; action: "review"; relationship: MemoryReviewRow["relationship"]; reason: string };
+
+/** The review a rule assessment asks for. */
+function ruleReview(a: ConflictAssessment): { relationship: MemoryReviewRow["relationship"]; reason: string } {
+  return { relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction", reason: a.reason };
+}
+
 /**
  * Memory writes with history: saves first, then (rule-based, no AI by default) checks
  * whether the new memory replaces or may contradict an older one. Explicit replacements
@@ -150,28 +160,14 @@ export class MemoryHistoryService {
       .map((c) => classifyRelationship(memory.content, c));
     if (this.settings.get().memoryHistory.aiConflictCheck) return this.detectWithAi(memory, candidates, assessments, signal);
 
-    const superseded: Memory[] = [];
-    const reviews: MemoryReviewRow[] = [];
+    const decisions: ConflictDecision[] = [];
     for (const a of assessments) {
       const action = decide(a);
       if (action === "none") continue;
-      if (action === "supersede") {
-        if (this.lifecycle.wouldCycle(a.oldMemoryId, memory.id)) continue;
-        superseded.push(this.lifecycle.supersede(a.oldMemoryId, memory.id, { validUntil: memory.valid_from }));
-        continue;
-      }
-      reviews.push(
-        this.repo.createReview({
-          memory_id: memory.id,
-          other_id: a.oldMemoryId,
-          relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction",
-          reason: a.reason,
-        }),
-      );
+      if (action === "supersede") decisions.push({ oldId: a.oldMemoryId, action });
+      else decisions.push({ oldId: a.oldMemoryId, action, ...ruleReview(a) });
     }
-    if (superseded.length) this.activity.record("memory.superseded", `${superseded.length} older memory(ies) kept as history`);
-    if (reviews.length) this.activity.record("memory.review", `${reviews.length} possible memory conflict(s) need review`);
-    return { memory: this.repo.get(memory.id) ?? memory, superseded, reviews };
+    return this.applyDecisions(memory, decisions);
   }
 
   /**
@@ -198,38 +194,40 @@ export class MemoryHistoryService {
     this.hooks.onAiCheck?.({ newer: memory.content, older: older.map((m) => m.content), verdicts });
     this.activity.record("memory.ai_check", `AI checked ${older.length} possible conflict(s)${verdicts ? "" : " (no usable answer)"}`);
 
-    const superseded: Memory[] = [];
-    const reviews: MemoryReviewRow[] = [];
+    const decisions: ConflictDecision[] = [];
     for (const old of older) {
       const verdict = verdicts?.find((v) => v.memoryId === old.id);
       const rule = nominated.get(old.id);
       if (verdict) {
         const action = decideAi(verdict);
         if (action === "none") continue;
-        if (action === "supersede") {
-          if (this.lifecycle.wouldCycle(old.id, memory.id)) continue;
-          superseded.push(this.lifecycle.supersede(old.id, memory.id, { validUntil: memory.valid_from }));
-          continue;
+        if (action === "supersede") decisions.push({ oldId: old.id, action });
+        else {
+          const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
+          decisions.push({ oldId: old.id, action, relationship, reason: verdict.reason });
         }
-        reviews.push(
-          this.repo.createReview({
-            memory_id: memory.id,
-            other_id: old.id,
-            relationship: verdict.relationship === "contradicts" ? "contradiction" : "possible_update",
-            reason: verdict.reason,
-          }),
-        );
       } else if (rule) {
         // No answer for a rule hit: the owner decides, as with the AI check off but without auto-supersede.
-        reviews.push(
-          this.repo.createReview({
-            memory_id: memory.id,
-            other_id: old.id,
-            relationship: rule.relationship === "possible_update" ? "possible_update" : "contradiction",
-            reason: rule.reason,
-          }),
-        );
+        decisions.push({ oldId: old.id, action: "review", ...ruleReview(rule) });
       }
+    }
+    return this.applyDecisions(memory, decisions);
+  }
+
+  /**
+   * Applies conflict decisions in order: supersedes (skipping any that would form a cycle) and
+   * reviews for the owner, then records what changed.
+   */
+  private applyDecisions(memory: Memory, decisions: ConflictDecision[]): WriteResult {
+    const superseded: Memory[] = [];
+    const reviews: MemoryReviewRow[] = [];
+    for (const d of decisions) {
+      if (d.action === "supersede") {
+        if (this.lifecycle.wouldCycle(d.oldId, memory.id)) continue;
+        superseded.push(this.lifecycle.supersede(d.oldId, memory.id, { validUntil: memory.valid_from }));
+        continue;
+      }
+      reviews.push(this.repo.createReview({ memory_id: memory.id, other_id: d.oldId, relationship: d.relationship, reason: d.reason }));
     }
     if (superseded.length) this.activity.record("memory.superseded", `${superseded.length} older memory(ies) kept as history`);
     if (reviews.length) this.activity.record("memory.review", `${reviews.length} possible memory conflict(s) need review`);
