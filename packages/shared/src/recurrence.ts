@@ -108,7 +108,10 @@ export function getZonedParts(date: Date, timeZone: string): ZonedParts {
 /** Offset of `timeZone` from UTC at `instant`, in milliseconds. */
 export function timeZoneOffsetMs(instant: number, timeZone: string): number {
   const p = getZonedParts(new Date(instant), timeZone);
-  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  const d = new Date(0);
+  d.setUTCFullYear(p.year, p.month - 1, p.day);
+  d.setUTCHours(p.hour, p.minute, p.second, 0);
+  const asUtc = d.getTime();
   return asUtc - Math.floor(instant / 1000) * 1000;
 }
 
@@ -121,7 +124,10 @@ export function zonedTimeToUtc(
   minute: number,
   timeZone: string,
 ): Date {
-  const wall = Date.UTC(year, month - 1, day, hour, minute);
+  const d = new Date(0);
+  d.setUTCFullYear(year, month - 1, day);
+  d.setUTCHours(hour, minute, 0, 0);
+  const wall = d.getTime();
   const before = timeZoneOffsetMs(wall - 36 * 3600_000, timeZone);
   const after = timeZoneOffsetMs(wall + 36 * 3600_000, timeZone);
   const candidates = [...new Set([wall - before, wall - after])]
@@ -141,7 +147,9 @@ function parseTime(time: string): [number, number] {
 }
 
 function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const d = new Date(0);
+  d.setUTCFullYear(year, month, 0);
+  return d.getUTCDate();
 }
 
 /** Next run strictly after `after`, or null when the schedule will never fire again. */
