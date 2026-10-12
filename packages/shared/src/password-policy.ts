@@ -9,7 +9,7 @@ export function checkPasswordStrength(password: string): string | null {
     return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
   }
   if (password.length > 256) return "Use at most 256 characters.";
-  if (/^(.)\1+$/.test(password)) return "Avoid repeating a single character.";
+  if (/^(.)\1+$/su.test(password)) return "Avoid repeating a single character.";
   const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length;
   if (password.length < 16 && classes < 2) {
     return "Mix letters with numbers or symbols, or use a passphrase of 16+ characters.";
