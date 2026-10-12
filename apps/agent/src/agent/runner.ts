@@ -255,7 +255,8 @@ export class AgentRunner {
       scheduled: true,
     });
     let text = "";
-    s.usage.increment({ ai_requests: 1, scheduled_ai_runs: 1 });
+    // Reserved after the awaits above, so a run started just before the budget ran out cannot overrun it.
+    if (!s.usage.reserveScheduledAi(settings.limits)) throw aiLimitReached(settings.limits.maxAiRequestsPerDay);
     try {
       for await (const event of this.provider.generateWithTools({
         system,

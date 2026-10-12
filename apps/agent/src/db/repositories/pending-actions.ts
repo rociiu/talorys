@@ -9,7 +9,10 @@ export interface StoredPendingAction {
   conversation_id: string;
   tool: string;
   target_id: string;
+  /** Hash of the target as it was when proposed; null rows (from before this column) can't be approved. */
+  target_version: string | null;
   summary: string;
+  payload: string | null;
   status: "pending" | "approved" | "cancelled" | "failed";
   error: string | null;
   created_at: string;
@@ -29,7 +32,7 @@ function present(row: StoredPendingAction): PendingAction {
 export class PendingActionRepository {
   constructor(private readonly db: Database) {}
 
-  create(input: { conversation_id: string; tool: string; target_id: string; summary: string }): PendingAction {
+  create(input: { conversation_id: string; tool: string; target_id: string; target_version: string | null; summary: string; payload: string | null }): PendingAction {
     const createdAt = now();
     const row: StoredPendingAction = {
       id: newId(),
@@ -41,9 +44,9 @@ export class PendingActionRepository {
       resolved_at: null,
     };
     this.db.run(
-      `INSERT INTO tal_pending_actions (id, conversation_id, tool, target_id, summary, status, error, created_at, expires_at, resolved_at)
-       VALUES (?, ?, ?, ?, ?, 'pending', NULL, ?, ?, NULL)`,
-      row.id, row.conversation_id, row.tool, row.target_id, row.summary, row.created_at, row.expires_at,
+      `INSERT INTO tal_pending_actions (id, conversation_id, tool, target_id, target_version, summary, payload, status, error, created_at, expires_at, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NULL, ?, ?, NULL)`,
+      row.id, row.conversation_id, row.tool, row.target_id, row.target_version, row.summary, row.payload, row.created_at, row.expires_at,
     );
     this.db.run(`DELETE FROM tal_pending_actions WHERE created_at < ?`, new Date(Date.now() - 30 * 86_400_000).toISOString());
     return present(row);

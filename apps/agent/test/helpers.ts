@@ -2,6 +2,8 @@ import { env, exports } from "cloudflare:workers";
 import { getAgentByName } from "agents";
 import { runInDurableObject } from "cloudflare:test";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
+import type { Services } from "../src/services/container";
+import { ALL_TOOLS, ToolExecutor } from "../src/tools";
 
 export const BASE = "https://talorys.example.pages.dev";
 export const password = () => (env as unknown as { TEST_PASSWORD: string }).TEST_PASSWORD;
@@ -69,4 +71,12 @@ export async function readSse(res: Response): Promise<any[]> {
     .map((block) => block.split("\n").find((l) => l.startsWith("data:")))
     .filter(Boolean)
     .map((l) => JSON.parse(l!.slice(5)));
+}
+
+/** Proposes a destructive tool call the way a chat turn does and returns the pending action's id. */
+export async function proposeAction(s: Services, name: string, input: unknown): Promise<string> {
+  const conversation = s.conversations.create();
+  const executor = new ToolExecutor(ALL_TOOLS, { services: s, timezone: "UTC", mode: "chat", conversationId: conversation.id }, { maxToolCalls: 4 });
+  await executor.execute(name, input, "call-1");
+  return executor.approvalFor("call-1")!.id;
 }

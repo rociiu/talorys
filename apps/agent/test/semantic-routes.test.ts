@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { client, inAgent, loggedIn } from "./helpers";
+import { client, inAgent, loggedIn, proposeAction } from "./helpers";
 import { MockEmbedder, embeddingsToday } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
 import { UsageService } from "../src/services/usage";
@@ -429,9 +429,7 @@ describe("semantic forget purge", () => {
   it("an approved forget_memory deletes the memory and its vector in the same request", async () => {
     const { ids, actionId } = await inAgent(async (a) => {
       const { s, ids } = await seeded(a, ["Owns a red kayak", "Plays the cello"]);
-      const conversation = s.conversations.create();
-      const action = s.pendingActions.create({ conversation_id: conversation.id, tool: "forget_memory", target_id: ids[0]!, summary: "Forget memory" });
-      return { ids, actionId: action.id };
+      return { ids, actionId: await proposeAction(s, "forget_memory", { id: ids[0] }) };
     });
     const c = await loggedIn();
     const approved = await c.json(`/api/actions/${actionId}/approve`, { method: "POST", body: {} });
@@ -453,9 +451,7 @@ describe("semantic forget purge", () => {
       const { s, ids } = await seeded(a, ["Owns a red kayak", "Plays the cello"]);
       writeSemanticConfig(s.settings, { enabled: false }, s.db);
       invalidateSemanticCache(s);
-      const conversation = s.conversations.create();
-      const action = s.pendingActions.create({ conversation_id: conversation.id, tool: "forget_memory", target_id: ids[1]!, summary: "Forget memory" });
-      return { ids, actionId: action.id };
+      return { ids, actionId: await proposeAction(s, "forget_memory", { id: ids[1] }) };
     });
     const c = await loggedIn();
     expect((await c.json(`/api/actions/${actionId}/approve`, { method: "POST", body: {} })).action.status).toBe("approved");
@@ -468,12 +464,12 @@ describe("semantic forget purge", () => {
   it("keeps the vector when the approved forget fails, and ignores other approved actions", async () => {
     const { ids, failId, taskActionId } = await inAgent(async (a) => {
       const { s, ids } = await seeded(a, ["Owns a red kayak", "Plays the cello"]);
-      const conversation = s.conversations.create();
-      // A memory id that no longer exists: upstream marks the action failed.
-      const fail = s.pendingActions.create({ conversation_id: conversation.id, tool: "forget_memory", target_id: "missing", summary: "Forget memory" });
+      // A memory that is gone by approval time: upstream marks the action failed.
+      const doomed = s.memories.create({ content: "Owns a canoe", category: "fact", source: "manual" });
+      const failId = await proposeAction(s, "forget_memory", { id: doomed.id });
+      s.memories.delete(doomed.id);
       const task = s.tasks.create({ title: "Wax the kayak" });
-      const taskAction = s.pendingActions.create({ conversation_id: conversation.id, tool: "delete_task", target_id: task.id, summary: "Delete task" });
-      return { ids, failId: fail.id, taskActionId: taskAction.id };
+      return { ids, failId, taskActionId: await proposeAction(s, "delete_task", { task: task.id }) };
     });
     const c = await loggedIn();
     expect((await c.json(`/api/actions/${failId}/approve`, { method: "POST", body: {} })).action.status).toBe("failed");

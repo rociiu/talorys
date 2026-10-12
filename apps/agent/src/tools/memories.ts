@@ -41,15 +41,20 @@ export const memoryTools = [
   }),
   defineTool({
     name: "update_memory",
-    description: "Correct or refine an existing memory by id.",
+    description: "Correct or refine an existing memory by id. The old wording is kept as a past fact the owner can restore.",
     permission: "write",
     maxCallsPerTurn: 3,
     input: z.object({ id: z.string().min(1), content: z.string().min(3).max(1000), category: z.enum(MEMORY_CATEGORIES).optional() }),
     label: () => `Updating a memory`,
     execute: async (i, ctx) => {
-      if (!ctx.services.memories.get(i.id)) throw new ToolError("Memory not found.");
-      const { memory: m } = await ctx.services.memoryHistory.update(i.id, { content: i.content, category: i.category });
-      return { updated: { id: m.id, content: m.content } };
+      const before = ctx.services.memories.get(i.id);
+      if (!before) throw new ToolError("Memory not found.");
+      // A new wording supersedes the old memory instead of overwriting it, so the agent can never erase a fact.
+      const { memory: m } =
+        i.content.trim() === before.content.trim()
+          ? await ctx.services.memoryHistory.update(i.id, { category: i.category })
+          : await ctx.services.memoryHistory.correct(i.id, i.content, i.category, "agent");
+      return { updated: { id: m.id, content: m.content }, ...(m.id !== before.id ? { previous_kept_as_history: before.id } : {}) };
     },
   }),
   defineTool({
@@ -63,6 +68,10 @@ export const memoryTools = [
       const m = ctx.services.memories.get(i.id);
       if (!m) throw new ToolError("Memory not found.");
       return { targetId: m.id, summary: `Forget memory ${quoteTitle(m.content)}` };
+    },
+    snapshot: (id, ctx) => {
+      const m = ctx.services.memories.get(id);
+      return m && [m.content, m.category];
     },
     commit: (id, ctx) => {
       const m = ctx.services.memories.get(id);

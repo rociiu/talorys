@@ -4,7 +4,7 @@ import { estimateTokens } from "../ai/provider";
 import type { Services } from "../services/container";
 import { UsageService } from "../services/usage";
 import type { SemanticConfig } from "./config";
-import { MODEL_DIMS, createEmbedder, embeddingsToday, recordEmbeddings } from "./embeddings";
+import { MODEL_DIMS, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
 import { cachedVectors, dot, normalize } from "./vectorStore";
@@ -79,15 +79,14 @@ async function embedQuery(ctx: SemanticContext, query: string): Promise<Float32A
   const { db, config, embedder } = ctx;
   if (!embedder) return null;
   const day = UsageService.day();
-  if (embeddingsToday(db, day) >= config.maxEmbeddingsPerDay) return null;
+  // Reserved before the call (which counts even if it fails), so concurrent turns cannot overrun the cap.
+  if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {
     const [vector] = await embedder.embed([query]);
     return vector && vector.length === embedder.dims ? vector : null;
   } catch (error) {
     console.warn("Semantic query embedding failed; using keyword recall", error instanceof Error ? error.message : String(error));
     return null;
-  } finally {
-    recordEmbeddings(db, day, 1, estimateTokens(query));
   }
 }
 

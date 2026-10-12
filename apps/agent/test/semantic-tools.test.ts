@@ -121,10 +121,15 @@ describe("semantic tools", () => {
       expect(vectors().map((v) => v.memory_id)).toEqual([saved.remembered.id]);
       const before = vectors()[0]!.content_hash;
 
-      const updated = await tool(tools, "update_memory").execute({ id: saved.remembered.id, content: "Owns a blue kayak" }, toolCtx);
-      expect(updated).toEqual({ updated: { id: saved.remembered.id, content: "Owns a blue kayak" } });
+      const updated = (await tool(tools, "update_memory").execute({ id: saved.remembered.id, content: "Owns a blue kayak" }, toolCtx)) as {
+        updated: { id: string; content: string };
+      };
+      // The new wording is a new memory; the old one stays as history.
+      expect(updated).toEqual({ updated: { id: expect.any(String), content: "Owns a blue kayak" }, previous_kept_as_history: saved.remembered.id });
       await runIndexer(sem);
-      expect(vectors()[0]!.content_hash).not.toBe(before);
+      const fresh = vectors().find((v) => v.memory_id === updated.updated.id);
+      expect(fresh?.content_hash).toBeDefined();
+      expect(fresh?.content_hash).not.toBe(before);
       await expect(tool(tools, "update_memory").execute({ id: "missing", content: "Nothing here" }, toolCtx)).rejects.toThrow("Memory not found.");
     });
   });

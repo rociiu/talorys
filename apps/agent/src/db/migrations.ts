@@ -217,6 +217,14 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS tal_memory_reviews_other ON tal_memory_reviews(other_id)`,
     ],
   },
+  {
+    version: 5,
+    name: "approval target versions",
+    statements: [
+      `ALTER TABLE tal_pending_actions ADD COLUMN target_version TEXT`,
+      `ALTER TABLE tal_pending_actions ADD COLUMN payload TEXT`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

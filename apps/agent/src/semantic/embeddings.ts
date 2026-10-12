@@ -168,6 +168,16 @@ export function embeddingsToday(db: Database, day: string): number {
   return db.one<{ n: number }>(`SELECT embedding_requests AS n FROM tal_semantic_usage WHERE day = ?`, day)?.n ?? 0;
 }
 
+/**
+ * Counts one embedding request before it is made, if the day's cap allows it. Check and
+ * record happen in one synchronous step, so concurrent callers cannot all pass the cap.
+ */
+export function reserveEmbedding(db: Database, day: string, cap: number, tokens: number): boolean {
+  if (embeddingsToday(db, day) >= cap) return false;
+  recordEmbeddings(db, day, 1, tokens);
+  return true;
+}
+
 export function recordEmbeddings(db: Database, day: string, requests: number, tokens: number): void {
   db.run(
     `INSERT INTO tal_semantic_usage (day, embedding_requests, embedded_tokens_estimate) VALUES (?, ?, ?)

@@ -88,6 +88,11 @@ export const reminderTools = [
       if (!a) throw new ToolError("Automation not found.");
       return { targetId: a.id, summary: `Cancel ${a.kind === "reminder" ? "reminder" : "automation"} ${quoteTitle(a.name)}` };
     },
+    // Run bookkeeping (last_run, next_run, run_count) changes on every run and is left out.
+    snapshot: (id, ctx) => {
+      const a = ctx.services.automations.get(id);
+      return a && [a.name, a.kind, a.message, a.schedule, a.enabled];
+    },
     commit: async (id, ctx) => {
       const a = ctx.services.automations.get(id);
       if (!a) throw new ToolError("This automation no longer exists.");

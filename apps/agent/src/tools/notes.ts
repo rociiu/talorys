@@ -1,6 +1,11 @@
 import { PROJECT_STATUSES } from "@talorys/shared";
 import { z } from "zod";
-import { defineTool, quoteTitle, ToolError } from "./registry";
+import { defineTool, quoteTitle, type ToolContext, ToolError } from "./registry";
+
+function noteSnapshot(id: string, ctx: ToolContext) {
+  const n = ctx.services.notes.get(id);
+  return n && [n.title, n.content, n.project_id];
+}
 
 export const noteTools = [
   defineTool({
@@ -53,22 +58,42 @@ export const noteTools = [
   defineTool({
     name: "update_note",
     description:
-      "Replace a note's title and/or content, or append text to it. If both content and append are given, content replaces the note first and append is added after it.",
+      "Rename a note and/or append text to the end of it. To replace or remove existing text, use replace_note_content, which the owner must approve.",
     permission: "write",
     maxCallsPerTurn: 3,
     input: z.object({
       id: z.string().min(1),
       title: z.string().min(1).max(300).optional(),
-      content: z.string().max(20_000).optional(),
-      append: z.string().max(10_000).optional(),
-    }),
+      append: z.string().min(1).max(10_000).optional(),
+    }).strict(),
     label: () => `Updating a note`,
     execute: (i, ctx) => {
       const note = ctx.services.notes.get(i.id);
       if (!note) throw new ToolError("Note not found.");
-      const content = i.append ? `${i.content ?? note.content}\n\n${i.append}` : i.content;
+      const content = i.append ? `${note.content}\n\n${i.append}` : undefined;
       const updated = ctx.services.notes.update(note.id, { title: i.title, content });
       return { updated: { id: updated.id, title: updated.title } };
+    },
+  }),
+  defineTool({
+    name: "replace_note_content",
+    description:
+      "Propose replacing the whole text of a note (to edit or remove existing text). The owner must approve it in the app before anything changes.",
+    permission: "destructive",
+    maxCallsPerTurn: 2,
+    input: z.object({ id: z.string().min(1), content: z.string().min(1).max(20_000) }),
+    label: () => `Proposing to rewrite a note`,
+    prepare: (i, ctx) => {
+      const note = ctx.services.notes.get(i.id);
+      if (!note) throw new ToolError("Note not found.");
+      const size = `${note.content.length.toLocaleString("en-US")} → ${i.content.length.toLocaleString("en-US")} characters`;
+      return { targetId: note.id, summary: `Rewrite note ${quoteTitle(note.title)} (${size})`, payload: { content: i.content } };
+    },
+    snapshot: noteSnapshot,
+    commit: (id, ctx, payload) => {
+      const { content } = z.object({ content: z.string().min(1).max(20_000) }).parse(payload);
+      const note = ctx.services.notes.update(id, { content });
+      ctx.services.activity.record("note.rewritten", `Rewrote note “${note.title}” (approved agent action)`);
     },
   }),
   defineTool({
@@ -83,6 +108,7 @@ export const noteTools = [
       if (!note) throw new ToolError("Note not found.");
       return { targetId: note.id, summary: `Delete note ${quoteTitle(note.title)}` };
     },
+    snapshot: noteSnapshot,
     commit: (id, ctx) => {
       const note = ctx.services.notes.get(id);
       if (!note) throw new ToolError("This note no longer exists.");

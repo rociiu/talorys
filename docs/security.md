@@ -58,14 +58,23 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 
 - The system prompt marks notes, memories, tool results and history as data.
 - Destructive tools (`delete_task`, `delete_note`, `forget_memory`,
-  `cancel_automation`) require `confirmed: true` **and** an explicit confirmation
-  in the owner's latest message — enforced in code, not just in the prompt.
+  `cancel_automation`, `replace_note_content`) never run during the agent's turn.
+  They only create a proposal; the owner approves or declines it with a button
+  (an authenticated, CSRF-protected request), and each proposal runs at most once.
+- A proposal is bound to the item as it was shown: if the item changes before the
+  owner approves (an edit, another tab, a backup import), approval fails and
+  nothing is done.
+- The agent cannot erase text on its own: `update_note` only renames a note or
+  appends to it, and `update_memory` saves the new wording as a new memory while
+  the old one is kept as a past fact.
 - Scheduled AI runs get read-only tools plus `notify_owner`.
 - Per-request limits: tool calls, per-tool caps, duplicate-call detection,
   reasoning steps, output and context tokens; daily caps on AI requests and
   scheduled AI runs. Every model call (each tool-loop step and each history
   summary) is counted against the daily cap before it is made, and the SDK's
-  automatic retries are off so no call goes uncounted.
+  automatic retries are off so no call goes uncounted. A scheduled AI run and an
+  embedding request are also counted before the call, so concurrent requests
+  cannot overrun their caps.
 - No shell, code execution, outbound HTTP, credentials or deployment tools exist.
 
 ## Backups

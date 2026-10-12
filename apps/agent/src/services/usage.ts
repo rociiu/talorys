@@ -68,6 +68,13 @@ export class UsageService {
   canRunScheduledAi(limits: Limits): boolean {
     return this.today().scheduled_ai_runs < limits.maxScheduledAiRunsPerDay && this.canUseAi(limits);
   }
+
+  /** Counts one scheduled run and its first model call if both budgets allow it; false means skip. */
+  reserveScheduledAi(limits: Limits): boolean {
+    if (!this.canRunScheduledAi(limits)) return false;
+    this.increment({ ai_requests: 1, scheduled_ai_runs: 1 });
+    return true;
+  }
 }
 
 export class ActivityLog {

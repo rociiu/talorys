@@ -19,6 +19,8 @@ export interface PreparedAction {
   targetId: string;
   /** Shown to the owner on the approval card, e.g. `Delete task “Buy milk”`. */
   summary: string;
+  /** Extra validated input `commit` needs (e.g. a note's replacement text), stored with the proposal. */
+  payload?: unknown;
 }
 
 interface BaseTool<S extends z.ZodType> {
@@ -39,11 +41,14 @@ export interface ImmediateTool<S extends z.ZodType = z.ZodType, R = unknown> ext
 /**
  * A destructive tool never runs during the agent's turn. `prepare` resolves the target
  * without changing anything; `commit` runs only after the owner approves that exact action.
+ * `snapshot` returns the fields the approval card describes (null if the target is gone);
+ * approval is refused if they changed after the proposal.
  */
 export interface DestructiveTool<S extends z.ZodType = z.ZodType> extends BaseTool<S> {
   permission: "destructive";
   prepare: (input: z.infer<S>, ctx: ToolContext) => PreparedAction | Promise<PreparedAction>;
-  commit: (targetId: string, ctx: ToolContext) => unknown;
+  snapshot: (targetId: string, ctx: ToolContext) => unknown;
+  commit: (targetId: string, ctx: ToolContext, payload: unknown) => unknown;
 }
 
 export type ToolDefinition<S extends z.ZodType = z.ZodType, R = unknown> = ImmediateTool<S, R> | DestructiveTool<S>;
@@ -139,7 +144,9 @@ export class ToolExecutor {
       conversation_id: this.ctx.conversationId,
       tool: tool.name,
       target_id: prepared.targetId,
+      target_version: await targetVersion(tool, prepared.targetId, this.ctx),
       summary: prepared.summary,
+      payload: prepared.payload === undefined ? null : JSON.stringify(prepared.payload),
     });
     if (callId) this.approvals.set(callId, action);
     return {
@@ -157,9 +164,18 @@ function stableStringify(value: unknown): string {
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
 }
 
+/** SHA-256 of the target's snapshot, or null if the target no longer exists. */
+async function targetVersion(tool: DestructiveTool, targetId: string, ctx: ToolContext): Promise<string | null> {
+  const snapshot = tool.snapshot(targetId, ctx);
+  if (snapshot === null || snapshot === undefined) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(stableStringify(snapshot)));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 /**
  * Runs a destructive action the owner approved in the UI. The pending record is claimed
- * atomically first, so each action runs at most once, and only on the target that was shown.
+ * atomically first, so each action runs at most once, and only on the target that was shown:
+ * if the target changed after the proposal (an edit, an import), the action fails instead.
  */
 export async function runApprovedAction(tools: ToolDefinition[], ctx: ToolContext, actionId: string): Promise<PendingAction> {
   const pending = ctx.services.pendingActions;
@@ -172,7 +188,12 @@ export async function runApprovedAction(tools: ToolDefinition[], ctx: ToolContex
     throw new AppError("CONFLICT", status === "expired" ? "This request expired. Ask again to get a new one." : "This action was already handled.");
   }
   try {
-    await tool.commit(stored.target_id, ctx);
+    const version = await targetVersion(tool, stored.target_id, ctx);
+    if (version === null) throw new ToolError("This item no longer exists.");
+    if (!stored.target_version || version !== stored.target_version) {
+      throw new ToolError("This item changed after it was proposed, so nothing was done. Ask again to get a new approval.");
+    }
+    await tool.commit(stored.target_id, ctx, stored.payload === null ? undefined : JSON.parse(stored.payload));
   } catch (error) {
     pending.markFailed(actionId, error instanceof ToolError ? error.message : "The action failed.");
     if (!(error instanceof ToolError)) console.error("Approved action failed", error);

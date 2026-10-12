@@ -88,8 +88,9 @@ Tools live in `apps/agent/src/tools/` and are registered in `tools/index.ts`.
 Each has a unique name, description, Zod input schema, permission
 (`read` | `write` | `destructive`), per-turn cap, UI label and typed result.
 `ToolExecutor` enforces validation, the global call budget, per-tool caps,
-duplicate-call (loop) detection, explicit confirmation for destructive actions,
-and read-only access for scheduled runs. Tools only use the service layer — no
+duplicate-call (loop) detection, owner approval for destructive actions
+(bound to a hash of the target as it was proposed), and read-only access for
+scheduled runs. Tools only use the service layer — no
 shell, code execution, network or credentials.
 
 ## Data model

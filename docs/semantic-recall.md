@@ -165,7 +165,8 @@ The prefix costs about 10 tokens per memory.
 | Storage | One vector row per memory |
 | New npm dependencies | 0 |
 
-Each query and each batch of memories counts toward the cap. When it is spent,
+Each query and each batch of memories counts toward the cap, before the call is
+made, so concurrent requests cannot overrun it. When it is spent,
 recall uses keyword search until the next day.
 
 ## Forget

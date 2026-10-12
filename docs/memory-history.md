@@ -42,6 +42,10 @@ Automatic changes need explicit wording ("sold", "moved", "no longer",
 "replaced", …) and are always reversible: **Restore as current** undoes them.
 Detection only runs when a memory is written, never on every chat message.
 
+When Talorys rewords a memory with `update_memory`, the new wording is saved as a
+new memory and the old one becomes a past fact linked to it, the same as
+**Correct** on the Memory page, so the agent can never erase what you told it.
+
 Dates are only recorded when you state them ("since 2024", "in March 2025",
 "as of 2026-02-01"). Talorys never treats the save time as the date a fact
 became true.
