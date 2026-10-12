@@ -226,6 +226,24 @@ export const MIGRATIONS: Migration[] = [
       `ALTER TABLE tal_pending_actions ADD COLUMN preview TEXT`,
     ],
   },
+  {
+    version: 6,
+    name: "web push subscriptions",
+    statements: [
+      // Device-specific secrets: never exported in backups.
+      `CREATE TABLE IF NOT EXISTS tal_push_subscriptions (
+        id TEXT PRIMARY KEY,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        label TEXT NOT NULL DEFAULT '',
+        origin TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        last_success_at TEXT,
+        failures INTEGER NOT NULL DEFAULT 0
+      )`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

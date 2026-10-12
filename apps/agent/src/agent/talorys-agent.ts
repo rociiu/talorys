@@ -47,7 +47,9 @@ export class TalorysAgent extends Agent<Env, AgentState> {
         },
         exists: async (id) => (await this.getScheduleById(id)) !== undefined,
       };
-      this._services = createServices(this.ctx.storage, this.env, scheduler, { provider: () => this.aiProvider() });
+      this._services = createServices(this.ctx.storage, this.env, scheduler, { provider: () => this.aiProvider() }, (work) =>
+        this.ctx.waitUntil(work),
+      );
       migrate(this._services.db);
     }
     return this._services;

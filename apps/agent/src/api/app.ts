@@ -9,6 +9,7 @@ import { dataRoutes } from "./routes/data";
 import { automationRoutes } from "./routes/automations";
 import { systemRoutes } from "./routes/system";
 import { semanticRoutes } from "../semantic/routes";
+import { pushRoutes } from "../push/routes";
 
 export interface AppEnv {
   Bindings: { agent: TalorysAgent; env: Env };
@@ -36,6 +37,7 @@ export function createApi() {
   app.route("/", chatRoutes);
   app.route("/", dataRoutes);
   app.route("/", automationRoutes);
+  app.route("/", pushRoutes);
 
   return app;
 }

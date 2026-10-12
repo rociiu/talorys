@@ -112,7 +112,11 @@ export class AutomationRepository {
 }
 
 export class NotificationRepository {
-  constructor(private readonly db: Database) {}
+  /** `onCreate` sees every new notification (Web Push delivery hooks in here); it must not throw. */
+  constructor(
+    private readonly db: Database,
+    private readonly onCreate: (n: Notification) => void = () => {},
+  ) {}
 
   list(opts: { unreadOnly?: boolean; limit?: number } = {}): Notification[] {
     return this.db.all<Notification>(
@@ -141,6 +145,7 @@ export class NotificationRepository {
     this.db.run(
       `DELETE FROM tal_notifications WHERE id NOT IN (SELECT id FROM tal_notifications ORDER BY created_at DESC LIMIT 500)`,
     );
+    this.onCreate(n);
     return n;
   }
 

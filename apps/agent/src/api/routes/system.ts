@@ -34,6 +34,7 @@ systemRoutes.get("/health", (c) => {
     schema_version: version,
     configured,
     ai_binding: !!c.env.env.AI,
+    push: s.push.configured(),
     time: new Date().toISOString(),
   };
   return c.json(report, report.ok ? 200 : 503);

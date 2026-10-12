@@ -1,6 +1,7 @@
 // One-Worker deployment, without Pages: the agent Worker also serves the web UI.
 // Build the UI first (npm run build -w @talorys/web), then set the OWNER_PASSWORD
-// (or OWNER_PASSWORD_HASH) and SESSION_SECRET secrets.
+// (or OWNER_PASSWORD_HASH) and SESSION_SECRET secrets. VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY
+// turn on push notifications (optional; see docs/deployment.md).
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "talorys",

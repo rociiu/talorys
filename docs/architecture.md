@@ -98,9 +98,12 @@ shell, code execution, network or credentials.
 `tal_settings`, `tal_conversations`, `tal_messages`, `tal_memories`,
 `tal_projects`, `tal_tasks`, `tal_notes`, `tal_automations`,
 `tal_automation_runs`, `tal_notifications`, `tal_activity`, `tal_sessions`,
-`tal_login_attempts`, `tal_usage_daily`, `tal_memory_reviews`, plus FTS tables. Migration 3 added `tal_messages.source` (chat or import); migration 4 added memory lifecycle
+`tal_login_attempts`, `tal_usage_daily`, `tal_memory_reviews`,
+`tal_push_subscriptions`, plus FTS tables. Migration 3 added `tal_messages.source` (chat or import); migration 4 added memory lifecycle
 columns (`status`, `superseded_by`, `valid_from`, `valid_until`) and the
-`tal_memory_reviews` table; existing memories default to `active`.
+`tal_memory_reviews` table; existing memories default to `active`. Migration 5
+added approval binding columns to `tal_pending_actions` (`target_version`,
+`payload`, `preview`); migration 6 added `tal_push_subscriptions` for Web Push devices.
 
 ## Free-tier choices
 

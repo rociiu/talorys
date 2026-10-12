@@ -408,6 +408,8 @@ export interface HealthReport {
   schema_version: number;
   configured: { password: boolean; session_secret: boolean };
   ai_binding: boolean;
+  /** Web Push keys are set; push is optional and does not affect `ok`. */
+  push: boolean;
   time: string;
 }
 

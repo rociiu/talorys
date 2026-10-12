@@ -25,7 +25,8 @@ describe("installer: fresh installation", () => {
     const worker = state.workers.acc1![manifest.worker_name]!;
     expect(worker.workers_dev).toBe(false);
     expect(worker.migrations).toEqual([{ tag: "v1", new_sqlite_classes: ["TalorysAgent"] }]);
-    expect(Object.keys(worker.secrets).sort()).toEqual(["OWNER_PASSWORD_HASH", "SESSION_SECRET"]);
+    expect(Object.keys(worker.secrets).sort()).toEqual(["OWNER_PASSWORD_HASH", "SESSION_SECRET", "VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY"]);
+    expect(worker.secrets.VAPID_PUBLIC_KEY!.length).toBe(87);
     expect(worker.secrets.OWNER_PASSWORD_HASH!.prefix).toBe("pbkdf2-sha256$");
     expect(worker.secrets.SESSION_SECRET!.length).toBeGreaterThanOrEqual(43);
     // URL comes from Cloudflare (note the suffix the fake account assigned), not from the project name.
@@ -151,7 +152,7 @@ describe("installer: idempotency and recovery", () => {
     const ui = new ScriptedUi([STRONG_PASSWORD, STRONG_PASSWORD, true]);
     const m = await install({ dir: sb.dir, ...FAST }, { ui, wrangler: sb.wrangler(), fetch: fakeSite(), templates: sb.templates });
     expect(m.status).toBe("deployed");
-    expect(Object.keys(sb.state().workers.acc1![m.worker_name]!.secrets)).toHaveLength(2);
+    expect(Object.keys(sb.state().workers.acc1![m.worker_name]!.secrets)).toHaveLength(4);
   });
 
   it("waits for propagation and succeeds once the site responds", async () => {
@@ -209,6 +210,24 @@ describe("installer: upgrades and password reset", () => {
     expect(readFileSync(join(sb.dir, "agent/worker.js"), "utf8")).toContain("0.2.0");
   });
 
+  it("adds push keys to an older installation without touching its other secrets", async () => {
+    const sb = makeSandbox();
+    const first = await install({ dir: sb.dir, ...FAST }, { ui: new ScriptedUi(freshAnswers()), wrangler: sb.wrangler(), fetch: fakeSite(), templates: sb.templates });
+    sb.update((s) => {
+      const secrets = s.workers.acc1![first.worker_name]!.secrets;
+      delete secrets.VAPID_PUBLIC_KEY;
+      delete secrets.VAPID_PRIVATE_KEY;
+    });
+    const before = sb.state().workers.acc1![first.worker_name]!.secrets;
+    const ui = new ScriptedUi([]);
+    await install({ dir: sb.dir, mode: "update", yes: true, ...FAST }, { ui, wrangler: sb.wrangler(), fetch: fakeSite(), templates: sb.templates });
+    const after = sb.state().workers.acc1![first.worker_name]!.secrets;
+    expect(after.OWNER_PASSWORD_HASH).toEqual(before.OWNER_PASSWORD_HASH);
+    expect(after.SESSION_SECRET).toEqual(before.SESSION_SECRET);
+    expect(Object.keys(after).sort()).toEqual(["OWNER_PASSWORD_HASH", "SESSION_SECRET", "VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY"]);
+    expect(ui.prompts).toEqual([]);
+  });
+
   it("update requires an existing installation", async () => {
     const sb = makeSandbox();
     await expect(
@@ -234,6 +253,24 @@ describe("password hashing interop", () => {
     const secrets = await buildOwnerSecrets(STRONG_PASSWORD, { includeSessionSecret: true });
     expect(await verifyPassword(STRONG_PASSWORD, secrets.OWNER_PASSWORD_HASH!)).toBe(true);
     expect(await verifyPassword("wrong-password-123", secrets.OWNER_PASSWORD_HASH!)).toBe(false);
+  });
+});
+
+describe("push key generation", () => {
+  it("produces a P-256 pair the Worker can sign with and browsers can verify", async () => {
+    const { webcrypto } = await import("node:crypto");
+    const { generatePushKeys } = await import("../src/secrets");
+    const keys = await generatePushKeys();
+    const point = Buffer.from(keys.VAPID_PUBLIC_KEY, "base64url");
+    expect(point.length).toBe(65);
+    expect(point[0]).toBe(4);
+    const jwk = { kty: "EC", crv: "P-256", x: point.subarray(1, 33).toString("base64url"), y: point.subarray(33).toString("base64url"), d: keys.VAPID_PRIVATE_KEY };
+    const signer = await webcrypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+    const verifier = await webcrypto.subtle.importKey("raw", point, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    const data = new TextEncoder().encode("vapid");
+    const sig = await webcrypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, signer, data);
+    expect(await webcrypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, verifier, sig, data)).toBe(true);
+    expect((await generatePushKeys()).VAPID_PRIVATE_KEY).not.toBe(keys.VAPID_PRIVATE_KEY);
   });
 });
 

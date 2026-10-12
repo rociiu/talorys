@@ -11,6 +11,8 @@ import { ActivityLog, UsageService } from "./usage";
 import { AuthService } from "../auth/auth-service";
 import { AutomationService, type Scheduler } from "../agent/scheduling";
 import { MemoryHistoryService, type MemoryHistoryHooks } from "../memory";
+import { PushSubscriptionRepository } from "../push/repository";
+import { PushService } from "../push/service";
 
 /** All data services for the single owner, bound to one Durable Object's storage. */
 export interface Services {
@@ -29,16 +31,25 @@ export interface Services {
   auth: AuthService;
   automations: AutomationService;
   memoryHistory: MemoryHistoryService;
+  push: PushService;
 }
 
-export function createServices(storage: DurableObjectStorage, env: Env, scheduler: Scheduler, memoryHooks: MemoryHistoryHooks = {}): Services {
+/** `background` keeps work alive after the request or alarm that started it (the Durable Object's waitUntil). */
+export function createServices(
+  storage: DurableObjectStorage,
+  env: Env,
+  scheduler: Scheduler,
+  memoryHooks: MemoryHistoryHooks = {},
+  background: (work: Promise<unknown>) => void = () => {},
+): Services {
   const db = new Database(storage);
   const settings = new SettingsService(db, {
     ...(env.TALORYS_DEFAULT_TIMEZONE ? { timezone: env.TALORYS_DEFAULT_TIMEZONE } : {}),
     ...(env.TALORYS_AGENT_NAME ? { agentName: env.TALORYS_AGENT_NAME } : {}),
   });
   const automationsRepo = new AutomationRepository(db);
-  const notifications = new NotificationRepository(db);
+  const push = new PushService(new PushSubscriptionRepository(db), env, background);
+  const notifications = new NotificationRepository(db, (n) => push.notify(n));
   const activity = new ActivityLog(db);
   const memories = new MemoryRepository(db);
   const usage = new UsageService(db);
@@ -62,5 +73,6 @@ export function createServices(storage: DurableObjectStorage, env: Env, schedule
     }),
     automations: new AutomationService(automationsRepo, settings, activity, scheduler),
     memoryHistory: new MemoryHistoryService(db, memories, settings, usage, activity, memoryHooks),
+    push,
   };
 }

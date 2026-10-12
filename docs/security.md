@@ -52,6 +52,8 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 - `_headers` sets a strict CSP (`script-src 'self'`, `connect-src 'self'`,
   `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `nosniff`, HSTS and a
   restrictive `Permissions-Policy`.
+- The service worker (`/sw.js`) only shows push notifications and caches
+  nothing; a notification click can only open a path on the app's own origin.
 - No secrets or bindings exist in browser code (the build checks for this).
 
 ## Prompt injection and tool safety
@@ -77,6 +79,27 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
   embedding request are also counted before the call, so concurrent requests
   cannot overrun their caps.
 - No shell, code execution, outbound HTTP, credentials or deployment tools exist.
+  Web Push sends are made by the notification service, never by a tool.
+
+## Push notifications
+
+- The VAPID private key is a Worker secret, generated locally by the installer
+  and sent to Wrangler via stdin. Only the public key reaches the browser.
+- Subscription endpoints come from the browser, so they are treated as
+  untrusted URLs the Worker will POST to: only `https`, no credentials in the
+  URL, no IP literals, no `localhost` or private-network names, redirects not
+  followed, a 10-second timeout, and at most 10 devices.
+- Payloads are encrypted for each device (RFC 8291, `aes128gcm`). The push
+  service (Google, Mozilla, Apple or Microsoft) sees the endpoint, the time and
+  the ciphertext size, not the text. The payload is the notification title and
+  the first 240 characters of its body, which the device's lock screen may show.
+- Subscriptions are device-specific secrets: they are never included in
+  backups. Endpoints the push service reports as gone (404/410) are deleted at
+  once, and one that fails 10 times in a row is dropped.
+- Sending runs in the background and never fails the automation, reminder or
+  chat turn that created the notification.
+- The routes (`/api/push/*`) need a session and the CSRF checks like every other
+  owner route.
 
 ## Backups
 

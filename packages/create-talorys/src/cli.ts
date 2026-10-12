@@ -6,7 +6,7 @@ import { formatChecks, install, resetPassword, ensureAuthenticated, type Deps } 
 import { MANIFEST_FILE, readManifest } from "./manifest";
 import { checkNodeVersion, detectGlobalClis } from "./requirements";
 import { readTemplateInfo } from "./scaffold";
-import { REQUIRED_SECRETS } from "./secrets";
+import { PUSH_SECRETS, REQUIRED_SECRETS } from "./secrets";
 import { ClackUi } from "./ui";
 import { runChecks } from "./verify";
 import { Wrangler } from "./wrangler";
@@ -104,6 +104,8 @@ async function doctor(dir: string, deps: Deps): Promise<number> {
         problems.push(`Missing secrets: ${missing.join(", ")} — re-run the installer to configure them.`);
         ui.error(problems.at(-1)!);
       } else ui.success("Owner secrets configured");
+      // Optional, so not a problem: the app works without push.
+      if (PUSH_SECRETS.some((s) => !secrets.includes(s))) ui.warn("Push notification keys are not set — run `npx create-talorys@latest update` to add them.");
     } else {
       problems.push(`Worker ${manifest.worker_name} not found — re-run the installer to deploy it.`);
       ui.error(problems.at(-1)!);

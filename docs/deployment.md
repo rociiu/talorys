@@ -20,7 +20,7 @@ npx create-talorys@latest
 | Write Worker bundle, frontend, generated `wrangler.jsonc` files | `scaffold.ts`, `config.ts` |
 | Check the Workers AI model exists (no inference) | `wrangler ai models schema` |
 | Deploy the private Worker (creates the SQLite DO on first deploy) | `wrangler deploy` |
-| Store `OWNER_PASSWORD_HASH` and `SESSION_SECRET` via stdin | `wrangler secret bulk` |
+| Store `OWNER_PASSWORD_HASH`, `SESSION_SECRET` and the Web Push keys (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) via stdin | `wrangler secret bulk` |
 | Create/reconcile the Pages project and deploy it | `wrangler pages project create`, `wrangler pages deploy` |
 | Verify through the public URL | `verify.ts` |
 
@@ -69,6 +69,9 @@ npx wrangler secret put SESSION_SECRET -c wrangler.standalone.jsonc   # 32+ rand
 npx wrangler deploy -c wrangler.standalone.jsonc
 ```
 
+Push notifications are optional here; see [Push notifications](#push-notifications)
+to add the keys.
+
 `OWNER_PASSWORD` is the plain password, for deploys that cannot hash it
 beforehand. It must pass the installer's strength check (10+ characters, mixed
 classes or 16+ characters, no common words); a weak one counts as not configured
@@ -81,6 +84,28 @@ UI: login reverts to `OWNER_PASSWORD`, and every device is signed out.
 The config names the Worker `talorys`, and `wrangler deploy` replaces any Worker
 of that name in the account. Change `name` (or pass `--name`) to deploy under
 another one.
+
+## Push notifications
+
+Web Push needs a VAPID key pair stored as two Worker secrets. The installer
+creates them on a fresh install, and `npx create-talorys@latest update` adds
+them to an installation made before push existed. Existing keys are never
+replaced, because new keys would disconnect every subscribed device.
+
+Without the keys everything else works: `/api/health` reports `"push": false`
+and Settings shows push as unavailable. To add them by hand (for example to a
+one-Worker deploy), generate a P-256 pair in the usual base64url form, such as
+with `npx web-push generate-vapid-keys`, and store both:
+
+```bash
+npx wrangler secret put VAPID_PUBLIC_KEY    # add -c wrangler.standalone.jsonc for a one-Worker deploy
+npx wrangler secret put VAPID_PRIVATE_KEY
+```
+
+The optional `VAPID_SUBJECT` (`mailto:you@example.com` or an `https://` URL)
+is the contact push services see. It defaults to the app's own URL as recorded
+when each device subscribed. Set it with `npx wrangler secret put VAPID_SUBJECT`;
+a plain variable would be dropped when an update regenerates the Worker config.
 
 ## Idempotency and recovery
 

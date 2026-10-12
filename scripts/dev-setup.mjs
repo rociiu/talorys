@@ -21,6 +21,14 @@ async function hash(password) {
   return `pbkdf2-sha256$${iterations}$${b64url(salt)}$${b64url(new Uint8Array(bits))}`;
 }
 
+/** A Web Push (VAPID) key pair, so push can be tried locally (browsers allow it on localhost). */
+async function vapidKeys() {
+  const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const publicKey = b64url(new Uint8Array(await crypto.subtle.exportKey("raw", pair.publicKey)));
+  const { d } = await crypto.subtle.exportKey("jwk", pair.privateKey);
+  return [`VAPID_PUBLIC_KEY=${publicKey}`, `VAPID_PRIVATE_KEY=${d}`];
+}
+
 if (existsSync(target) && !force) {
   console.log("apps/agent/.dev.vars exists (use --force to regenerate).");
 } else {
@@ -35,6 +43,7 @@ if (existsSync(target) && !force) {
       "TALORYS_DEV_ORIGINS=http://localhost:5173,http://127.0.0.1:5173",
       `OWNER_PASSWORD_HASH=${await hash(password)}`,
       `SESSION_SECRET=${b64url(crypto.getRandomValues(new Uint8Array(32)))}`,
+      ...(await vapidKeys()),
       "",
     ].join("\n"),
   );

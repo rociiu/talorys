@@ -12,6 +12,14 @@ async function pbkdf2(password: string): Promise<string> {
   return `pbkdf2-sha256$100000$${b64(salt)}$${b64(new Uint8Array(bits))}`;
 }
 
+/** A throwaway VAPID key pair in the installer's format (base64url public point and private scalar). */
+async function vapidKeys(): Promise<{ VAPID_PUBLIC_KEY: string; VAPID_PRIVATE_KEY: string }> {
+  const pair = await webcrypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const raw = new Uint8Array(await webcrypto.subtle.exportKey("raw", pair.publicKey));
+  const jwk = await webcrypto.subtle.exportKey("jwk", pair.privateKey);
+  return { VAPID_PUBLIC_KEY: Buffer.from(raw).toString("base64url"), VAPID_PRIVATE_KEY: jwk.d! };
+}
+
 export default defineConfig(async () => ({
   plugins: [
     cloudflareTest({
@@ -25,6 +33,7 @@ export default defineConfig(async () => ({
           OWNER_PASSWORD_HASH: await pbkdf2(TEST_PASSWORD),
           SESSION_SECRET: "test-session-secret-0123456789abcdefghijklmnop",
           TEST_PASSWORD,
+          ...(await vapidKeys()),
         },
       },
     }),

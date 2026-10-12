@@ -6,7 +6,7 @@ import { COMPATIBILITY_DATE, detectTimezone, generateInstallationId, type Resour
 import { type Manifest, markStep, readManifest, writeManifest } from "./manifest";
 import { checkNodeVersion, detectGlobalClis } from "./requirements";
 import { assertSafeTarget, readTemplateInfo, scaffoldProject, templatesDir } from "./scaffold";
-import { buildOwnerSecrets, PASSWORD_SECRET, REQUIRED_SECRETS, SESSION_SECRET, validatePassword } from "./secrets";
+import { buildOwnerSecrets, generatePushKeys, PASSWORD_SECRET, PUSH_SECRETS, REQUIRED_SECRETS, SESSION_SECRET, validatePassword } from "./secrets";
 import type { Ui } from "./ui";
 import { type FetchLike, type CheckResult, verifyDeployment } from "./verify";
 import type { CloudflareAccount, Wrangler, WhoAmI } from "./wrangler";
@@ -203,6 +203,8 @@ export async function install(opts: InstallOptions, deps: Deps): Promise<Manifes
   const workerExists = manifest ? await wrangler.workerExists(names.workerName) : false;
   const existingSecrets = workerExists ? await wrangler.listSecrets(names.workerName) : [];
   const missingSecrets = REQUIRED_SECRETS.filter((s) => !existingSecrets.includes(s));
+  // Existing push keys are kept: replacing them would silently disconnect every subscribed device.
+  const needsPushKeys = PUSH_SECRETS.some((s) => !existingSecrets.includes(s));
   const password = missingSecrets.includes(PASSWORD_SECRET) ? await askPassword(ui, opts.password) : null;
 
   if (!opts.yes && ui.interactive) {
@@ -281,14 +283,19 @@ export async function install(opts: InstallOptions, deps: Deps): Promise<Manifes
     );
     manifest = markStep(dir, { ...manifest, deployment_version: template.version }, "worker");
 
+    const pushKeys = needsPushKeys ? await generatePushKeys() : {};
     if (missingSecrets.length > 0) {
       await ui.step("Configuring authentication", async () => {
         const secrets = await buildOwnerSecrets(password ?? "", { includeSessionSecret: missingSecrets.includes(SESSION_SECRET) });
         if (!missingSecrets.includes(PASSWORD_SECRET)) delete secrets[PASSWORD_SECRET];
-        await wrangler.putSecrets(names.workerName, secrets);
+        await wrangler.putSecrets(names.workerName, { ...secrets, ...pushKeys });
       }, () => "Authentication configured (password hashed locally; secrets stored as Cloudflare secrets)");
     } else {
       ui.success("Authentication already configured — owner password unchanged");
+      if (needsPushKeys) {
+        await ui.step("Configuring push notifications", () => wrangler.putSecrets(names.workerName, pushKeys),
+          () => "Push notification keys created (stored as Cloudflare secrets)");
+      }
     }
     manifest = markStep(dir, manifest, "secrets");
 

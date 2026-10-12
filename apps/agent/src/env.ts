@@ -9,6 +9,14 @@ export interface Env {
   OWNER_PASSWORD?: string;
   /** Random 256-bit secret used to key session token hashes. Worker secret. */
   SESSION_SECRET?: string;
+  /**
+   * Web Push (VAPID) key pair, base64url: the uncompressed public point and the private scalar.
+   * Set by the installer as Worker secrets; without them push is unavailable and nothing else changes.
+   */
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  /** Contact sent to push services ("mailto:..." or "https://..."). Defaults to the app's own URL. */
+  VAPID_SUBJECT?: string;
   /** "development" enables local-only conveniences (mock AI, http cookies). Never set in production. */
   TALORYS_ENV?: string;
   /** Development only: use the deterministic mock AI provider. */

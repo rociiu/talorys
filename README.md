@@ -24,6 +24,7 @@ npx create-talorys@latest
 - **Memory history** — facts that change over time: when you say you sold your car, the old one is kept as a past fact instead of being treated as current, and unclear conflicts wait for your review. See [docs/memory-history.md](docs/memory-history.md).
 - **Tasks, notes and projects** — full CRUD in the UI, and from chat ("Add a task to review my project tomorrow").
 - **Automations** — one-time and recurring reminders, daily task digests and optional AI routines, delivered to an in-app notification center. They run on Durable Object alarms, so nothing has to stay online.
+- **Push notifications** — reminders, digests and routines also arrive as system notifications on the phones and computers you turn them on for, even when Talorys is closed (Settings → General). Uses standard Web Push, encrypted end to end; on iPhone and iPad, add Talorys to the Home Screen first.
 - **Single-user by design** — no signup, no accounts, no teams. The installer sets the owner password.
 - **Works without AI** — tasks, notes, memories and reminders keep working if Workers AI is unavailable or your free quota is used up.
 
@@ -86,7 +87,7 @@ The installer:
 2. Verifies your Cloudflare login, or **opens Cloudflare's authorization page in your browser**.
 3. Lets you choose an account (if you have several) and an agent name.
 4. Asks for an owner password (hidden input, strength-checked). It is hashed locally with PBKDF2-SHA256 and stored only as a Cloudflare secret.
-5. Generates a 256-bit session secret and unique resource names (`talorys-<id>-agent`, `talorys-<id>-web`).
+5. Generates a 256-bit session secret, a Web Push key pair, and unique resource names (`talorys-<id>-agent`, `talorys-<id>-web`).
 6. Deploys the private Worker (creating its SQLite Durable Object), stores secrets, creates and deploys the Pages project with the service binding.
 7. Verifies the live deployment (frontend, auth endpoint, unauthenticated rejection, storage health) **without** running any AI inference.
 8. Prints the real `https://….pages.dev` URL reported by Cloudflare.

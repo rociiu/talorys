@@ -5,6 +5,7 @@ import { checkPasswordStrength, GITHUB_URL, LIMIT_CEILINGS, type Limits, type Me
 import { Download, ExternalLink, LogOut, Monitor, Moon, Sun, Upload } from "lucide-react";
 import { Badge, Button, Card, ConfirmDialog, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch } from "../components/ui";
 import { SemanticRecallCard } from "../components/SemanticRecallCard";
+import { PushNotificationsCard } from "../components/PushNotificationsCard";
 import { keys, useApiMutation, useSessions, useSettings, useSystemInfo, useUpdateStatus, useUsage } from "../hooks/queries";
 import { useSession } from "../hooks/session";
 import { useToast, errorMessage } from "../hooks/toast";
@@ -72,6 +73,7 @@ export default function SettingsPage() {
       ) : (
         <div className="space-y-8 animate-fade-in">
           {tab === "General" && <GeneralTab settings={settings} />}
+          {tab === "General" && <PushNotificationsCard />}
           {tab === "AI" && <AiTab settings={settings} />}
           {tab === "Privacy" && <PrivacyTab />}
           {tab === "Security" && <SecurityTab />}
