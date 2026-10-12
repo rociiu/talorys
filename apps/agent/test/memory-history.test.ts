@@ -761,7 +761,7 @@ describe("PR #22 hardening", () => {
     });
   });
 
-  it.fails("H3 a weak contradiction from a semantic neighbor alone makes no review", async () => {
+  it("H3 a weak contradiction from a semantic neighbor alone makes no review", async () => {
     expect((await semanticOnly(() => null)).reviews).toHaveLength(0);
     expect((await semanticOnly(() => async () => clefReply(["contradicts", 0.55]))).reviews).toHaveLength(0);
   });

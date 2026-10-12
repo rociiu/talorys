@@ -14,6 +14,11 @@ export interface ConflictAssessment {
 export const AUTO_SUPERSEDE_CONFIDENCE = 0.8;
 /** Longest a save waits for Clef, in ms; a timeout counts as an AI error. */
 export const CLEF_TIMEOUT_MS = 3000;
+/**
+ * Minimum Clef probability for a contradiction on a memory nominated by similarity alone.
+ * A starting value, to be measured against real pairs.
+ */
+export const AI_SEMANTIC_CONTRADICTION_MIN = 0.7;
 
 const STOP = new Set(
   "a an and are as at be but by can could do does did for from had has have how i i'm im if in into is it its me my of on or our so than that the their them then there these they this to us was we were what when where which who why will with would you your about also just like now new very really still been being am he she his her owner user".split(
@@ -247,10 +252,13 @@ export async function aiCheckSupersession(
 
 /**
  * Only a confident "supersedes" (Clef probability >= AUTO_SUPERSEDE_CONFIDENCE) replaces a memory;
- * a doubtful one or a contradiction waits for review.
+ * a doubtful one or a contradiction waits for review. A contradiction on a memory nominated by
+ * similarity alone needs at least AI_SEMANTIC_CONTRADICTION_MIN, otherwise nothing happens.
  */
-export function decideAi(verdict: AiVerdict): "supersede" | "review" | "none" {
+export function decideAi(verdict: AiVerdict, opts: { semanticOnly?: boolean } = {}): "supersede" | "review" | "none" {
   if (verdict.relationship === "supersedes") return verdict.confidence >= AUTO_SUPERSEDE_CONFIDENCE ? "supersede" : "review";
-  if (verdict.relationship === "contradicts") return "review";
+  if (verdict.relationship === "contradicts") {
+    return opts.semanticOnly && verdict.confidence < AI_SEMANTIC_CONTRADICTION_MIN ? "none" : "review";
+  }
   return "none";
 }

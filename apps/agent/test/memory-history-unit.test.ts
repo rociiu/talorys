@@ -51,6 +51,11 @@ describe("AI supersession check", () => {
     expect(decideAi({ relationship: "supersedes", confidence: 0.6, reason: "" })).toBe("review");
     expect(decideAi({ relationship: "contradicts", confidence: 0.9, reason: "" })).toBe("review");
     expect(decideAi({ relationship: "refines", confidence: 0.9, reason: "" })).toBe("none");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.55, reason: "" })).toBe("review");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.69, reason: "" }, { semanticOnly: true })).toBe("none");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.7, reason: "" }, { semanticOnly: true })).toBe("review");
+    expect(decideAi({ relationship: "supersedes", confidence: 0.8, reason: "" }, { semanticOnly: true })).toBe("supersede");
+    expect(decideAi({ relationship: "supersedes", confidence: 0.6, reason: "" }, { semanticOnly: true })).toBe("review");
   });
 
   it("keeps the facts in state and truncates long ones", () => {

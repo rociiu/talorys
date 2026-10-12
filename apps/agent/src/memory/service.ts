@@ -214,7 +214,7 @@ export class MemoryHistoryService {
         if (rule) decisions.push(...ruleDecision(rule));
         continue;
       }
-      const action = decideAi(verdict);
+      const action = decideAi(verdict, { semanticOnly: !rule });
       if (action === "supersede") decisions.push({ oldId: old.id, action });
       else if (action === "review") {
         const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
