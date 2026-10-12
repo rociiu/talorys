@@ -703,3 +703,84 @@ describe("PR #22 review", () => {
     }
   });
 });
+
+describe("PR #22 hardening", () => {
+  const LONDON = "I live in London";
+  const MOVED = "I moved to Paris";
+  const OLDER = "Alpha kayaks on weekends";
+  const NEWER = "Beta gardens every evening";
+
+  function aiOn(agent: TalorysAgent) {
+    agent.services.settings.update({ memoryHistory: { aiConflictCheck: true } });
+    return agent.services;
+  }
+
+  /** Saves OLDER then NEWER, with OLDER offered to Clef only as a close semantic neighbor. */
+  const semanticOnly = (clef: TalorysAgent["services"]["memoryHistory"]["hooks"]["clef"]) =>
+    freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: older } = await s.memoryHistory.create({ content: OLDER });
+      s.memoryHistory.hooks.neighbors = async () => [{ id: older.id, cosine: 0.9 }];
+      s.memoryHistory.hooks.clef = clef;
+      const r = await s.memoryHistory.create({ content: NEWER });
+      return { older, reviews: r.reviews };
+    });
+
+  it.fails("H1 a save with no signal stops waiting for a stalled Clef and counts an AI error", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      Object.assign(s.memoryHistory.hooks, { clefTimeoutMs: 50 });
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
+      const errors = s.usage.today().ai_errors;
+      const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
+      const result = await Promise.race([s.memoryHistory.create({ content: MOVED }), timeout]);
+      expect(result).not.toBe("timeout");
+      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.usage.today().ai_errors).toBe(errors + 1);
+    });
+  });
+
+  it("H1 a save cancelled before the Clef timeout is not counted as an AI error", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      Object.assign(s.memoryHistory.hooks, { clefTimeoutMs: 1000 });
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
+      const errors = s.usage.today().ai_errors;
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 20);
+      const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1500));
+      const result = await Promise.race([s.memoryHistory.create({ content: MOVED }, { signal: controller.signal }), timeout]);
+      expect(result).not.toBe("timeout");
+      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.usage.today().ai_errors).toBe(errors);
+    });
+  });
+
+  it.fails("H3 a weak contradiction from a semantic neighbor alone makes no review", async () => {
+    expect((await semanticOnly(() => null)).reviews).toHaveLength(0);
+    expect((await semanticOnly(() => async () => clefReply(["contradicts", 0.55]))).reviews).toHaveLength(0);
+  });
+
+  it("H3 a strong contradiction from a semantic neighbor alone makes one review", async () => {
+    expect((await semanticOnly(() => null)).reviews).toHaveLength(0);
+    const { older, reviews } = await semanticOnly(() => async () => clefReply(["contradicts", 0.9]));
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]).toMatchObject({ other_id: older.id, relationship: "contradiction" });
+  });
+
+  it("H3 a weak contradiction on a rule-nominated memory still makes a review", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      s.memoryHistory.hooks.clef = () => async () => clefReply(["contradicts", 0.55]);
+      const r = await s.memoryHistory.create({ content: MOVED });
+      expect(r.reviews.some((v) => v.other_id === london.id)).toBe(true);
+    });
+  });
+});
