@@ -51,7 +51,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
       };
       this._services = createServices(this.ctx.storage, this.env, scheduler, {
         clef: () => this.clefRun(),
-        neighbors: (memory) => semanticNeighbors(this.services, this.env, memory),
+        neighbors: (memory, opts) => semanticNeighbors(this.services, this.env, memory, opts),
         ...(this.env.TALORYS_ENV === "development" ? { onAiCheck: (check) => console.info("memory.ai_check", JSON.stringify(check)) } : {}),
       });
       migrate(this._services.db);

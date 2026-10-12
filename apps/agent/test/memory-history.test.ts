@@ -588,9 +588,9 @@ describe("PR #22 review", () => {
         await s.memoryHistory.create({ content: "My knee hurts on long hikes" });
         const wired = s.memoryHistory.hooks.neighbors!;
         let calls = 0;
-        s.memoryHistory.hooks.neighbors = (memory) => {
+        s.memoryHistory.hooks.neighbors = (memory, opts) => {
           calls++;
-          return wired(memory);
+          return wired(memory, opts);
         };
         setup(s);
         const day = UsageService.day();

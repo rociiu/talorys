@@ -828,7 +828,7 @@ describe("semanticNeighbors", () => {
       s.memories.clear();
       const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
       s.memories.create({ content: "I live in Porto", category: "fact" });
-      expect(await semanticNeighbors(s, workerEnv, m)).toEqual([]);
+      expect(await semanticNeighbors(s, workerEnv, m, { minCosine: -1, limit: 10, exclude: new Set() })).toEqual([]);
     });
   });
 
@@ -846,7 +846,8 @@ describe("semanticNeighbors", () => {
         s.memories.create({ content: "My favourite colour is green", category: "preference" }),
         s.memories.create({ content: "The dog is called Rex", category: "fact" }),
       ];
-      const out = await semanticNeighbors(s, workerEnv, m);
+      await runIndexer(createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!));
+      const out = await semanticNeighbors(s, workerEnv, m, { minCosine: -1, limit: 10, exclude: new Set() });
       expect(out.map((n) => n.id).sort()).toEqual(others.map((o) => o.id).sort());
       expect(out.some((n) => n.id === m.id)).toBe(false);
       for (let i = 1; i < out.length; i++) expect(out[i]!.cosine).toBeLessThanOrEqual(out[i - 1]!.cosine);
@@ -855,8 +856,6 @@ describe("semanticNeighbors", () => {
 });
 
 describe("PR #22 review", () => {
-  /** Takes the options argument the fixed `semanticNeighbors` accepts, so this file typechecks before and after. */
-  const neighbors = semanticNeighbors as (...args: unknown[]) => ReturnType<typeof semanticNeighbors>;
   const options = () => ({ minCosine: -1, limit: 100, exclude: new Set<string>() });
 
   function enabled(a: TalorysAgent) {
@@ -869,7 +868,7 @@ describe("PR #22 review", () => {
     return { s, ctx: createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!) };
   }
 
-  it.fails("#1 neighbors of an edited memory use its current text, not a stale vector", async () => {
+  it("#1 neighbors of an edited memory use its current text, not a stale vector", async () => {
     await inAgent(async (a) => {
       const { s, ctx } = enabled(a);
       const x = s.memories.create({ content: "I drive a Tesla", category: "fact" });
@@ -881,14 +880,14 @@ describe("PR #22 review", () => {
       const edited = s.memories.update(x.id, { content: "I live in Denver" });
       s.memories.update(y.id, { content: "The dog is called Rex" });
 
-      const ids = (await neighbors(s, workerEnv, edited, options())).map((n) => n.id);
+      const ids = (await semanticNeighbors(s, workerEnv, edited, options())).map((n) => n.id);
       expect(ids).toContain(p.id);
       expect(ids).not.toContain(y.id);
       for (const id of ids) expect(id).not.toBe(x.id);
     });
   });
 
-  it.fails("#7 finding neighbors embeds only the saved memory, not the whole backlog", async () => {
+  it("#7 finding neighbors embeds only the saved memory, not the whole backlog", async () => {
     await inAgent(async (a) => {
       const { s, ctx } = enabled(a);
       for (let i = 0; i < 60; i++) s.memories.create({ content: `Backlog memory ${i} about subject ${i * 3}`, category: "fact" });
@@ -897,7 +896,7 @@ describe("PR #22 review", () => {
       const before = embeddingsToday(s.db, day);
       const digest = vi.spyOn(crypto.subtle, "digest");
       try {
-        await neighbors(s, workerEnv, saved, options());
+        await semanticNeighbors(s, workerEnv, saved, options());
         expect(digest.mock.calls.length).toBeLessThan(10);
       } finally {
         digest.mockRestore();

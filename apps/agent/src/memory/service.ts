@@ -3,6 +3,7 @@ import { estimateTokens } from "../ai/provider";
 import { ValidationError } from "../api/errors";
 import type { Database } from "../db/database";
 import type { MemoryRepository, MemoryReviewRow } from "../db/repositories/memories";
+import type { NeighborOptions } from "../semantic/neighbors";
 import { deleteAllVectors, deleteVector } from "../semantic/vectorStore";
 import type { SettingsService } from "../services/settings";
 import type { ActivityLog, UsageService } from "../services/usage";
@@ -23,8 +24,8 @@ import { extractStatedDate, MemoryLifecycle } from "./lifecycle";
 export interface MemoryHistoryHooks {
   /** Clef (Workers AI decision model), used only for the optional AI conflict check. */
   clef?: () => ClefRun | null;
-  /** Other memories by cosine to this one, best first (semantic recall on); embeds it if needed. */
-  neighbors?: (memory: Memory) => Promise<{ id: string; cosine: number }[]>;
+  /** Other memories by cosine to this one, best first, within `opts` (semantic recall on); embeds it if needed. */
+  neighbors?: (memory: Memory, opts: NeighborOptions) => Promise<{ id: string; cosine: number }[]>;
   /** Called after each AI conflict check (development logging, tests). */
   onAiCheck?: (check: { newer: string; older: string[]; verdicts: AiBatchVerdict[] | null }) => void;
 }
@@ -243,7 +244,7 @@ export class MemoryHistoryService {
     if (!this.hooks.neighbors) return [];
     let neighbors: { id: string; cosine: number }[];
     try {
-      neighbors = await this.hooks.neighbors(memory);
+      neighbors = await this.hooks.neighbors(memory, { minCosine: AI_CANDIDATE_MIN_COSINE, limit: AI_CANDIDATE_LIMIT, exclude });
     } catch (error) {
       console.warn("memory.neighbors_failed", (error as Error).name);
       return [];

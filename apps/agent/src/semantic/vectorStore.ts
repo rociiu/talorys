@@ -197,6 +197,12 @@ export function vectorMeta(db: Database): Map<string, VectorMeta> {
   return meta;
 }
 
+/** model, dims and content hash of one memory's vector, or null when it has none. */
+export function vectorMetaFor(db: Database, memoryId: string): VectorMeta | null {
+  if (!hasTable(db)) return null;
+  return db.one<VectorMeta>(`SELECT model, dims, content_hash FROM tal_semantic_vectors WHERE memory_id = ?`, memoryId) ?? null;
+}
+
 /** Stored vectors of `model`, of any size. */
 export function countVectors(db: Database, model: string): number {
   if (!hasTable(db)) return 0;
