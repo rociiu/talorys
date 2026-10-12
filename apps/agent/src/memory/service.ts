@@ -190,7 +190,7 @@ export class MemoryHistoryService {
     for (const id of nominated.keys()) pool.set(id, candidates.get(id)!);
     for (const m of await this.semanticCandidates(memory, new Set(nominated.keys()))) pool.set(m.id, m);
     if (pool.size === 0) return { memory: this.repo.get(memory.id) ?? memory, superseded: [], reviews: [] };
-    if (!this.usage.reserveAi(limits)) return fallback();
+    if (signal?.aborted || !this.usage.reserveAi(limits)) return fallback();
 
     const older = [...pool.values()];
     const verdicts = await this.aiCheck(run, memory.content, older, signal);
@@ -262,12 +262,30 @@ export class MemoryHistoryService {
     return out;
   }
 
-  /** One Clef call (the caller has reserved it against the daily AI budget). Null when Clef can't answer. */
+  /**
+   * One Clef call (the caller has reserved it against the daily AI budget). Null when Clef can't
+   * answer. An abort stops the wait even if the runtime ignores the signal, and is not an AI error.
+   */
   private async aiCheck(run: ClefRun, newer: string, older: Memory[], signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
+    const call = aiCheckSupersession(run, newer, older, signal);
+    if (!signal) return this.settleAiCheck(call);
+    let onAbort = () => {};
+    const aborted = new Promise<never>((_, reject) => {
+      onAbort = () => reject(signal.reason);
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
     try {
-      return await aiCheckSupersession(run, newer, older, signal);
+      return await this.settleAiCheck(Promise.race([call, aborted]), signal);
+    } finally {
+      signal.removeEventListener("abort", onAbort);
+    }
+  }
+
+  private async settleAiCheck(call: Promise<AiBatchVerdict[] | null>, signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
+    try {
+      return await call;
     } catch {
-      this.usage.increment({ ai_errors: 1 });
+      if (!signal?.aborted) this.usage.increment({ ai_errors: 1 });
       return null;
     }
   }

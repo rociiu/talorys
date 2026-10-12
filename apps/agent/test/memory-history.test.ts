@@ -542,7 +542,7 @@ describe("PR #22 review", () => {
     });
   });
 
-  it.fails("#4 a cancelled save is not counted as an AI error", async () => {
+  it("#4 a cancelled save is not counted as an AI error", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
       s.memoryHistory.hooks.neighbors = async () => [];
@@ -564,7 +564,7 @@ describe("PR #22 review", () => {
     });
   });
 
-  it.fails("#5 a cancelled save stops waiting for Clef and falls back to the rules", async () => {
+  it("#5 a cancelled save stops waiting for Clef and falls back to the rules", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
       s.memoryHistory.hooks.neighbors = async () => [];

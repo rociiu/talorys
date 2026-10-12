@@ -93,8 +93,8 @@ export class TalorysAgent extends Agent<Env, AgentState> {
   /** Clef for the memory-history AI check: only with real Workers AI (not mock AI or demo mode). */
   clefRun(): ClefRun | null {
     if (!this.env.AI || !(this.aiProvider() instanceof CloudflareWorkersAIProvider)) return null;
-    const ai = this.env.AI as unknown as { run(model: string, input: unknown, options?: { signal?: AbortSignal }): Promise<unknown> };
-    return (request, signal) => ai.run(CLEF_MODEL, request, { signal });
+    const ai = this.env.AI;
+    return (request, signal) => ai.run(CLEF_MODEL, { ...request }, { signal });
   }
 
   runner(): AgentRunner {
