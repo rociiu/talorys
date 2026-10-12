@@ -12,6 +12,8 @@ export interface ConflictAssessment {
 
 /** Minimum confidence for an automatic (always reversible) supersession. */
 export const AUTO_SUPERSEDE_CONFIDENCE = 0.8;
+/** Longest a save waits for Clef, in ms; a timeout counts as an AI error. */
+export const CLEF_TIMEOUT_MS = 3000;
 
 const STOP = new Set(
   "a an and are as at be but by can could do does did for from had has have how i i'm im if in into is it its me my of on or our so than that the their them then there these they this to us was we were what when where which who why will with would you your about also just like now new very really still been being am he she his her owner user".split(

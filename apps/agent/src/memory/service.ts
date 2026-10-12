@@ -13,6 +13,7 @@ import {
   type AiBatchVerdict,
   aiCheckSupersession,
   type ClefRun,
+  CLEF_TIMEOUT_MS,
   classifyRelationship,
   type ConflictAssessment,
   decide,
@@ -28,6 +29,8 @@ export interface MemoryHistoryHooks {
   neighbors?: (memory: Memory, opts: NeighborOptions) => Promise<{ id: string; cosine: number }[]>;
   /** Called after each AI conflict check (development logging, tests). */
   onAiCheck?: (check: { newer: string; older: string[]; verdicts: AiBatchVerdict[] | null }) => void;
+  /** Clef time limit in ms (tests only). */
+  clefTimeoutMs?: number;
 }
 
 export interface WriteResult {
@@ -268,21 +271,22 @@ export class MemoryHistoryService {
   }
 
   /**
-   * One Clef call (the caller has reserved it against the daily AI budget). Null when Clef can't
-   * answer. An abort stops the wait even if the runtime ignores the signal, and is not an AI error.
+   * One Clef call (the caller has reserved it against the daily AI budget), limited to
+   * CLEF_TIMEOUT_MS. Null when Clef can't answer in time. A timeout or abort stops the wait even if
+   * the runtime ignores the signal; a timeout counts as an AI error, a caller abort does not.
    */
   private async aiCheck(run: ClefRun, newer: string, older: Memory[], signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
-    const call = aiCheckSupersession(run, newer, older, signal);
-    if (!signal) return this.settleAiCheck(call);
+    const timeout = AbortSignal.timeout(this.hooks.clefTimeoutMs ?? CLEF_TIMEOUT_MS);
+    const effective = signal ? AbortSignal.any([signal, timeout]) : timeout;
     let onAbort = () => {};
     const aborted = new Promise<never>((_, reject) => {
-      onAbort = () => reject(signal.reason);
-      signal.addEventListener("abort", onAbort, { once: true });
+      onAbort = () => reject(effective.reason);
+      effective.addEventListener("abort", onAbort, { once: true });
     });
     try {
-      return await this.settleAiCheck(Promise.race([call, aborted]), signal);
+      return await this.settleAiCheck(Promise.race([aiCheckSupersession(run, newer, older, effective), aborted]), signal);
     } finally {
-      signal.removeEventListener("abort", onAbort);
+      effective.removeEventListener("abort", onAbort);
     }
   }
 
@@ -290,6 +294,7 @@ export class MemoryHistoryService {
     try {
       return await call;
     } catch {
+      // Only the caller's own abort is not an error; a timeout is.
       if (!signal?.aborted) this.usage.increment({ ai_errors: 1 });
       return null;
     }

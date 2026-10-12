@@ -727,10 +727,10 @@ describe("PR #22 hardening", () => {
       return { older, reviews: r.reviews };
     });
 
-  it.fails("H1 a save with no signal stops waiting for a stalled Clef and counts an AI error", async () => {
+  it("H1 a save with no signal stops waiting for a stalled Clef and counts an AI error", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
-      Object.assign(s.memoryHistory.hooks, { clefTimeoutMs: 50 });
+      s.memoryHistory.hooks.clefTimeoutMs = 50;
       s.memoryHistory.hooks.neighbors = async () => [];
       const { memory: london } = await s.memoryHistory.create({ content: LONDON });
       s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
@@ -746,7 +746,7 @@ describe("PR #22 hardening", () => {
   it("H1 a save cancelled before the Clef timeout is not counted as an AI error", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
-      Object.assign(s.memoryHistory.hooks, { clefTimeoutMs: 1000 });
+      s.memoryHistory.hooks.clefTimeoutMs = 1000;
       s.memoryHistory.hooks.neighbors = async () => [];
       const { memory: london } = await s.memoryHistory.create({ content: LONDON });
       s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
