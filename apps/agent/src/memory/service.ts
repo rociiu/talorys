@@ -98,12 +98,17 @@ export class MemoryHistoryService {
   }
 
   /** Records a newer version of a fact. The old memory is kept as history and linked to the new one. */
-  async correct(id: string, content: string, category?: MemoryCategory, source: "manual" | "agent" = "manual"): Promise<WriteResult> {
+  async correct(
+    id: string,
+    content: string,
+    category?: MemoryCategory,
+    opts: { source?: "manual" | "agent"; signal?: AbortSignal } = {},
+  ): Promise<WriteResult> {
     const old = this.repo.require(id);
-    const created = this.repo.create({ content, category: category ?? old.category, source, valid_from: extractStatedDate(content) });
+    const created = this.repo.create({ content, category: category ?? old.category, source: opts.source ?? "manual", valid_from: extractStatedDate(content) });
     if (created.id === old.id) throw new ValidationError("That is the same as the current memory.");
     const superseded = [this.lifecycle.supersede(old.id, created.id, {})];
-    const rest = await this.afterWrite(this.repo.require(created.id));
+    const rest = await this.afterWrite(this.repo.require(created.id), opts.signal);
     return { memory: this.repo.require(created.id), superseded: [...superseded, ...rest.superseded], reviews: rest.reviews };
   }
 

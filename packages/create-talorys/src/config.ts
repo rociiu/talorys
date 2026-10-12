@@ -56,7 +56,7 @@ export function generateAgentConfig(input: AgentConfigInput): Record<string, unk
     name: input.workerName,
     main: input.main ?? "worker.js",
     compatibility_date: COMPATIBILITY_DATE,
-    compatibility_flags: ["nodejs_compat"],
+    compatibility_flags: ["nodejs_compat", "enable_request_signal"],
     // Private backend: no workers.dev URL and no preview URLs. Only the Pages service binding can reach it.
     workers_dev: false,
     preview_urls: false,

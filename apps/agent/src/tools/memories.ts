@@ -53,7 +53,7 @@ export const memoryTools = [
       const { memory: m } =
         i.content.trim() === before.content.trim()
           ? await ctx.services.memoryHistory.update(i.id, { category: i.category })
-          : await ctx.services.memoryHistory.correct(i.id, i.content, i.category, "agent");
+          : await ctx.services.memoryHistory.correct(i.id, i.content, i.category, { source: "agent" });
       return { updated: { id: m.id, content: m.content }, ...(m.id !== before.id ? { previous_kept_as_history: before.id } : {}) };
     },
   }),

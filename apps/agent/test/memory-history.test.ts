@@ -17,7 +17,7 @@ import { createSemanticContext, hybridSearch, selectSemanticMemories } from "../
 import { countVectors } from "../src/semantic/vectorStore";
 import { exportData, importData } from "../src/services/backup";
 import { UsageService } from "../src/services/usage";
-import { loggedIn } from "./helpers";
+import { BASE, inAgent, loggedIn } from "./helpers";
 
 const ns = () => (env as unknown as { TalorysAgent: DurableObjectNamespace<TalorysAgent> }).TalorysAgent;
 
@@ -576,6 +576,45 @@ describe("PR #22 review", () => {
       const result = await Promise.race([s.memoryHistory.create({ content: MOVED }, { signal: controller.signal }), timeout]);
       expect(result).not.toBe("timeout");
       expect(s.memories.get(london.id)?.status).toBe("historical");
+    });
+  });
+
+  it("#5 an HTTP save passes its request signal to the conflict check", async () => {
+    const c = await loggedIn();
+    const tag = crypto.randomUUID().slice(0, 8);
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const { hooks } = s.memoryHistory;
+      const before = s.settings.get().memoryHistory;
+      try {
+        aiOn(agent);
+        s.memoryHistory.hooks = { ...hooks, neighbors: async () => [] };
+        const { memory: london } = await s.memoryHistory.create({ content: `${LONDON} ${tag}` });
+        let calls = 0;
+        s.memoryHistory.hooks.clef = () => () => {
+          calls++;
+          return new Promise(() => {});
+        };
+        const errors = s.usage.today().ai_errors;
+        const controller = new AbortController();
+        controller.abort();
+        const request = new Request(`${BASE}/api/memories`, {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "cf-connecting-ip": c.ip, "x-talorys-request": "1", origin: BASE, "content-type": "application/json", cookie: c.cookie! },
+          body: JSON.stringify({ content: `${MOVED} ${tag}` }),
+        });
+        const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
+        const res = await Promise.race([agent.fetch(request), timeout]);
+        expect(res).not.toBe("timeout");
+        expect((res as Response).status).toBe(201);
+        expect(calls).toBe(0);
+        expect(s.memories.get(london.id)?.status).toBe("historical");
+        expect(s.usage.today().ai_errors).toBe(errors);
+      } finally {
+        s.memoryHistory.hooks = hooks;
+        s.settings.update({ memoryHistory: before });
+      }
     });
   });
 
