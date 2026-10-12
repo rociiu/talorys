@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { checkPasswordStrength, GITHUB_URL, LIMIT_CEILINGS, type Limits, type MemoryHistorySettings, type Settings, TALORYS_VERSION } from "@talorys/shared";
 import { Download, ExternalLink, LogOut, Monitor, Moon, Sun, Upload } from "lucide-react";
@@ -38,7 +39,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("General");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const param = searchParams.get("tab");
+  const tab: Tab = TABS.find((t) => t === param) ?? "General";
+  const setTab = (t: Tab) => setSearchParams(t === "General" ? {} : { tab: t }, { replace: true });
   const { data: settings, isLoading, error, refetch } = useSettings();
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">

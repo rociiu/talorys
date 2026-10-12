@@ -20,6 +20,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
+import { ChatUsage } from "../components/ChatUsage";
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
@@ -140,6 +141,7 @@ export function ChatPage() {
     } finally {
       abortRef.current = null;
       void qc.invalidateQueries({ queryKey: ["conversations"] });
+      void qc.invalidateQueries({ queryKey: keys.usage });
       if (convId) void qc.invalidateQueries({ queryKey: keys.conversation(convId) });
       // Drop the transient bubble once persisted messages are back.
       setTimeout(() => setStream((s) => (s?.done ? null : s)), 400);
@@ -247,10 +249,13 @@ function ChatHeader({
         </button>
         <h2 className="truncate text-sm font-medium text-fg">{conversation?.title ?? "New conversation"}</h2>
       </div>
-      <Button variant="ghost" size="sm" onClick={onNew}>
-        <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">New chat</span>
-      </Button>
+      <div className="flex shrink-0 items-center gap-1">
+        <ChatUsage />
+        <Button variant="ghost" size="sm" onClick={onNew}>
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">New chat</span>
+        </Button>
+      </div>
     </div>
   );
 }

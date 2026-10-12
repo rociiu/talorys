@@ -133,8 +133,8 @@ export function useNotifications() {
   });
 }
 
-export function useUsage() {
-  return useQuery({ queryKey: keys.usage, queryFn: () => api<UsageReport>("/usage") });
+export function useUsage(refetchInterval: number | false = false) {
+  return useQuery({ queryKey: keys.usage, queryFn: () => api<UsageReport>("/usage"), refetchInterval });
 }
 
 export function useSessions() {
