@@ -66,7 +66,8 @@ Clef returns a probability for every answer:
 | Clef's answer | Result |
 | --- | --- |
 | Replaces it, probability 0.8 or more | Old becomes past (reversible) |
-| Replaces it, below 0.8, or conflicts | **Both kept**; shown under *Needs review* |
+| Replaces it, below 0.8 | **Both kept**; shown under *Needs review* |
+| Conflicts | **Both kept**; shown under *Needs review*. For a memory found only by similarity, the conflict needs a probability of 0.7 or more; below that nothing changes |
 | More detail, compatible, or unrelated | Nothing changes, unless the wording rules would have replaced it: then **both kept**; shown under *Needs review* |
 
 The facts are sent as data, and only Clef's probabilities are read, never free
@@ -74,15 +75,17 @@ text. Each call counts as one request against your daily AI request limit
 (Clef bills input tokens only; a check is roughly 7–17 neurons). The check
 runs only when there is something to compare against.
 
-When Clef can't answer (mock AI or demo mode, the daily limit is reached, an
-error or an unexpected response), the check falls back to the wording rules:
+Clef has 3 seconds to answer. When Clef can't answer (mock AI or demo mode, the
+daily limit is reached, no answer within 3 seconds, an error or an unexpected
+response), the check falls back to the wording rules:
 rule hits are handled exactly as with the check off, and memories nominated
 only by similarity are left alone. Clef and the daily limit are checked before
 any similarity lookup, so such a save spends no embeddings. The new memory is
 embedded on its own if its vector is missing or out of date (counted against
 the daily embedding limit); older memories whose vectors are out of date are
-skipped until the background index catches up. A save cancelled while Clef is
-answering finishes with the wording rules and is not counted as an AI error.
+skipped until the background index catches up. A timeout counts as an AI
+error. A save cancelled while Clef is answering also finishes with the wording
+rules, but is not counted as an AI error.
 
 With the check off, detection is the wording rules alone, as described above.
 
