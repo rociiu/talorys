@@ -19,7 +19,7 @@ import {
   embeddingsToday,
   encodeVector,
 } from "../src/semantic/embeddings";
-import { runIndexer } from "../src/semantic/indexer";
+import { pendingMemories, runIndexer } from "../src/semantic/indexer";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import {
   estimateTokens,
@@ -850,6 +850,60 @@ describe("semanticNeighbors", () => {
       expect(out.map((n) => n.id).sort()).toEqual(others.map((o) => o.id).sort());
       expect(out.some((n) => n.id === m.id)).toBe(false);
       for (let i = 1; i < out.length; i++) expect(out[i]!.cosine).toBeLessThanOrEqual(out[i - 1]!.cosine);
+    });
+  });
+});
+
+describe("PR #22 review", () => {
+  /** Takes the options argument the fixed `semanticNeighbors` accepts, so this file typechecks before and after. */
+  const neighbors = semanticNeighbors as (...args: unknown[]) => ReturnType<typeof semanticNeighbors>;
+  const options = () => ({ minCosine: -1, limit: 100, exclude: new Set<string>() });
+
+  function enabled(a: TalorysAgent) {
+    const s = a.services;
+    dropSemanticData(s.db);
+    deleteSemanticConfig(s.settings);
+    s.memories.clear();
+    writeSemanticConfig(s.settings, { enabled: true, maxEmbeddingsPerDay: 10_000 }, s.db);
+    invalidateSemanticCache(s);
+    return { s, ctx: createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!) };
+  }
+
+  it.fails("#1 neighbors of an edited memory use its current text, not a stale vector", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = enabled(a);
+      const x = s.memories.create({ content: "I drive a Tesla", category: "fact" });
+      const y = s.memories.create({ content: "My car is a VW", category: "fact" });
+      const p = s.memories.create({ content: "I live in Portland", category: "fact" });
+      for (let i = 0; i < 5 && (await pendingMemories(s.db, ctx.embedder!.model)).length; i++) await runIndexer(ctx);
+      expect(await pendingMemories(s.db, ctx.embedder!.model)).toHaveLength(0);
+      for (let i = 0; i < 55; i++) s.memories.create({ content: `Unrelated note ${i} about topic ${i * 7}`, category: "fact" });
+      const edited = s.memories.update(x.id, { content: "I live in Denver" });
+      s.memories.update(y.id, { content: "The dog is called Rex" });
+
+      const ids = (await neighbors(s, workerEnv, edited, options())).map((n) => n.id);
+      expect(ids).toContain(p.id);
+      expect(ids).not.toContain(y.id);
+      for (const id of ids) expect(id).not.toBe(x.id);
+    });
+  });
+
+  it.fails("#7 finding neighbors embeds only the saved memory, not the whole backlog", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = enabled(a);
+      for (let i = 0; i < 60; i++) s.memories.create({ content: `Backlog memory ${i} about subject ${i * 3}`, category: "fact" });
+      const saved = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      const day = UsageService.day();
+      const before = embeddingsToday(s.db, day);
+      const digest = vi.spyOn(crypto.subtle, "digest");
+      try {
+        await neighbors(s, workerEnv, saved, options());
+        expect(digest.mock.calls.length).toBeLessThan(10);
+      } finally {
+        digest.mockRestore();
+      }
+      expect(embeddingsToday(s.db, day)).toBe(before + 1);
+      expect((await pendingMemories(s.db, ctx.embedder!.model)).length).toBeGreaterThanOrEqual(60);
     });
   });
 });

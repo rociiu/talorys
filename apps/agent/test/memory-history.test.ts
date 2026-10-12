@@ -11,10 +11,12 @@ import type { ClefRequest } from "../src/memory/conflict";
 import type { Env } from "../src/env";
 import { invalidateSemanticCache, semanticExtensions } from "../src/semantic";
 import { readSemanticConfig, writeSemanticConfig } from "../src/semantic/config";
+import { embeddingsToday } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
 import { createSemanticContext, hybridSearch, selectSemanticMemories } from "../src/semantic/recall";
 import { countVectors } from "../src/semantic/vectorStore";
 import { exportData, importData } from "../src/services/backup";
+import { UsageService } from "../src/services/usage";
 import { loggedIn } from "./helpers";
 
 const ns = () => (env as unknown as { TalorysAgent: DurableObjectNamespace<TalorysAgent> }).TalorysAgent;
@@ -477,5 +479,181 @@ describe("memory history API", () => {
 
     expect((await c.call("/api/settings", { method: "PATCH", body: { memoryHistory: { conflictReview: "yes" } } })).status).toBe(400);
     for (const m of (await c.json(`/api/memories?q=${tag}`)).memories) await c.call(`/api/memories/${m.id}`, { method: "DELETE" });
+  });
+});
+
+describe("PR #22 review", () => {
+  const LONDON = "I live in London";
+  const MOVED = "I moved to Paris";
+
+  function aiOn(agent: TalorysAgent) {
+    agent.services.settings.update({ memoryHistory: { aiConflictCheck: true } });
+    return agent.services;
+  }
+
+  it.fails("#2 a rule-confident supersede still applies when Clef cannot answer", async () => {
+    const cases: [string, (s: TalorysAgent["services"]) => void][] = [
+      ["no Clef", (s) => (s.memoryHistory.hooks.clef = () => null)],
+      [
+        "budget spent",
+        (s) => {
+          s.memoryHistory.hooks.clef = () => async () => clefReply(["supersedes", 0.95]);
+          s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
+        },
+      ],
+      [
+        "Clef error",
+        (s) =>
+          (s.memoryHistory.hooks.clef = () => async () => {
+            throw new Error("AI unavailable");
+          }),
+      ],
+    ];
+    for (const [, setup] of cases) {
+      await freshAgent()(async (agent) => {
+        const s = aiOn(agent);
+        s.memoryHistory.hooks.neighbors = async () => [];
+        const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+        setup(s);
+        const r = await s.memoryHistory.create({ content: MOVED });
+        expect(s.memories.get(london.id)?.status).toBe("historical");
+        expect(r.superseded.map((m) => m.id)).toContain(london.id);
+        expect(r.reviews).toHaveLength(0);
+      });
+    }
+  });
+
+  it.fails("#3 a rule-confident supersede Clef calls unrelated is kept for review, not dropped", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      s.memoryHistory.hooks.clef = () => async () => clefReply(["unrelated", 0.3]);
+      const r = await s.memoryHistory.create({ content: MOVED });
+      expect(r.reviews.some((v) => v.relationship === "possible_update" && v.other_id === london.id)).toBe(true);
+      expect(r.superseded).toHaveLength(0);
+      expect(s.memories.get(london.id)?.status).toBe("active");
+    });
+  });
+
+  it.fails("#4 a cancelled save is not counted as an AI error", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      await s.memoryHistory.create({ content: LONDON });
+      const controller = new AbortController();
+      s.memoryHistory.hooks.clef = () => async () => {
+        controller.abort();
+        throw new DOMException("aborted", "AbortError");
+      };
+      const errors = s.usage.today().ai_errors;
+      await s.memoryHistory.create({ content: MOVED }, { signal: controller.signal });
+      expect(s.usage.today().ai_errors).toBe(errors);
+
+      s.memoryHistory.hooks.clef = () => async () => {
+        throw new Error("AI unavailable");
+      };
+      await s.memoryHistory.create({ content: "I moved to Rome" });
+      expect(s.usage.today().ai_errors).toBe(errors + 1);
+    });
+  });
+
+  it.fails("#5 a cancelled save stops waiting for Clef and falls back to the rules", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 50);
+      const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
+      const result = await Promise.race([s.memoryHistory.create({ content: MOVED }, { signal: controller.signal }), timeout]);
+      expect(result).not.toBe("timeout");
+      expect(s.memories.get(london.id)?.status).toBe("historical");
+    });
+  });
+
+  it.fails("#6 nothing is embedded when Clef cannot run", async () => {
+    const cases: ((s: TalorysAgent["services"]) => void)[] = [
+      (s) => (s.memoryHistory.hooks.clef = () => null),
+      (s) => {
+        s.memoryHistory.hooks.clef = () => async () => clefReply(["unrelated", 0.9]);
+        s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
+      },
+    ];
+    for (const setup of cases) {
+      await freshAgent()(async (agent) => {
+        const s = aiOn(agent);
+        enableSemantic(agent);
+        await s.memoryHistory.create({ content: "My knee hurts on long hikes" });
+        const wired = s.memoryHistory.hooks.neighbors!;
+        let calls = 0;
+        s.memoryHistory.hooks.neighbors = (memory) => {
+          calls++;
+          return wired(memory);
+        };
+        setup(s);
+        const day = UsageService.day();
+        const before = embeddingsToday(s.db, day);
+        await s.memoryHistory.create({ content: "I enjoy hiking in the mountains" });
+        expect(calls).toBe(0);
+        expect(embeddingsToday(s.db, day)).toBe(before);
+      });
+    }
+  });
+
+  it.fails("#8 asks for neighbors above the floor and keeps their order", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: a } = await s.memoryHistory.create({ content: "Alpha kayaks" });
+      const { memory: b } = await s.memoryHistory.create({ content: "Beta gardens" });
+      const calls: unknown[][] = [];
+      s.memoryHistory.hooks.neighbors = async (...args: unknown[]) => {
+        calls.push(args);
+        return [
+          { id: a.id, cosine: 0.7 },
+          { id: b.id, cosine: 0.9 },
+        ];
+      };
+      const requests: ClefRequest[] = [];
+      s.memoryHistory.hooks.clef = () => async (request) => {
+        requests.push(request);
+        return clefReply(["unrelated", 0.9], ["unrelated", 0.9]);
+      };
+      await s.memoryHistory.create({ content: "Zeta harmonicas" });
+      expect(calls[0]![1]).toEqual({ minCosine: 0.6, limit: 3, exclude: new Set() });
+      expect(requests[0]!.state.older.map((o) => o.content)).toEqual(["Alpha kayaks", "Beta gardens"]);
+    });
+  });
+
+  it.fails("#9 with Clef unavailable, the AI check on behaves as the AI check off", async () => {
+    const outcome = async (older: string, newer: string, ai: boolean) =>
+      freshAgent()(async (agent) => {
+        const s = agent.services;
+        if (ai) {
+          aiOn(agent);
+          s.memoryHistory.hooks.clef = () => null;
+          s.memoryHistory.hooks.neighbors = async () => [];
+        }
+        await s.memoryHistory.create({ content: older });
+        const seen = new Set(s.activity.list(1000).map((e) => e.id));
+        const r = await s.memoryHistory.create({ content: newer });
+        return {
+          superseded: r.superseded.map((m) => m.content),
+          reviews: r.reviews.map((v) => v.relationship),
+          activity: s.activity
+            .list(1000)
+            .filter((e) => !seen.has(e.id))
+            .map((e) => e.type)
+            .sort(),
+        };
+      });
+    for (const [older, newer] of [
+      [LONDON, MOVED],
+      [LONDON, "I live in Paris"],
+    ] as const) {
+      expect(await outcome(older, newer, true)).toEqual(await outcome(older, newer, false));
+    }
   });
 });
