@@ -53,9 +53,12 @@ type ConflictDecision =
   | { oldId: string; action: "supersede" }
   | { oldId: string; action: "review"; relationship: MemoryReviewRow["relationship"]; reason: string };
 
-/** The review a rule assessment asks for. */
-function ruleReview(a: ConflictAssessment): { relationship: MemoryReviewRow["relationship"]; reason: string } {
-  return { relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction", reason: a.reason };
+/** What the deterministic rules decide for one assessment (empty when they leave it alone). */
+function ruleDecision(a: ConflictAssessment): ConflictDecision[] {
+  const action = decide(a);
+  if (action === "none") return [];
+  if (action === "supersede") return [{ oldId: a.oldMemoryId, action }];
+  return [{ oldId: a.oldMemoryId, action, relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction", reason: a.reason }];
 }
 
 /**
@@ -160,21 +163,14 @@ export class MemoryHistoryService {
       .map((c) => classifyRelationship(memory.content, c));
     if (this.settings.get().memoryHistory.aiConflictCheck) return this.detectWithAi(memory, candidates, assessments, signal);
 
-    const decisions: ConflictDecision[] = [];
-    for (const a of assessments) {
-      const action = decide(a);
-      if (action === "none") continue;
-      if (action === "supersede") decisions.push({ oldId: a.oldMemoryId, action });
-      else decisions.push({ oldId: a.oldMemoryId, action, ...ruleReview(a) });
-    }
-    return this.applyDecisions(memory, decisions);
+    return this.applyDecisions(memory, assessments.flatMap((a) => ruleDecision(a)));
   }
 
   /**
    * With the AI check on, rules and semantic similarity only nominate: the rule hits plus up to
    * AI_CANDIDATE_LIMIT memories at or above AI_CANDIDATE_MIN_COSINE go to one Clef call, and only
-   * a confident "supersedes" replaces a memory. When Clef can't answer, rule hits wait for review
-   * and nothing changes by itself.
+   * a confident "supersedes" replaces a memory. Clef and the AI budget are checked before any
+   * embedding work; when Clef can't run or answer, rule hits are decided as with the check off.
    */
   private async detectWithAi(
     memory: Memory,
@@ -184,13 +180,20 @@ export class MemoryHistoryService {
   ): Promise<WriteResult> {
     const nominated = new Map<string, ConflictAssessment>();
     for (const a of assessments) if (decide(a) !== "none") nominated.set(a.oldMemoryId, a);
+    const fallback = () => this.applyDecisions(memory, [...nominated.values()].flatMap((a) => ruleDecision(a)));
+
+    const run = this.hooks.clef?.();
+    const { limits } = this.settings.get();
+    if (!run || !this.usage.canUseAi(limits)) return fallback();
+
     const pool = new Map<string, Memory>();
     for (const id of nominated.keys()) pool.set(id, candidates.get(id)!);
     for (const m of await this.semanticCandidates(memory, new Set(nominated.keys()))) pool.set(m.id, m);
     if (pool.size === 0) return { memory: this.repo.get(memory.id) ?? memory, superseded: [], reviews: [] };
+    if (!this.usage.reserveAi(limits)) return fallback();
 
     const older = [...pool.values()];
-    const verdicts = await this.aiCheck(memory.content, older, signal);
+    const verdicts = await this.aiCheck(run, memory.content, older, signal);
     this.hooks.onAiCheck?.({ newer: memory.content, older: older.map((m) => m.content), verdicts });
     this.activity.record("memory.ai_check", `AI checked ${older.length} possible conflict(s)${verdicts ? "" : " (no usable answer)"}`);
 
@@ -198,17 +201,19 @@ export class MemoryHistoryService {
     for (const old of older) {
       const verdict = verdicts?.find((v) => v.memoryId === old.id);
       const rule = nominated.get(old.id);
-      if (verdict) {
-        const action = decideAi(verdict);
-        if (action === "none") continue;
-        if (action === "supersede") decisions.push({ oldId: old.id, action });
-        else {
-          const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
-          decisions.push({ oldId: old.id, action, relationship, reason: verdict.reason });
-        }
-      } else if (rule) {
-        // No answer for a rule hit: the owner decides, as with the AI check off but without auto-supersede.
-        decisions.push({ oldId: old.id, action: "review", ...ruleReview(rule) });
+      if (!verdict) {
+        // No answer: rule hits are decided as with the AI check off; semantic-only ones are left alone.
+        if (rule) decisions.push(...ruleDecision(rule));
+        continue;
+      }
+      const action = decideAi(verdict);
+      if (action === "supersede") decisions.push({ oldId: old.id, action });
+      else if (action === "review") {
+        const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
+        decisions.push({ oldId: old.id, action, relationship, reason: verdict.reason });
+      } else if (rule && decide(rule) === "supersede") {
+        // The rules were confident this replaces the older memory; Clef disagrees, so the owner decides.
+        decisions.push({ oldId: old.id, action: "review", relationship: "possible_update", reason: rule.reason });
       }
     }
     return this.applyDecisions(memory, decisions);
@@ -235,8 +240,8 @@ export class MemoryHistoryService {
   }
 
   /**
-   * Current, older memories closest in meaning (semantic recall on), best first: at most
-   * AI_CANDIDATE_LIMIT at or above AI_CANDIDATE_MIN_COSINE, not counting ids rules already nominated.
+   * Current, older memories closest in meaning (semantic recall on), in the hook's best-first order:
+   * at most AI_CANDIDATE_LIMIT at or above AI_CANDIDATE_MIN_COSINE, not counting ids rules already nominated.
    */
   private async semanticCandidates(memory: Memory, exclude: Set<string>): Promise<Memory[]> {
     if (!this.hooks.neighbors) return [];
@@ -248,20 +253,17 @@ export class MemoryHistoryService {
       return [];
     }
     const out: Memory[] = [];
-    for (const n of [...neighbors].sort((x, y) => y.cosine - x.cosine)) {
+    for (const n of neighbors) {
       if (n.cosine < AI_CANDIDATE_MIN_COSINE || out.length >= AI_CANDIDATE_LIMIT) break;
-      if (n.id === memory.id || exclude.has(n.id) || out.some((m) => m.id === n.id)) continue;
+      if (n.id === memory.id || exclude.has(n.id)) continue;
       const m = this.repo.get(n.id);
       if (m && m.status !== "historical" && m.created_at <= memory.updated_at) out.push(m);
     }
     return out;
   }
 
-  /** One Clef call, reserved against the daily AI budget first. Null when Clef can't answer. */
-  private async aiCheck(newer: string, older: Memory[], signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
-    const run = this.hooks.clef?.();
-    const { limits } = this.settings.get();
-    if (!run || !this.usage.reserveAi(limits)) return null;
+  /** One Clef call (the caller has reserved it against the daily AI budget). Null when Clef can't answer. */
+  private async aiCheck(run: ClefRun, newer: string, older: Memory[], signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
     try {
       return await aiCheckSupersession(run, newer, older, signal);
     } catch {

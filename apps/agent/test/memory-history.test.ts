@@ -236,12 +236,13 @@ describe("conflict detection", () => {
       expect(r1.superseded.map((m) => m.id)).toEqual([lisbon.id]);
       expect(s.memories.get(lisbon.id)?.status).toBe("historical");
 
-      // A rule hit Clef calls unrelated changes nothing.
+      // A rule-confident supersede Clef calls unrelated is not dropped: the owner reviews it
+      // (it used to vanish), and nothing is superseded.
       const { memory: peanuts } = await s.memoryHistory.create({ content: "I'm allergic to peanuts" });
       reply = clefReply(["unrelated", 0.74]);
       const r2 = await s.memoryHistory.create({ content: "I stopped buying peanut butter for the kids." });
       expect(r2.superseded).toHaveLength(0);
-      expect(r2.reviews).toHaveLength(0);
+      expect(r2.reviews.map((r) => [r.other_id, r.relationship])).toEqual([[peanuts.id, "possible_update"]]);
       expect(s.memories.get(peanuts.id)?.status).toBe("active");
 
       // A doubtful "supersedes" waits for review instead of replacing anything.
@@ -251,31 +252,34 @@ describe("conflict detection", () => {
       expect(r3.reviews.map((r) => r.other_id)).toEqual([r1.memory.id]);
       expect(r3.reviews[0]!.reason).toContain("62% sure");
 
-      // No usable answer (error, or a response that isn't Clef's shape): rule hits wait for review.
+      // No usable answer (error, or a response that isn't Clef's shape): the rules decide as with
+      // the AI check off, so their confident supersede applies instead of waiting for review.
       fail = true;
       const { memory: vw } = await s.memoryHistory.create({ content: "I own a Volkswagen." });
       const r4 = await s.memoryHistory.create({ content: "I sold it and bought a Tesla." });
-      expect(r4.superseded).toHaveLength(0);
-      expect(r4.reviews.map((r) => r.other_id)).toEqual([vw.id]);
-      expect(s.memories.get(vw.id)?.status).toBe("active");
+      expect(r4.superseded.map((m) => m.id)).toEqual([vw.id]);
+      expect(r4.reviews).toHaveLength(0);
+      expect(s.memories.get(vw.id)?.status).toBe("historical");
 
       fail = false;
       reply = { answers: { older_1: { choice: "delete_everything", probabilities: { delete_everything: 1 } } } };
       const { memory: bike } = await s.memoryHistory.create({ content: "I ride a red bike" });
       const r5 = await s.memoryHistory.create({ content: "I sold my red bike" });
-      expect(r5.superseded).toHaveLength(0);
-      expect(r5.reviews.map((r) => r.other_id)).toEqual([bike.id]);
-      expect(s.memories.get(bike.id)?.status).toBe("active");
+      expect(r5.superseded.map((m) => m.id)).toEqual([bike.id]);
+      expect(r5.reviews).toHaveLength(0);
+      expect(s.memories.get(bike.id)?.status).toBe("historical");
       expect(calls).toBe(5);
 
-      // Each Clef call reserves one AI request; with the day's budget spent Clef isn't called and rule hits wait for review.
+      // Each Clef call reserves one AI request; with the day's budget spent Clef isn't called and
+      // the rules decide as with the AI check off (their confident supersede applies).
       expect(s.usage.today().ai_requests).toBe(used + 5);
       s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
       const { memory: scooter } = await s.memoryHistory.create({ content: "I ride a green scooter" });
       const r6 = await s.memoryHistory.create({ content: "I sold my green scooter" });
       expect(calls).toBe(5);
-      expect(r6.superseded).toHaveLength(0);
-      expect(r6.reviews.map((r) => r.other_id)).toContain(scooter.id);
+      expect(r6.superseded.map((m) => m.id)).toContain(scooter.id);
+      expect(r6.reviews).toHaveLength(0);
+      expect(s.memories.get(scooter.id)?.status).toBe("historical");
     });
   });
 
@@ -491,13 +495,15 @@ describe("PR #22 review", () => {
     return agent.services;
   }
 
-  it.fails("#2 a rule-confident supersede still applies when Clef cannot answer", async () => {
+  it("#2 a rule-confident supersede still applies when Clef cannot answer", async () => {
     const cases: [string, (s: TalorysAgent["services"]) => void][] = [
       ["no Clef", (s) => (s.memoryHistory.hooks.clef = () => null)],
       [
         "budget spent",
         (s) => {
           s.memoryHistory.hooks.clef = () => async () => clefReply(["supersedes", 0.95]);
+          // A fresh agent has used nothing yet and the limit must be at least 1.
+          s.usage.increment({ ai_requests: 1 });
           s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
         },
       ],
@@ -523,7 +529,7 @@ describe("PR #22 review", () => {
     }
   });
 
-  it.fails("#3 a rule-confident supersede Clef calls unrelated is kept for review, not dropped", async () => {
+  it("#3 a rule-confident supersede Clef calls unrelated is kept for review, not dropped", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
       s.memoryHistory.hooks.neighbors = async () => [];
@@ -573,11 +579,12 @@ describe("PR #22 review", () => {
     });
   });
 
-  it.fails("#6 nothing is embedded when Clef cannot run", async () => {
+  it("#6 nothing is embedded when Clef cannot run", async () => {
     const cases: ((s: TalorysAgent["services"]) => void)[] = [
       (s) => (s.memoryHistory.hooks.clef = () => null),
       (s) => {
         s.memoryHistory.hooks.clef = () => async () => clefReply(["unrelated", 0.9]);
+        s.usage.increment({ ai_requests: 1 });
         s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
       },
     ];
@@ -602,15 +609,15 @@ describe("PR #22 review", () => {
     }
   });
 
-  it.fails("#8 asks for neighbors above the floor and keeps their order", async () => {
+  it("#8 asks for neighbors above the floor and keeps their order", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);
       s.memoryHistory.hooks.neighbors = async () => [];
       const { memory: a } = await s.memoryHistory.create({ content: "Alpha kayaks" });
       const { memory: b } = await s.memoryHistory.create({ content: "Beta gardens" });
       const calls: unknown[][] = [];
-      s.memoryHistory.hooks.neighbors = async (...args: unknown[]) => {
-        calls.push(args);
+      s.memoryHistory.hooks.neighbors = async (memory, opts) => {
+        calls.push([memory, opts]);
         return [
           { id: a.id, cosine: 0.7 },
           { id: b.id, cosine: 0.9 },
@@ -627,7 +634,7 @@ describe("PR #22 review", () => {
     });
   });
 
-  it.fails("#9 with Clef unavailable, the AI check on behaves as the AI check off", async () => {
+  it("#9 with Clef unavailable, the AI check on behaves as the AI check off", async () => {
     const outcome = async (older: string, newer: string, ai: boolean) =>
       freshAgent()(async (agent) => {
         const s = agent.services;
