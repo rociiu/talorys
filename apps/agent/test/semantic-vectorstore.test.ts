@@ -114,6 +114,8 @@ describe("vector math", () => {
     expect(u).not.toBe(v);
     expect(norm(u)).toBeCloseTo(1, 6);
     expect(normalize(new Float32Array(8))).toEqual(new Float32Array(8));
+    expect(normalize(new Float32Array([NaN, 1, 2]))).toEqual(new Float32Array(3));
+    expect(normalize(new Float32Array([Infinity, 1, 2]))).toEqual(new Float32Array(3));
   });
 
   it("dot of unit vectors matches cosine of the raw ones, and is 0 for zero vectors or other lengths", () => {
@@ -124,6 +126,7 @@ describe("vector math", () => {
     }
     expect(dot(normalize(new Float32Array(MOCK_DIMS)), normalize(raw(1)))).toBe(0);
     expect(dot(new Float32Array(3), new Float32Array(4))).toBe(0);
+    expect(dot(new Float32Array([NaN, 1]), new Float32Array([1, 1]))).toBe(0);
   });
 });
 

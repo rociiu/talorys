@@ -56,23 +56,24 @@ function hasTable(db: Database): boolean {
   return db.one(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, TABLE) !== null;
 }
 
-/** A new unit-length copy of `v`; a zero vector stays zero. */
+/** A new unit-length copy of `v`; a zero vector stays zero. Non-finite values return a zero vector. */
 export function normalize(v: Float32Array): Float32Array {
   let sum = 0;
   for (let i = 0; i < v.length; i++) sum += v[i]! * v[i]!;
   const out = new Float32Array(v.length);
-  if (sum === 0) return out;
+  if (!Number.isFinite(sum) || sum === 0) return out;
   const norm = Math.sqrt(sum);
+  if (!Number.isFinite(norm) || norm === 0) return out;
   for (let i = 0; i < v.length; i++) out[i] = v[i]! / norm;
   return out;
 }
 
-/** Dot product; the cosine of two unit vectors. 0 when the lengths differ. */
+/** Dot product; the cosine of two unit vectors. 0 when the lengths differ or result is non-finite. */
 export function dot(a: Float32Array, b: Float32Array): number {
   if (a.length !== b.length) return 0;
   let sum = 0;
   for (let i = 0; i < a.length; i++) sum += a[i]! * b[i]!;
-  return sum;
+  return Number.isFinite(sum) ? sum : 0;
 }
 
 /**
