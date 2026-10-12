@@ -15,7 +15,15 @@ const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Expected HH:MM (24h)
 
 /** True when year/month/day name a real calendar date (rejects e.g. 2026-02-31). */
 export function isValidCalendarDate(year: number, month: number, day: number): boolean {
-  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
+  return (
+    Number.isInteger(year) &&
+    Number.isInteger(month) &&
+    Number.isInteger(day) &&
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= daysInMonth(year, month)
+  );
 }
 
 export const scheduleSpecSchema = z.discriminatedUnion("type", [

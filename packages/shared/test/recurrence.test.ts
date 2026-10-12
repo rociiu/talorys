@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeNextRun, describeSchedule, scheduleSpecSchema, zonedTimeToUtc, getZonedParts } from "../src/recurrence";
+import { computeNextRun, describeSchedule, scheduleSpecSchema, zonedTimeToUtc, getZonedParts, isValidCalendarDate } from "../src/recurrence";
 
 const NY = "America/New_York";
 
@@ -60,6 +60,27 @@ describe("computeNextRun", () => {
     expect(scheduleSpecSchema.safeParse({ type: "interval", minutes: 5 }).success).toBe(false);
     expect(scheduleSpecSchema.safeParse({ type: "daily", time: "25:00" }).success).toBe(false);
     expect(scheduleSpecSchema.safeParse({ type: "weekly", days: [], time: "09:00" }).success).toBe(false);
+    expect(scheduleSpecSchema.safeParse({ type: "once", at: "2026-02-31T09:00" }).success).toBe(false);
+    expect(scheduleSpecSchema.safeParse({ type: "once", at: "2026-02-29T09:00" }).success).toBe(false);
+    expect(scheduleSpecSchema.safeParse({ type: "once", at: "2028-02-29T09:00" }).success).toBe(true);
     expect(describeSchedule({ type: "weekly", days: [1, 3], time: "09:00" })).toBe("Every Monday, Wednesday at 09:00");
   });
 });
+
+describe("isValidCalendarDate", () => {
+  it("rejects non-existent calendar dates like Feb 31", () => {
+    expect(isValidCalendarDate(2026, 2, 31)).toBe(false);
+    expect(isValidCalendarDate(2026, 4, 31)).toBe(false);
+    expect(isValidCalendarDate(2026, 2, 29)).toBe(false); // 2026 is not a leap year
+    expect(isValidCalendarDate(2026, 13, 1)).toBe(false);
+    expect(isValidCalendarDate(2026, 0, 1)).toBe(false);
+  });
+
+  it("handles leap years correctly", () => {
+    expect(isValidCalendarDate(2024, 2, 29)).toBe(true);
+    expect(isValidCalendarDate(2028, 2, 29)).toBe(true);
+    expect(isValidCalendarDate(2000, 2, 29)).toBe(true); // 400-year leap rule
+    expect(isValidCalendarDate(1900, 2, 29)).toBe(false); // 100-year non-leap rule
+  });
+});
+
