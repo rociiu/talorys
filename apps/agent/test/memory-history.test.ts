@@ -542,6 +542,47 @@ describe("PR #22 review", () => {
     });
   });
 
+  const LIMA = "I live in Lima";
+  const QUITO = "I live in Quito";
+
+  /** Saves Lima then Quito with the AI check on and Clef giving `answer` for Lima. */
+  async function limaThenQuito(answer: [string, number]) {
+    return freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: lima } = await s.memoryHistory.create({ content: LIMA });
+      s.memoryHistory.hooks.clef = () => async () => clefReply(answer);
+      const r = await s.memoryHistory.create({ content: QUITO });
+      return { lima, r, limaStatus: s.memories.get(lima.id)?.status };
+    });
+  }
+
+  it("#1 a weak Clef answer keeps the rule review", async () => {
+    const offRelationship = await freshAgent()(async (agent) => {
+      const s = agent.services;
+      await s.memoryHistory.create({ content: LIMA });
+      const r = await s.memoryHistory.create({ content: QUITO });
+      expect(r.reviews).toHaveLength(1);
+      return r.reviews[0]!.relationship;
+    });
+    for (const answer of [["unrelated", 0.3], ["refines", 0.3], ["complements", 0.79]] as [string, number][]) {
+      const { lima, r, limaStatus } = await limaThenQuito(answer);
+      expect(r.reviews, answer.join(" ")).toHaveLength(1);
+      expect(r.reviews[0]).toMatchObject({ other_id: lima.id, relationship: offRelationship });
+      expect(r.superseded).toHaveLength(0);
+      expect(limaStatus).toBe("active");
+    }
+  });
+
+  it("#1 a confident Clef answer dismisses the rule review", async () => {
+    for (const answer of [["unrelated", 0.8], ["unrelated", 0.95]] as [string, number][]) {
+      const { r, limaStatus } = await limaThenQuito(answer);
+      expect(r.reviews, answer.join(" ")).toHaveLength(0);
+      expect(r.superseded).toHaveLength(0);
+      expect(limaStatus).toBe("active");
+    }
+  });
+
   it("#4 a cancelled save is not counted as an AI error", async () => {
     await freshAgent()(async (agent) => {
       const s = aiOn(agent);

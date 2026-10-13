@@ -12,6 +12,7 @@ import {
   AI_CANDIDATE_MIN_COSINE,
   type AiBatchVerdict,
   aiCheckSupersession,
+  aiDismisses,
   type ClefRun,
   CLEF_TIMEOUT_MS,
   classifyRelationship,
@@ -222,6 +223,9 @@ export class MemoryHistoryService {
       } else if (rule && decide(rule) === "supersede") {
         // The rules were confident this replaces the older memory; Clef disagrees, so the owner decides.
         decisions.push({ oldId: old.id, action: "review", relationship: "possible_update", reason: rule.reason });
+      } else if (rule && !aiDismisses(verdict)) {
+        // A rule review is dropped only when Clef is confident the memories are compatible.
+        decisions.push(...ruleDecision(rule));
       }
     }
     return this.applyDecisions(memory, decisions);
