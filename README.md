@@ -14,6 +14,11 @@ One person. One Cloudflare account. One command. One personal AI agent.
 npx create-talorys@latest
 ```
 
+Or install it with [Appflare](https://appflare.dev), which deploys it as a
+[single Worker](docs/deployment.md#one-worker-without-pages):
+
+[![Install with Appflare](https://appflare.dev/badge.svg)](https://appflare.dev/install/talorys/)
+
 ---
 
 ## 1. What Talorys is

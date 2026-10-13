@@ -19,7 +19,7 @@ import {
   embeddingsToday,
   encodeVector,
 } from "../src/semantic/embeddings";
-import { runIndexer } from "../src/semantic/indexer";
+import { pendingMemories, runIndexer } from "../src/semantic/indexer";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import {
   estimateTokens,
@@ -53,6 +53,7 @@ import { env } from "cloudflare:workers";
 import golden from "./fixtures/recall-golden.json";
 import { AgentRunner } from "../src/agent/runner";
 import { selectRelevantMemories } from "../src/agent/memory";
+import { semanticNeighbors } from "../src/semantic/neighbors";
 import { buildSystemPrompt } from "../src/agent/prompt";
 import type { Services } from "../src/services/container";
 import type { Env } from "../src/env";
@@ -814,5 +815,127 @@ describe("golden recall replay", () => {
     const c = cases.find((x) => x.id === "S-mountain")!;
     const { lines, vectorHits } = await replay(c, c.memories);
     console.info(`[golden] S-mountain (gate: false) selected:\n${lines.join("\n") || "(none)"}\nvector hits: ${vectorHits.length}`);
+  });
+});
+
+describe("semanticNeighbors", () => {
+  it("returns nothing while semantic recall was never enabled", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      dropSemanticData(s.db);
+      deleteSemanticConfig(s.settings);
+      invalidateSemanticCache(s);
+      s.memories.clear();
+      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      s.memories.create({ content: "I live in Porto", category: "fact" });
+      expect(await semanticNeighbors(s, workerEnv, m, { minCosine: -1, limit: 10, exclude: new Set() })).toEqual([]);
+    });
+  });
+
+  it("ranks other memories by cosine, best first, without the memory itself", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      dropSemanticData(s.db);
+      deleteSemanticConfig(s.settings);
+      s.memories.clear();
+      writeSemanticConfig(s.settings, { enabled: true }, s.db);
+      invalidateSemanticCache(s);
+      const others = [
+        s.memories.create({ content: "I live in Porto", category: "fact" }),
+        s.memories.create({ content: "My favourite colour is green", category: "preference" }),
+        s.memories.create({ content: "The dog is called Rex", category: "fact" }),
+      ];
+      // Neighbors are older memories, so the target is created last.
+      const m = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      await runIndexer(createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!));
+      const out = await semanticNeighbors(s, workerEnv, m, { minCosine: -1, limit: 10, exclude: new Set() });
+      expect(out.map((n) => n.id).sort()).toEqual(others.map((o) => o.id).sort());
+      expect(out.some((n) => n.id === m.id)).toBe(false);
+      for (let i = 1; i < out.length; i++) expect(out[i]!.cosine).toBeLessThanOrEqual(out[i - 1]!.cosine);
+    });
+  });
+});
+
+describe("PR #22 review", () => {
+  const options = () => ({ minCosine: -1, limit: 100, exclude: new Set<string>() });
+
+  function enabled(a: TalorysAgent) {
+    const s = a.services;
+    dropSemanticData(s.db);
+    deleteSemanticConfig(s.settings);
+    s.memories.clear();
+    writeSemanticConfig(s.settings, { enabled: true, maxEmbeddingsPerDay: 10_000 }, s.db);
+    invalidateSemanticCache(s);
+    return { s, ctx: createSemanticContext(s, workerEnv, readSemanticConfig(s.settings, s.db)!) };
+  }
+
+  it("#1 neighbors of an edited memory use its current text, not a stale vector", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = enabled(a);
+      const x = s.memories.create({ content: "I drive a Tesla", category: "fact" });
+      const y = s.memories.create({ content: "My car is a VW", category: "fact" });
+      const p = s.memories.create({ content: "I live in Portland", category: "fact" });
+      for (let i = 0; i < 5 && (await pendingMemories(s.db, ctx.embedder!.model)).length; i++) await runIndexer(ctx);
+      expect(await pendingMemories(s.db, ctx.embedder!.model)).toHaveLength(0);
+      for (let i = 0; i < 55; i++) s.memories.create({ content: `Unrelated note ${i} about topic ${i * 7}`, category: "fact" });
+      const edited = s.memories.update(x.id, { content: "I live in Denver" });
+      s.memories.update(y.id, { content: "The dog is called Rex" });
+
+      const ids = (await semanticNeighbors(s, workerEnv, edited, options())).map((n) => n.id);
+      expect(ids).toContain(p.id);
+      expect(ids).not.toContain(y.id);
+      for (const id of ids) expect(id).not.toBe(x.id);
+    });
+  });
+
+  it("#7 finding neighbors embeds only the saved memory, not the whole backlog", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = enabled(a);
+      for (let i = 0; i < 60; i++) s.memories.create({ content: `Backlog memory ${i} about subject ${i * 3}`, category: "fact" });
+      const saved = s.memories.create({ content: "I live in Lisbon", category: "fact" });
+      const day = UsageService.day();
+      const before = embeddingsToday(s.db, day);
+      const digest = vi.spyOn(crypto.subtle, "digest");
+      try {
+        await semanticNeighbors(s, workerEnv, saved, options());
+        expect(digest.mock.calls.length).toBeLessThan(10);
+      } finally {
+        digest.mockRestore();
+      }
+      expect(embeddingsToday(s.db, day)).toBe(before + 1);
+      expect((await pendingMemories(s.db, ctx.embedder!.model)).length).toBeGreaterThanOrEqual(60);
+    });
+  });
+
+  it("parallel saves cannot pass the daily embedding cap when finding neighbors", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = enabled(a);
+      const day = UsageService.day();
+      const cap = embeddingsToday(s.db, day) + 1;
+      writeSemanticConfig(s.settings, { enabled: true, maxEmbeddingsPerDay: cap }, s.db);
+      invalidateSemanticCache(s);
+      const saved = Array.from({ length: 6 }, (_, i) => s.memories.create({ content: `I live in town number ${i}`, category: "fact" }));
+      let release!: () => void;
+      const opened = new Promise<void>((resolve) => (release = resolve));
+      // Spy on the class of the embedder the code actually uses (mock or Workers AI), not on the mock.
+      const proto = Object.getPrototypeOf(ctx.embedder!) as Embedder;
+      const original = proto.embed;
+      let calls = 0;
+      const embed = vi.spyOn(proto, "embed").mockImplementation(async function (this: Embedder, texts: string[]) {
+        calls++;
+        await opened;
+        return original.call(this, texts);
+      });
+      try {
+        const runs = saved.map((m) => semanticNeighbors(s, workerEnv, m, options()));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        release();
+        await Promise.all(runs);
+      } finally {
+        embed.mockRestore();
+      }
+      expect(calls).toBe(1);
+      expect(embeddingsToday(s.db, day)).toBe(cap);
+    });
   });
 });

@@ -71,13 +71,13 @@ dataRoutes.get("/memories", (c) => {
 
 dataRoutes.post("/memories", async (c) => {
   const input = await body(c, memoryCreateSchema);
-  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: "manual" });
+  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: "manual" }, { signal: c.req.raw.signal });
   return c.json({ memory: result.memory, superseded: result.superseded, reviews: result.reviews.length }, 201);
 });
 
 dataRoutes.patch("/memories/:id", async (c) => {
   const patch = await body(c, memoryUpdateSchema);
-  const result = await c.env.agent.services.memoryHistory.update(c.req.param("id"), patch);
+  const result = await c.env.agent.services.memoryHistory.update(c.req.param("id"), patch, { signal: c.req.raw.signal });
   return c.json({ memory: result.memory, superseded: result.superseded, reviews: result.reviews.length });
 });
 
@@ -119,7 +119,7 @@ dataRoutes.post("/memories/:id/status", async (c) => {
 /** Saves a newer version of a fact; the old one is kept as history. */
 dataRoutes.post("/memories/:id/correct", async (c) => {
   const input = await body(c, memoryCorrectSchema);
-  const result = await c.env.agent.services.memoryHistory.correct(c.req.param("id"), input.content, input.category);
+  const result = await c.env.agent.services.memoryHistory.correct(c.req.param("id"), input.content, input.category, { signal: c.req.raw.signal });
   return c.json({ memory: result.memory, superseded: result.superseded, reviews: result.reviews.length }, 201);
 });
 

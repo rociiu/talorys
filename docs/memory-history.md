@@ -50,13 +50,44 @@ Dates are only recorded when you state them ("since 2024", "in March 2025",
 "as of 2026-02-01"). Talorys never treats the save time as the date a fact
 became true.
 
-### Optional AI double-check
+### Optional AI conflict check
 
-**Settings → AI → Memory history → Double-check conflicts with AI** (off by
-default) asks the chat model about *unclear* cases only, at most once per save,
-counted against your daily AI request limit. It can dismiss a false alarm or
-explain one; it can never replace or delete a memory, and its answer is
-validated before use.
+**Settings → AI → Memory history → Check conflicts with AI** (off by default)
+hands the decision to [Clef](https://developers.cloudflare.com/workers-ai/models/clef/)
+(`@cf/cloudflare/clef`), Cloudflare's decision model on Workers AI, through the
+same `AI` binding as chat. No new key or service.
+
+With it on, the wording rules and semantic recall only *nominate* older
+memories: the rule hits, plus up to 3 current memories with a cosine of 0.60 or
+more to the new one (semantic recall on only; only up-to-date vectors are used).
+One Clef call per save asks how the new memory relates to each of them, and
+Clef returns a probability for every answer:
+
+| Clef's answer | Result |
+| --- | --- |
+| Replaces it, probability 0.8 or more | Old becomes past (reversible) |
+| Replaces it, below 0.8 | **Both kept**; shown under *Needs review* |
+| Conflicts | **Both kept**; shown under *Needs review*. For a memory found only by similarity, the conflict needs a probability of 0.7 or more; below that nothing changes |
+| More detail, compatible, or unrelated | If the wording rules would have replaced it: **both kept**; shown under *Needs review*. If the wording rules flagged it for review: it stays under *Needs review* unless Clef is 0.8 or more sure of that answer. Otherwise nothing changes |
+
+The facts are sent as data, and only Clef's probabilities are read, never free
+text. Each call counts as one request against your daily AI request limit
+(Clef bills input tokens only; a check is roughly 7–17 neurons). The check
+runs only when there is something to compare against.
+
+Clef has 3 seconds to answer. When Clef can't answer (mock AI or demo mode, the
+daily limit is reached, no answer within 3 seconds, an error or an unexpected
+response), the check falls back to the wording rules:
+rule hits are handled exactly as with the check off, and memories nominated
+only by similarity are left alone. Clef and the daily limit are checked before
+any similarity lookup, so such a save spends no embeddings. The new memory is
+embedded on its own if its vector is missing or out of date (counted against
+the daily embedding limit); older memories whose vectors are out of date are
+skipped until the background index catches up. A timeout counts as an AI
+error. A save cancelled while Clef is answering also finishes with the wording
+rules, but is not counted as an AI error.
+
+With the check off, detection is the wording rules alone, as described above.
 
 Turning off **Memory conflict review** disables detection entirely; memories
 are then saved exactly as before.
@@ -115,8 +146,9 @@ memory that the deleted one had replaced stays historical; you can restore it.
 
 ## Known limitations
 
-- Change detection uses English wording rules and a handful of topics. Other
-  changes are kept side by side or flagged for review rather than replaced.
+- Without the AI conflict check, change detection uses English wording rules
+  and a handful of topics. Other changes are kept side by side or flagged for
+  review rather than replaced.
 - "Questions about the past" are detected from English wording.
 - Without semantic recall, a question about the past only finds old facts that
   share words with it (plus earlier versions of what it finds).

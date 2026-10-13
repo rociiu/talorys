@@ -1,17 +1,37 @@
 import type { Memory, MemoryCategory, MemoryReviewAction } from "@talorys/shared";
-import { type AIProvider, estimateTokens } from "../ai/provider";
+import { estimateTokens } from "../ai/provider";
 import { ValidationError } from "../api/errors";
 import type { Database } from "../db/database";
 import type { MemoryRepository, MemoryReviewRow } from "../db/repositories/memories";
+import type { NeighborOptions } from "../semantic/neighbors";
 import { deleteAllVectors, deleteVector } from "../semantic/vectorStore";
 import type { SettingsService } from "../services/settings";
 import type { ActivityLog, UsageService } from "../services/usage";
-import { aiCheckConflict, classifyRelationship, type ConflictAssessment, decide, slotSearchTerms } from "./conflict";
+import {
+  AI_CANDIDATE_LIMIT,
+  AI_CANDIDATE_MIN_COSINE,
+  type AiBatchVerdict,
+  aiCheckSupersession,
+  aiDismisses,
+  type ClefRun,
+  CLEF_TIMEOUT_MS,
+  classifyRelationship,
+  type ConflictAssessment,
+  decide,
+  decideAi,
+  slotSearchTerms,
+} from "./conflict";
 import { extractStatedDate, MemoryLifecycle } from "./lifecycle";
 
 export interface MemoryHistoryHooks {
-  /** The chat provider, used only for the optional AI conflict double-check. */
-  provider?: () => AIProvider | null;
+  /** Clef (Workers AI decision model), used only for the optional AI conflict check. */
+  clef?: () => ClefRun | null;
+  /** Other memories by cosine to this one, best first, within `opts` (semantic recall on); embeds it if needed. */
+  neighbors?: (memory: Memory, opts: NeighborOptions) => Promise<{ id: string; cosine: number }[]>;
+  /** Called after each AI conflict check (development logging, tests). */
+  onAiCheck?: (check: { newer: string; older: string[]; verdicts: AiBatchVerdict[] | null }) => void;
+  /** Clef time limit in ms (tests only). */
+  clefTimeoutMs?: number;
 }
 
 export interface WriteResult {
@@ -31,6 +51,19 @@ export interface PromptMemory {
 }
 
 const CONFLICT_CANDIDATES = 8;
+
+/** What to do with one older memory after a conflict check. */
+type ConflictDecision =
+  | { oldId: string; action: "supersede" }
+  | { oldId: string; action: "review"; relationship: MemoryReviewRow["relationship"]; reason: string };
+
+/** What the deterministic rules decide for one assessment (empty when they leave it alone). */
+function ruleDecision(a: ConflictAssessment): ConflictDecision[] {
+  const action = decide(a);
+  if (action === "none") return [];
+  if (action === "supersede") return [{ oldId: a.oldMemoryId, action }];
+  return [{ oldId: a.oldMemoryId, action, relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction", reason: a.reason }];
+}
 
 /**
  * Memory writes with history: saves first, then (rule-based, no AI by default) checks
@@ -69,12 +102,17 @@ export class MemoryHistoryService {
   }
 
   /** Records a newer version of a fact. The old memory is kept as history and linked to the new one. */
-  async correct(id: string, content: string, category?: MemoryCategory, source: "manual" | "agent" = "manual"): Promise<WriteResult> {
+  async correct(
+    id: string,
+    content: string,
+    category?: MemoryCategory,
+    opts: { source?: "manual" | "agent"; signal?: AbortSignal } = {},
+  ): Promise<WriteResult> {
     const old = this.repo.require(id);
-    const created = this.repo.create({ content, category: category ?? old.category, source, valid_from: extractStatedDate(content) });
+    const created = this.repo.create({ content, category: category ?? old.category, source: opts.source ?? "manual", valid_from: extractStatedDate(content) });
     if (created.id === old.id) throw new ValidationError("That is the same as the current memory.");
     const superseded = [this.lifecycle.supersede(old.id, created.id, {})];
-    const rest = await this.afterWrite(this.repo.require(created.id));
+    const rest = await this.afterWrite(this.repo.require(created.id), opts.signal);
     return { memory: this.repo.require(created.id), superseded: [...superseded, ...rest.superseded], reviews: rest.reviews };
   }
 
@@ -132,48 +170,136 @@ export class MemoryHistoryService {
     const assessments: ConflictAssessment[] = [...candidates.values()]
       .filter((c) => c.status !== "historical" && c.created_at <= memory.updated_at)
       .map((c) => classifyRelationship(memory.content, c));
+    if (this.settings.get().memoryHistory.aiConflictCheck) return this.detectWithAi(memory, candidates, assessments, signal);
 
-    const superseded: Memory[] = [];
-    const reviews: MemoryReviewRow[] = [];
-    let aiChecks = 0;
-    for (const a of assessments) {
-      const action = decide(a);
-      if (action === "none") continue;
-      if (action === "supersede") {
-        if (this.lifecycle.wouldCycle(a.oldMemoryId, memory.id)) continue;
-        superseded.push(this.lifecycle.supersede(a.oldMemoryId, memory.id, { validUntil: memory.valid_from }));
+    return this.applyDecisions(memory, assessments.flatMap((a) => ruleDecision(a)));
+  }
+
+  /**
+   * With the AI check on, rules and semantic similarity only nominate: the rule hits plus up to
+   * AI_CANDIDATE_LIMIT memories at or above AI_CANDIDATE_MIN_COSINE go to one Clef call, and only
+   * a confident "supersedes" replaces a memory. Clef and the AI budget are checked before any
+   * embedding work; when Clef can't run or answer, rule hits are decided as with the check off.
+   */
+  private async detectWithAi(
+    memory: Memory,
+    candidates: Map<string, Memory>,
+    assessments: ConflictAssessment[],
+    signal?: AbortSignal,
+  ): Promise<WriteResult> {
+    const nominated = new Map<string, ConflictAssessment>();
+    for (const a of assessments) if (decide(a) !== "none") nominated.set(a.oldMemoryId, a);
+    const fallback = () => this.applyDecisions(memory, [...nominated.values()].flatMap((a) => ruleDecision(a)));
+
+    const run = this.hooks.clef?.();
+    const { limits } = this.settings.get();
+    if (!run || !this.usage.canUseAi(limits)) return fallback();
+
+    const pool = new Map<string, Memory>();
+    for (const id of nominated.keys()) pool.set(id, candidates.get(id)!);
+    for (const m of await this.semanticCandidates(memory, new Set(nominated.keys()))) pool.set(m.id, m);
+    if (pool.size === 0) return { memory: this.repo.get(memory.id) ?? memory, superseded: [], reviews: [] };
+    if (signal?.aborted || !this.usage.reserveAi(limits)) return fallback();
+
+    const older = [...pool.values()];
+    const verdicts = await this.aiCheck(run, memory.content, older, signal);
+    this.hooks.onAiCheck?.({ newer: memory.content, older: older.map((m) => m.content), verdicts });
+    this.activity.record("memory.ai_check", `AI checked ${older.length} possible conflict(s)${verdicts ? "" : " (no usable answer)"}`);
+
+    const decisions: ConflictDecision[] = [];
+    for (const old of older) {
+      const verdict = verdicts?.find((v) => v.memoryId === old.id);
+      const rule = nominated.get(old.id);
+      if (!verdict) {
+        // No answer: rule hits are decided as with the AI check off; semantic-only ones are left alone.
+        if (rule) decisions.push(...ruleDecision(rule));
         continue;
       }
-      // Ambiguous: optionally let the model dismiss a false alarm. It can never supersede by itself.
-      let reason = a.reason;
-      if (this.settings.get().memoryHistory.aiConflictCheck && aiChecks < 1) {
-        aiChecks++;
-        const verdict = await this.aiVerdict(candidates.get(a.oldMemoryId)!.content, memory.content, signal);
-        if (verdict && (verdict.relationship === "complements" || verdict.relationship === "unrelated") && verdict.confidence >= 0.8) continue;
-        if (verdict) reason = verdict.reason || reason;
+      const action = decideAi(verdict, { semanticOnly: !rule });
+      if (action === "supersede") decisions.push({ oldId: old.id, action });
+      else if (action === "review") {
+        const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
+        decisions.push({ oldId: old.id, action, relationship, reason: verdict.reason });
+      } else if (rule && decide(rule) === "supersede") {
+        // The rules were confident this replaces the older memory; Clef disagrees, so the owner decides.
+        decisions.push({ oldId: old.id, action: "review", relationship: "possible_update", reason: rule.reason });
+      } else if (rule && !aiDismisses(verdict)) {
+        // A rule review is dropped only when Clef is confident the memories are compatible.
+        decisions.push(...ruleDecision(rule));
       }
-      reviews.push(
-        this.repo.createReview({
-          memory_id: memory.id,
-          other_id: a.oldMemoryId,
-          relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction",
-          reason,
-        }),
-      );
+    }
+    return this.applyDecisions(memory, decisions);
+  }
+
+  /**
+   * Applies conflict decisions in order: supersedes (skipping any that would form a cycle) and
+   * reviews for the owner, then records what changed.
+   */
+  private applyDecisions(memory: Memory, decisions: ConflictDecision[]): WriteResult {
+    const superseded: Memory[] = [];
+    const reviews: MemoryReviewRow[] = [];
+    for (const d of decisions) {
+      if (d.action === "supersede") {
+        if (this.lifecycle.wouldCycle(d.oldId, memory.id)) continue;
+        superseded.push(this.lifecycle.supersede(d.oldId, memory.id, { validUntil: memory.valid_from }));
+        continue;
+      }
+      reviews.push(this.repo.createReview({ memory_id: memory.id, other_id: d.oldId, relationship: d.relationship, reason: d.reason }));
     }
     if (superseded.length) this.activity.record("memory.superseded", `${superseded.length} older memory(ies) kept as history`);
     if (reviews.length) this.activity.record("memory.review", `${reviews.length} possible memory conflict(s) need review`);
     return { memory: this.repo.get(memory.id) ?? memory, superseded, reviews };
   }
 
-  private async aiVerdict(older: string, newer: string, signal?: AbortSignal) {
-    const provider = this.hooks.provider?.();
-    const { limits } = this.settings.get();
-    if (!provider || !this.usage.reserveAi(limits)) return null;
+  /**
+   * Current, older memories closest in meaning (semantic recall on), in the hook's best-first order:
+   * at most AI_CANDIDATE_LIMIT at or above AI_CANDIDATE_MIN_COSINE, not counting ids rules already nominated.
+   */
+  private async semanticCandidates(memory: Memory, exclude: Set<string>): Promise<Memory[]> {
+    if (!this.hooks.neighbors) return [];
+    let neighbors: { id: string; cosine: number }[];
     try {
-      return await aiCheckConflict(provider, older, newer, signal);
+      neighbors = await this.hooks.neighbors(memory, { minCosine: AI_CANDIDATE_MIN_COSINE, limit: AI_CANDIDATE_LIMIT, exclude });
+    } catch (error) {
+      console.warn("memory.neighbors_failed", (error as Error).name);
+      return [];
+    }
+    const out: Memory[] = [];
+    for (const n of neighbors) {
+      if (n.cosine < AI_CANDIDATE_MIN_COSINE || out.length >= AI_CANDIDATE_LIMIT) break;
+      if (n.id === memory.id || exclude.has(n.id)) continue;
+      const m = this.repo.get(n.id);
+      if (m && m.status !== "historical" && m.created_at <= memory.updated_at) out.push(m);
+    }
+    return out;
+  }
+
+  /**
+   * One Clef call (the caller has reserved it against the daily AI budget), limited to
+   * CLEF_TIMEOUT_MS. Null when Clef can't answer in time. A timeout or abort stops the wait even if
+   * the runtime ignores the signal; a timeout counts as an AI error, a caller abort does not.
+   */
+  private async aiCheck(run: ClefRun, newer: string, older: Memory[], signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
+    const timeout = AbortSignal.timeout(this.hooks.clefTimeoutMs ?? CLEF_TIMEOUT_MS);
+    const effective = signal ? AbortSignal.any([signal, timeout]) : timeout;
+    let onAbort = () => {};
+    const aborted = new Promise<never>((_, reject) => {
+      onAbort = () => reject(effective.reason);
+      effective.addEventListener("abort", onAbort, { once: true });
+    });
+    try {
+      return await this.settleAiCheck(Promise.race([aiCheckSupersession(run, newer, older, effective), aborted]), signal);
+    } finally {
+      effective.removeEventListener("abort", onAbort);
+    }
+  }
+
+  private async settleAiCheck(call: Promise<AiBatchVerdict[] | null>, signal?: AbortSignal): Promise<AiBatchVerdict[] | null> {
+    try {
+      return await call;
     } catch {
-      this.usage.increment({ ai_errors: 1 });
+      // Only the caller's own abort is not an error; a timeout is.
+      if (!signal?.aborted) this.usage.increment({ ai_errors: 1 });
       return null;
     }
   }

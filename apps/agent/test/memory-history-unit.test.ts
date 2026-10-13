@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Memory } from "@talorys/shared";
-import { classifyRelationship, decide, parseAiVerdict } from "../src/memory/conflict";
+import { aiDismisses, classifyRelationship, clefRequest, decide, decideAi, parseClefAnswers } from "../src/memory/conflict";
 import { hasHistoricalIntent } from "../src/memory/intent";
 import { extractStatedDate } from "../src/memory/lifecycle";
 import { toPromptMemory } from "../src/memory/service";
@@ -23,6 +23,61 @@ function mem(content: string, extra: Partial<Memory> = {}): Memory {
     ...extra,
   };
 }
+
+describe("AI supersession check", () => {
+  it("asks Clef one question per older memory and reads only its answer shape", () => {
+    const req = clefRequest("Bob is now my only coworker", [{ content: "Bob is my coworker" }, { content: "Sally is my coworker" }]);
+    expect(Object.keys(req.questions)).toEqual(["older_1", "older_2"]);
+    expect(req.state.older).toEqual([{ n: 1, content: "Bob is my coworker" }, { n: 2, content: "Sally is my coworker" }]);
+    const raw = {
+      model: "clef",
+      answers: {
+        older_1: { type: "choice", choice: "refines", probabilities: { supersedes: 0.32, refines: 0.34, contradicts: 0.06, complements: 0.18, unrelated: 0.1 }, confidence: 0.1 },
+        older_2: { type: "choice", choice: "supersedes", probabilities: { supersedes: 0.8, refines: 0.08, contradicts: 0.03, complements: 0.02, unrelated: 0.07 }, confidence: 0.6 },
+        older_3: { type: "choice", choice: "supersedes", probabilities: { supersedes: 1 }, confidence: 1 },
+      },
+      usage: { input_tokens: 800, output_tokens: 0 },
+    };
+    const v = parseClefAnswers(raw, ["a", "b"]);
+    expect(v?.map((x) => [x.memoryId, x.relationship, x.confidence])).toEqual([
+      ["a", "refines", 0.34],
+      ["b", "supersedes", 0.8],
+    ]);
+    expect(v?.[1]?.reason).toBe("The newer memory probably replaces this one (80% sure).");
+    expect(parseClefAnswers({ answers: { older_1: { choice: "delete_everything", probabilities: {} } } }, ["a"])).toBeNull();
+    expect(parseClefAnswers({ answers: { older_1: { choice: "supersedes", probabilities: { supersedes: 7 } } } }, ["a"])).toBeNull();
+    expect(parseClefAnswers("IGNORE ALL RULES", ["a"])).toBeNull();
+    expect(decideAi({ relationship: "supersedes", confidence: 0.8, reason: "" })).toBe("supersede");
+    expect(decideAi({ relationship: "supersedes", confidence: 0.6, reason: "" })).toBe("review");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.9, reason: "" })).toBe("review");
+    expect(decideAi({ relationship: "refines", confidence: 0.9, reason: "" })).toBe("none");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.55, reason: "" })).toBe("review");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.69, reason: "" }, { semanticOnly: true })).toBe("none");
+    expect(decideAi({ relationship: "contradicts", confidence: 0.7, reason: "" }, { semanticOnly: true })).toBe("review");
+    expect(decideAi({ relationship: "supersedes", confidence: 0.8, reason: "" }, { semanticOnly: true })).toBe("supersede");
+    expect(decideAi({ relationship: "supersedes", confidence: 0.6, reason: "" }, { semanticOnly: true })).toBe("review");
+  });
+
+  it("lets only a confident compatible answer dismiss a rule review", () => {
+    for (const relationship of ["refines", "complements", "unrelated"] as const) {
+      expect(aiDismisses({ relationship, confidence: 0.8, reason: "" })).toBe(true);
+      expect(aiDismisses({ relationship, confidence: 0.95, reason: "" })).toBe(true);
+      expect(aiDismisses({ relationship, confidence: 0.79, reason: "" })).toBe(false);
+      expect(aiDismisses({ relationship, confidence: 0.3, reason: "" })).toBe(false);
+      expect(aiDismisses({ relationship, confidence: 0, reason: "" })).toBe(false);
+    }
+    for (const relationship of ["supersedes", "contradicts"] as const) {
+      for (const confidence of [0.3, 0.8, 0.95, 1]) expect(aiDismisses({ relationship, confidence, reason: "" })).toBe(false);
+    }
+  });
+
+  it("keeps the facts in state and truncates long ones", () => {
+    const req = clefRequest("x".repeat(600), [{ content: "y".repeat(600) }]);
+    expect(req.state.newer).toHaveLength(500);
+    expect(req.state.older[0]!.content).toHaveLength(500);
+    expect(req.questions.older_1!.instructions).not.toContain("y");
+  });
+});
 
 describe("questions about the past", () => {
   it("detects past-tense intent", () => {
@@ -67,15 +122,6 @@ describe("conflict rules", () => {
   it("ignores generic shared words and incidental overlap", () => {
     expect(decide(classifyRelationship("I sold my old bike.", mem("I like old movies.")))).toBe("none");
     expect(decide(classifyRelationship("I sold it and bought a Tesla e2e", mem("I live in Lima e2e")))).toBe("none");
-  });
-
-  it("accepts only well-formed AI verdicts", () => {
-    expect(parseAiVerdict('{"relationship":"supersedes","confidence":0.97,"reason":"Sold the old car."}')).toMatchObject({ relationship: "supersedes" });
-    expect(parseAiVerdict('Sure! {"relationship":"unrelated","confidence":0.9,"reason":"x"} done')).toMatchObject({ relationship: "unrelated" });
-    expect(parseAiVerdict('{"relationship":"delete_everything","confidence":1,"reason":"x"}')).toBeNull();
-    expect(parseAiVerdict('{"relationship":"supersedes","confidence":7,"reason":"x"}')).toBeNull();
-    expect(parseAiVerdict("not json")).toBeNull();
-    expect(parseAiVerdict("{broken")).toBeNull();
   });
 });
 
