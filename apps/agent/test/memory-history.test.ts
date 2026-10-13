@@ -743,6 +743,29 @@ describe("PR #22 review", () => {
       expect(await outcome(older, newer, true)).toEqual(await outcome(older, newer, false));
     }
   });
+
+  it("correct() takes { source, signal }", async () => {
+    await freshAgent()(async (agent) => {
+      const s = aiOn(agent);
+      s.memoryHistory.hooks.neighbors = async () => [];
+      const { memory: locker } = await s.memoryHistory.create({ content: "My locker is number 12" });
+      const manual = await s.memoryHistory.correct(locker.id, "My locker is number 14");
+      expect(manual.memory.source).toBe("manual");
+      const byAgent = await s.memoryHistory.correct(manual.memory.id, "My locker is number 16", undefined, { source: "agent" });
+      expect(byAgent.memory.source).toBe("agent");
+
+      // A cancelled correction stops waiting for Clef and falls back to the rules, like create().
+      const { memory: london } = await s.memoryHistory.create({ content: LONDON });
+      const { memory: desk } = await s.memoryHistory.create({ content: "My desk is by the window" });
+      s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 50);
+      const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
+      const result = await Promise.race([s.memoryHistory.correct(desk.id, MOVED, undefined, { signal: controller.signal }), timeout]);
+      expect(result).not.toBe("timeout");
+      expect(s.memories.get(london.id)?.status).toBe("historical");
+    });
+  });
 });
 
 describe("PR #22 hardening", () => {
