@@ -19,6 +19,13 @@ export const CLEF_TIMEOUT_MS = 3000;
  * A starting value, to be measured against real pairs.
  */
 export const AI_SEMANTIC_CONTRADICTION_MIN = 0.7;
+/**
+ * Minimum Clef probability for a compatible answer (refines, complements, unrelated) to dismiss
+ * a review the wording rules raised. Same value as AUTO_SUPERSEDE_CONFIDENCE and the old
+ * chat-model check (e34c7eb), but a separate bar: this one dismisses a rule-raised review,
+ * AUTO_SUPERSEDE_CONFIDENCE replaces a memory.
+ */
+export const AI_DISMISS_MIN = 0.8;
 
 const STOP = new Set(
   "a an and are as at be but by can could do does did for from had has have how i i'm im if in into is it its me my of on or our so than that the their them then there these they this to us was we were what when where which who why will with would you your about also just like now new very really still been being am he she his her owner user".split(
@@ -261,4 +268,10 @@ export function decideAi(verdict: AiVerdict, opts: { semanticOnly?: boolean } = 
     return opts.semanticOnly && verdict.confidence < AI_SEMANTIC_CONTRADICTION_MIN ? "none" : "review";
   }
   return "none";
+}
+
+/** True when Clef is at least AI_DISMISS_MIN sure the older memory is still compatible with the newer one. */
+export function aiDismisses(verdict: AiVerdict): boolean {
+  const compatible = verdict.relationship === "refines" || verdict.relationship === "complements" || verdict.relationship === "unrelated";
+  return compatible && verdict.confidence >= AI_DISMISS_MIN;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Memory } from "@talorys/shared";
-import { classifyRelationship, clefRequest, decide, decideAi, parseClefAnswers } from "../src/memory/conflict";
+import { aiDismisses, classifyRelationship, clefRequest, decide, decideAi, parseClefAnswers } from "../src/memory/conflict";
 import { hasHistoricalIntent } from "../src/memory/intent";
 import { extractStatedDate } from "../src/memory/lifecycle";
 import { toPromptMemory } from "../src/memory/service";
@@ -56,6 +56,19 @@ describe("AI supersession check", () => {
     expect(decideAi({ relationship: "contradicts", confidence: 0.7, reason: "" }, { semanticOnly: true })).toBe("review");
     expect(decideAi({ relationship: "supersedes", confidence: 0.8, reason: "" }, { semanticOnly: true })).toBe("supersede");
     expect(decideAi({ relationship: "supersedes", confidence: 0.6, reason: "" }, { semanticOnly: true })).toBe("review");
+  });
+
+  it("lets only a confident compatible answer dismiss a rule review", () => {
+    for (const relationship of ["refines", "complements", "unrelated"] as const) {
+      expect(aiDismisses({ relationship, confidence: 0.8, reason: "" })).toBe(true);
+      expect(aiDismisses({ relationship, confidence: 0.95, reason: "" })).toBe(true);
+      expect(aiDismisses({ relationship, confidence: 0.79, reason: "" })).toBe(false);
+      expect(aiDismisses({ relationship, confidence: 0.3, reason: "" })).toBe(false);
+      expect(aiDismisses({ relationship, confidence: 0, reason: "" })).toBe(false);
+    }
+    for (const relationship of ["supersedes", "contradicts"] as const) {
+      for (const confidence of [0.3, 0.8, 0.95, 1]) expect(aiDismisses({ relationship, confidence, reason: "" })).toBe(false);
+    }
   });
 
   it("keeps the facts in state and truncates long ones", () => {
