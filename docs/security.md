@@ -86,9 +86,12 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 - The VAPID private key is a Worker secret, generated locally by the installer
   and sent to Wrangler via stdin. Only the public key reaches the browser.
 - Subscription endpoints come from the browser, so they are treated as
-  untrusted URLs the Worker will POST to: only `https`, no credentials in the
-  URL, no IP literals, no `localhost` or private-network names, redirects not
-  followed, a 10-second timeout, and at most 10 devices.
+  untrusted URLs the Worker will POST to. Only the browser push services are
+  accepted (`fcm.googleapis.com`, `updates.push.services.mozilla.com`,
+  `*.push.apple.com`, `*.notify.windows.com`; the list is in
+  `apps/agent/src/push/endpoint.ts`), over `https` on the default port with no
+  credentials in the URL. Redirects are not followed, each send has a 10-second
+  timeout, and there are at most 10 devices.
 - Payloads are encrypted for each device (RFC 8291, `aes128gcm`). The push
   service (Google, Mozilla, Apple or Microsoft) sees the endpoint, the time and
   the ciphertext size, not the text. The payload is the notification title and

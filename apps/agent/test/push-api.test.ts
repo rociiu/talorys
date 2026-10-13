@@ -13,12 +13,16 @@ describe("push endpoint validation", () => {
   it.each([
     ["http://fcm.googleapis.com/x", /https/],
     ["https://user:pw@fcm.googleapis.com/x", /credentials/],
-    ["https://127.0.0.1/x", /IP address/],
-    ["https://2130706433/x", /IP address/],
-    ["https://[::1]/x", /IP address/],
-    ["https://localhost/x", /public push service/],
-    ["https://printer.local/x", /public push service/],
-    ["https://intranet/x", /public push service/],
+    ["https://fcm.googleapis.com:8443/x", /default https port/],
+    ["https://127.0.0.1/x", /known browser push service/],
+    ["https://2130706433/x", /known browser push service/],
+    ["https://[::1]/x", /known browser push service/],
+    ["https://localhost/x", /known browser push service/],
+    ["https://printer.local/x", /known browser push service/],
+    ["https://example.com/push", /known browser push service/],
+    ["https://fcm.googleapis.com.example.com/x", /known browser push service/],
+    ["https://evilpush.apple.com.example.net/x", /known browser push service/],
+    ["https://notpush.apple.com/x", /known browser push service/],
     ["not a url", /valid URL/],
   ])("refuses %s", (url, reason) => {
     expect(endpointProblem(url)).toMatch(reason);
@@ -83,7 +87,7 @@ describe("push API", () => {
     const browser = await fakeBrowser("https://10.0.0.5/push");
     const res = await c.call("/api/push/subscriptions", { method: "POST", body: browser.json });
     expect(res.status).toBe(400);
-    expect(((await res.json()) as { error: { message: string } }).error.message).toMatch(/IP address/);
+    expect(((await res.json()) as { error: { message: string } }).error.message).toMatch(/known browser push service/);
     const good = await fakeBrowser();
     const badKeys = await c.call("/api/push/subscriptions", { method: "POST", body: { ...good.json, keys: { p256dh: "x", auth: good.json.keys.auth } } });
     expect(badKeys.status).toBe(400);

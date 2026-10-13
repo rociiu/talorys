@@ -1,10 +1,20 @@
-/** Hosts that only make sense on a private network. */
-const PRIVATE_SUFFIXES = [".localhost", ".local", ".internal", ".home.arpa", ".lan"];
+/**
+ * The browser push services a subscription may point at. Exact hosts, or parents whose
+ * subdomains are all that service (Apple and Microsoft use per-region hosts).
+ * Extend this when a browser ships a new push service.
+ */
+const PUSH_HOSTS = ["fcm.googleapis.com", "updates.push.services.mozilla.com"];
+const PUSH_HOST_PARENTS = ["push.apple.com", "notify.windows.com"];
+
+/** True for a known push service host, matched on whole labels (no `evil-push.apple.com.example`). */
+export function isPushServiceHost(host: string): boolean {
+  return PUSH_HOSTS.includes(host) || PUSH_HOST_PARENTS.some((parent) => host === parent || host.endsWith(`.${parent}`));
+}
 
 /**
  * Push endpoints come from the browser, so they are untrusted URLs the Worker will POST to.
- * Real push services (FCM, Mozilla, Apple, WNS) are public HTTPS hostnames, so anything else
- * is refused: other schemes, credentials in the URL, IP literals and private-network names.
+ * Only the real push services are accepted (Chrome/Edge on Android: FCM, Firefox: Mozilla,
+ * Safari/iOS: Apple, Edge on Windows: WNS), over https on the default port, without credentials.
  * Returns why the endpoint is refused, or null when it is acceptable.
  */
 export function endpointProblem(raw: string): string | null {
@@ -16,11 +26,8 @@ export function endpointProblem(raw: string): string | null {
   }
   if (url.protocol !== "https:") return "Push endpoint must use https.";
   if (url.username || url.password) return "Push endpoint must not contain credentials.";
+  if (url.port) return "Push endpoint must use the default https port.";
   const host = url.hostname.toLowerCase().replace(/\.$/, "");
-  // URL normalises every IPv4 spelling (decimal, hex, octal) to dotted form; IPv6 keeps its brackets.
-  if (host.startsWith("[") || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return "Push endpoint must use a hostname, not an IP address.";
-  if (!host.includes(".") || host === "localhost" || PRIVATE_SUFFIXES.some((s) => host.endsWith(s))) {
-    return "Push endpoint must be a public push service.";
-  }
+  if (!isPushServiceHost(host)) return `Push endpoint must be a known browser push service; "${host}" is not one.`;
   return null;
 }
