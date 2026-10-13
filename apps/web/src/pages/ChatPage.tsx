@@ -31,6 +31,7 @@ import { cn, copyText, relativeTime } from "../lib/utils";
 interface StreamState {
   conversationId: string | null;
   userText: string;
+  userMessageId: string | null;
   assistantId: string | null;
   text: string;
   tools: ToolActivity[];
@@ -88,7 +89,7 @@ export function ChatPage() {
         old ? { ...old, messages: old.messages.filter((m) => !(m.role === "assistant" && m.status !== "complete" && m === old.messages.at(-1))) } : old,
       );
     }
-    setStream({ conversationId: convId, userText: opts.retry ? "" : text, assistantId: null, text: "", tools: [], error: null, done: false });
+    setStream({ conversationId: convId, userText: opts.retry ? "" : text, userMessageId: null, assistantId: null, text: "", tools: [], error: null, done: false });
     try {
       await streamChat(
         { conversation_id: convId ?? undefined, message: opts.retry ? "retry" : text, retry: opts.retry },
@@ -102,7 +103,7 @@ export function ChatPage() {
                 convId = event.conversation_id;
                 navigate(`/chat/${convId}`, { replace: true });
               }
-              setStream((s) => s && { ...s, conversationId: event.conversation_id, assistantId: event.assistant_message_id });
+              setStream((s) => s && { ...s, conversationId: event.conversation_id, userMessageId: event.user_message_id, assistantId: event.assistant_message_id });
               break;
             case "text":
               setStream((s) => s && { ...s, text: s.text + event.delta });
@@ -203,7 +204,8 @@ export function ChatPage() {
               )}
               {streamHere && (
                 <>
-                  {streamHere.userText && !messages.some((m) => m.role === "user" && m.content === streamHere.userText && streamHere.done) && (
+                  {/* The server saves the owner's message before streaming, so a refetch mid-stream can already include it. */}
+                  {streamHere.userText && !messages.some((m) => m.id === streamHere.userMessageId) && (
                     <UserBubble text={streamHere.userText} />
                   )}
                   <AssistantBubble

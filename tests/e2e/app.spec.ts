@@ -31,6 +31,22 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByRole("heading", { name: "add task e2e review the roadmap" })).toBeVisible();
   });
 
+  test("the first message of a new chat shows once while the reply streams @mobile", async ({ page }) => {
+    await login(page);
+    const text = "tell me something about e2e duplicate bubbles";
+    const loaded = page.waitForResponse((r) => /\/api\/conversations\/[0-9a-f-]{36}$/.test(r.url()));
+    await page.getByRole("textbox", { name: "Message", exact: true }).fill(text);
+    await page.keyboard.press("Enter");
+    // The saved conversation loads mid-stream and already contains the owner's message.
+    await loaded;
+    const bubbles = page.locator("section .overflow-y-auto").getByText(text, { exact: true });
+    await expect(page.getByRole("button", { name: "Stop generating" })).toBeVisible();
+    // Count once rather than retrying: the duplicate only lasts until the reply finishes.
+    expect(await bubbles.count()).toBe(1);
+    await expect(page.getByRole("button", { name: "Send message" })).toBeVisible();
+    await expect(bubbles).toHaveCount(1);
+  });
+
   test("deleting through chat waits for the owner to approve the exact task", async ({ page }) => {
     await login(page);
     const composer = page.getByRole("textbox", { name: "Message", exact: true });
