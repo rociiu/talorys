@@ -4,9 +4,18 @@
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
-/** Only same-origin paths can be opened from a notification. */
+/**
+ * Only same-origin paths can be opened from a notification. Resolved as the browser will, so
+ * "//host" and "/\host" (a backslash reads as a slash) cannot point at another origin.
+ */
 function safePath(url) {
-  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") ? url : "/";
+  if (typeof url !== "string" || !url.startsWith("/")) return "/";
+  try {
+    const resolved = new URL(url, self.location.origin);
+    return resolved.origin === self.location.origin ? resolved.pathname + resolved.search + resolved.hash : "/";
+  } catch {
+    return "/";
+  }
 }
 
 self.addEventListener("push", (event) => {

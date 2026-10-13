@@ -52,4 +52,17 @@ test.describe("Push notifications", () => {
     await expect(page.getByText("0 of 10 devices registered.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Send test" })).toBeDisabled();
   });
+
+  test("notification clicks only open paths on the app's own origin", async ({ page }) => {
+    await page.goto("/");
+    const source = await (await page.request.get("/sw.js")).text();
+    const fn = source.match(/function safePath\(url\) \{[\s\S]*?\n\}/)?.[0];
+    expect(fn).toBeTruthy();
+    const results = await page.evaluate((code) => {
+      const safePath = new Function(`${code}; return safePath;`)();
+      const inputs = ["/tasks?x=1#a", "/", "//evil.example", "/\\evil.example", "/\\/evil.example", "https://evil.example", "javascript:alert(1)", 42];
+      return inputs.map((input) => safePath(input));
+    }, fn!);
+    expect(results).toEqual(["/tasks?x=1#a", "/", "/", "/", "/", "/", "/", "/"]);
+  });
 });
