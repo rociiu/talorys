@@ -21,6 +21,8 @@ export interface PreparedAction {
   summary: string;
   /** Extra validated input `commit` needs (e.g. a note's replacement text), stored with the proposal. */
   payload?: unknown;
+  /** Text the action will write, shown in full on the approval card so the owner sees what they approve. */
+  preview?: string;
 }
 
 interface BaseTool<S extends z.ZodType> {
@@ -147,6 +149,7 @@ export class ToolExecutor {
       target_version: await targetVersion(tool, prepared.targetId, this.ctx),
       summary: prepared.summary,
       payload: prepared.payload === undefined ? null : JSON.stringify(prepared.payload),
+      preview: prepared.preview ?? null,
     });
     if (callId) this.approvals.set(callId, action);
     return {

@@ -61,6 +61,7 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
   `cancel_automation`, `replace_note_content`) never run during the agent's turn.
   They only create a proposal; the owner approves or declines it with a button
   (an authenticated, CSRF-protected request), and each proposal runs at most once.
+  A proposed note rewrite shows the new text in full on its card.
 - A proposal is bound to the item as it was shown: if the item changes before the
   owner approves (an edit, another tab, a backup import), approval fails and
   nothing is done.

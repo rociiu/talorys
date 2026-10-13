@@ -18,9 +18,11 @@ describe("approvals are bound to what the owner saw", () => {
       const changedId = await proposeAction(s, "delete_note", { id: note.id });
       // Edited in another tab (or by an import) before the owner clicks Approve.
       s.notes.update(note.id, { content: "passport, visa, tickets" });
-      // Positive control: an unchanged target is still deleted.
+      // Positive control: a target whose shown fields are unchanged is still deleted, even if it was completed meanwhile.
       const task = s.tasks.create({ title: "Return library books" });
-      return { changedId, changedNote: note.id, keptId: await proposeAction(s, "delete_task", { task: task.id }), keptTask: task.id };
+      const keptId = await proposeAction(s, "delete_task", { task: task.id });
+      s.tasks.complete(task.id);
+      return { changedId, changedNote: note.id, keptId, keptTask: task.id };
     });
     const refused = await approve(changedId);
     expect(refused).toMatchObject({ status: "failed" });
@@ -59,7 +61,9 @@ describe("the agent cannot erase notes or memories on its own", () => {
 
       await expect(ex.execute("replace_note_content", { id: note.id, content: "" })).rejects.toThrow(/Invalid input/);
       expect(await ex.execute("replace_note_content", { id: note.id, content: "Cancelled" }, "rw")).toMatchObject({ status: "awaiting_owner_approval" });
-      expect(ex.approvalFor("rw")?.summary).toBe("Rewrite note “Trip plan” (24 → 9 characters)");
+      // The card gets the exact new text, not just a size.
+      expect(ex.approvalFor("rw")).toMatchObject({ summary: "Rewrite note “Trip plan” (24 → 9 characters)", preview: "Cancelled" });
+      expect(s.pendingActions.view(ex.approvalFor("rw")!.id)?.preview).toBe("Cancelled");
       expect(s.notes.get(note.id)?.content).toBe("Day 1: hike\n\nDay 2: lake");
       return { noteId: note.id, actionId: ex.approvalFor("rw")!.id };
     });

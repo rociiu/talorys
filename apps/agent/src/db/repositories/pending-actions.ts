@@ -13,6 +13,7 @@ export interface StoredPendingAction {
   target_version: string | null;
   summary: string;
   payload: string | null;
+  preview: string | null;
   status: "pending" | "approved" | "cancelled" | "failed";
   error: string | null;
   created_at: string;
@@ -22,7 +23,8 @@ export interface StoredPendingAction {
 
 function present(row: StoredPendingAction): PendingAction {
   const expired = row.status === "pending" && row.expires_at <= now();
-  return { id: row.id, summary: row.summary, status: expired ? "expired" : row.status, error: row.error, expires_at: row.expires_at };
+  const action: PendingAction = { id: row.id, summary: row.summary, status: expired ? "expired" : row.status, error: row.error, expires_at: row.expires_at };
+  return row.preview === null ? action : { ...action, preview: row.preview };
 }
 
 /**
@@ -32,11 +34,12 @@ function present(row: StoredPendingAction): PendingAction {
 export class PendingActionRepository {
   constructor(private readonly db: Database) {}
 
-  create(input: { conversation_id: string; tool: string; target_id: string; target_version: string | null; summary: string; payload: string | null }): PendingAction {
+  create(input: { conversation_id: string; tool: string; target_id: string; target_version: string | null; summary: string; payload: string | null; preview?: string | null }): PendingAction {
     const createdAt = now();
     const row: StoredPendingAction = {
       id: newId(),
       ...input,
+      preview: input.preview ?? null,
       status: "pending",
       error: null,
       created_at: createdAt,
@@ -44,9 +47,9 @@ export class PendingActionRepository {
       resolved_at: null,
     };
     this.db.run(
-      `INSERT INTO tal_pending_actions (id, conversation_id, tool, target_id, target_version, summary, payload, status, error, created_at, expires_at, resolved_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NULL, ?, ?, NULL)`,
-      row.id, row.conversation_id, row.tool, row.target_id, row.target_version, row.summary, row.payload, row.created_at, row.expires_at,
+      `INSERT INTO tal_pending_actions (id, conversation_id, tool, target_id, target_version, summary, payload, preview, status, error, created_at, expires_at, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, ?, ?, NULL)`,
+      row.id, row.conversation_id, row.tool, row.target_id, row.target_version, row.summary, row.payload, row.preview, row.created_at, row.expires_at,
     );
     this.db.run(`DELETE FROM tal_pending_actions WHERE created_at < ?`, new Date(Date.now() - 30 * 86_400_000).toISOString());
     return present(row);

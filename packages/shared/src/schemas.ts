@@ -112,6 +112,8 @@ export interface PendingAction {
   status: PendingActionStatus;
   error: string | null;
   expires_at: string;
+  /** Exact text the action will write (e.g. a note's replacement), shown in full on the approval card. */
+  preview?: string;
 }
 
 export interface ToolActivity {
@@ -138,6 +140,7 @@ export const toolActivitySchema = z.object({
       status: z.enum(["pending", "approved", "cancelled", "expired", "failed"]),
       error: z.string().nullable(),
       expires_at: z.string(),
+      preview: z.string().optional(),
     })
     .optional(),
 }) satisfies z.ZodType<ToolActivity>;

@@ -1,7 +1,8 @@
 import type { Memory } from "@talorys/shared";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { inAgent } from "./helpers";
 import { AgentRunner } from "../src/agent/runner";
+import { AppError } from "../src/api/errors";
 import type { AgentEvent, AIProvider, ToolRequest } from "../src/ai/provider";
 import { DEFAULT_SEMANTIC_CONFIG } from "../src/semantic/config";
 import { MockEmbedder, embeddingsToday } from "../src/semantic/embeddings";
@@ -83,6 +84,28 @@ describe("caps hold under concurrent calls", () => {
         expect(s.usage.today().ai_requests).toBe(used.ai_requests + 1);
       } finally {
         s.settings.update({ limits: original });
+      }
+    });
+  });
+
+  it("a run that loses the race is recorded as skipped, with the usual notice", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      const automation = await s.automations.create({
+        name: "Morning brief", kind: "agent_prompt", message: "Summarize", schedule: { type: "interval", minutes: 60 }, enabled: false,
+      });
+      // Passes the up-front budget check, then loses the reservation inside the run.
+      const lost = new AppError("AI_LIMIT_REACHED", "limit");
+      const runner = vi.spyOn(a, "runner").mockReturnValue({ runScheduledPrompt: () => Promise.reject(lost) } as unknown as AgentRunner);
+      try {
+        expect(await a["executeAutomation"](automation)).toEqual({ status: "skipped", result: "Scheduled AI budget reached" });
+        expect(s.notifications.list({ limit: 1 })[0]).toMatchObject({ title: "Morning brief", body: expect.stringContaining("Skipped: the daily budget") });
+        // Any other failure still surfaces as an error.
+        runner.mockReturnValue({ runScheduledPrompt: () => Promise.reject(new AppError("AI_UNAVAILABLE", "down")) } as unknown as AgentRunner);
+        await expect(a["executeAutomation"](automation)).rejects.toMatchObject({ code: "AI_UNAVAILABLE" });
+      } finally {
+        runner.mockRestore();
+        await s.automations.delete(automation.id);
       }
     });
   });

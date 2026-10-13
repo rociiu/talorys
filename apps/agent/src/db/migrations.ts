@@ -223,6 +223,7 @@ export const MIGRATIONS: Migration[] = [
     statements: [
       `ALTER TABLE tal_pending_actions ADD COLUMN target_version TEXT`,
       `ALTER TABLE tal_pending_actions ADD COLUMN payload TEXT`,
+      `ALTER TABLE tal_pending_actions ADD COLUMN preview TEXT`,
     ],
   },
 ];

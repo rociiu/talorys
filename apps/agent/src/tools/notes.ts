@@ -87,7 +87,7 @@ export const noteTools = [
       const note = ctx.services.notes.get(i.id);
       if (!note) throw new ToolError("Note not found.");
       const size = `${note.content.length.toLocaleString("en-US")} → ${i.content.length.toLocaleString("en-US")} characters`;
-      return { targetId: note.id, summary: `Rewrite note ${quoteTitle(note.title)} (${size})`, payload: { content: i.content } };
+      return { targetId: note.id, summary: `Rewrite note ${quoteTitle(note.title)} (${size})`, payload: { content: i.content }, preview: i.content };
     },
     snapshot: noteSnapshot,
     commit: (id, ctx, payload) => {

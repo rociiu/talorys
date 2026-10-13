@@ -148,7 +148,8 @@ export const taskTools = [
     },
     snapshot: (id, ctx) => {
       const t = ctx.services.tasks.get(id);
-      return t && [t.title, t.description, t.status, t.priority, t.due_at, t.project_id];
+      // Status is left out: completing a task after the proposal should not block deleting it.
+      return t && [t.title, t.description, t.priority, t.due_at, t.project_id];
     },
     commit: (id, ctx) => {
       const task = ctx.services.tasks.get(id);

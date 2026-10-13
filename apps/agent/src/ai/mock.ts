@@ -83,6 +83,9 @@ function planTools(text: string): PlannedCall[] {
   if ((m = text.match(/^(?:delete|remove) (?:the )?task\s+(.+)$/i))) {
     return [{ name: "delete_task", input: { task: m[1] }, describe: () => `I've asked to delete "${m![1]}". Approve it above if you want it gone.` }];
   }
+  if ((m = text.match(/^rewrite note (\S+) as:\s*(.+)$/i))) {
+    return [{ name: "replace_note_content", input: { id: m[1], content: m[2] }, describe: () => "I've proposed new text for that note. Approve it above to save it." }];
+  }
   if (/^(?:list|show)(?: my)? tasks|what should i work on/i.test(text)) {
     return [
       {

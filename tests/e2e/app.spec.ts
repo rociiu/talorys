@@ -53,6 +53,27 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByText("e2e approve-me")).toHaveCount(0);
   });
 
+  test("a proposed note rewrite shows the exact new text before approval", async ({ page }) => {
+    await login(page);
+    await page.getByRole("link", { name: "Notes" }).first().click();
+    await page.getByRole("button", { name: "New note" }).click();
+    await page.getByLabel("Note title").fill("e2e Rewrite me");
+    await page.getByLabel("Note content").fill("Original packing list");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    const noteUrl = page.url();
+    const noteId = new URL(noteUrl).pathname.split("/").pop();
+    await page.getByRole("link", { name: "Chat" }).first().click();
+    await page.getByRole("textbox", { name: "Message", exact: true }).fill(`rewrite note ${noteId} as: Only the charger now`);
+    await page.keyboard.press("Enter");
+    const card = page.getByRole("group", { name: "Approval needed" });
+    await expect(card.getByText("Rewrite note “e2e Rewrite me” (21 → 20 characters)?")).toBeVisible();
+    await expect(card.getByRole("region", { name: "Proposed text" })).toHaveText("Only the charger now");
+    await card.getByRole("button", { name: "Approve" }).click();
+    await expect(page.getByText(/Rewrite note “e2e Rewrite me” .* · Approved and done/)).toBeVisible();
+    await page.goto(noteUrl);
+    await expect(page.getByRole("textbox", { name: "Note content" })).toHaveValue("Only the charger now");
+  });
+
   test("conversations can be renamed and deleted", async ({ page }) => {
     await login(page);
     await page.getByRole("textbox", { name: "Message", exact: true }).fill("list tasks");

@@ -11,6 +11,7 @@ import { MockAIProvider } from "../ai/mock";
 import type { AIProvider } from "../ai/provider";
 import { localDayBounds, formatLocal } from "../services/time";
 import { semanticExtensions } from "../semantic";
+import { AppError } from "../api/errors";
 
 interface AgentState {
   /** Unread notifications, kept in agent state for cheap polling. */
@@ -126,18 +127,27 @@ export class TalorysAgent extends Agent<Env, AgentState> {
         return { status: "success", result: `${overdue.length} overdue, ${today.length} due today` };
       }
       case "agent_prompt": {
-        if (!s.usage.canRunScheduledAi(settings.limits)) {
-          s.notifications.create({
-            title: a.name,
-            body: "Skipped: the daily budget for scheduled AI runs was reached. Adjust it in Settings → AI.",
-            automation_id: a.id,
-          });
-          return { status: "skipped", result: "Scheduled AI budget reached" };
+        if (!s.usage.canRunScheduledAi(settings.limits)) return skipForBudget(s, a);
+        let text: string;
+        try {
+          text = await this.runner().runScheduledPrompt(a.message);
+        } catch (error) {
+          // The budget ran out while this run waited (another run or chat took the last request).
+          if (error instanceof AppError && error.code === "AI_LIMIT_REACHED") return skipForBudget(s, a);
+          throw error;
         }
-        const text = await this.runner().runScheduledPrompt(a.message);
         s.notifications.create({ title: a.name, body: text, automation_id: a.id });
         return { status: "success", result: text.slice(0, 300) };
       }
     }
   }
+}
+
+function skipForBudget(s: Services, a: Automation): { status: "skipped"; result: string } {
+  s.notifications.create({
+    title: a.name,
+    body: "Skipped: the daily budget for scheduled AI runs was reached. Adjust it in Settings → AI.",
+    automation_id: a.id,
+  });
+  return { status: "skipped", result: "Scheduled AI budget reached" };
 }
