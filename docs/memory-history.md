@@ -68,7 +68,7 @@ Clef returns a probability for every answer:
 | Replaces it, probability 0.8 or more | Old becomes past (reversible) |
 | Replaces it, below 0.8 | **Both kept**; shown under *Needs review* |
 | Conflicts | **Both kept**; shown under *Needs review*. For a memory found only by similarity, the conflict needs a probability of 0.7 or more; below that nothing changes |
-| More detail, compatible, or unrelated | Nothing changes, unless the wording rules would have replaced it: then **both kept**; shown under *Needs review* |
+| More detail, compatible, or unrelated | If the wording rules would have replaced it: **both kept**; shown under *Needs review*. If the wording rules flagged it for review: it stays under *Needs review* unless Clef is 0.8 or more sure of that answer. Otherwise nothing changes |
 
 The facts are sent as data, and only Clef's probabilities are read, never free
 text. Each call counts as one request against your daily AI request limit
