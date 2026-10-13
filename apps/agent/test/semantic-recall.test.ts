@@ -909,7 +909,7 @@ describe("PR #22 review", () => {
 
   it("parallel saves cannot pass the daily embedding cap when finding neighbors", async () => {
     await inAgent(async (a) => {
-      const { s } = enabled(a);
+      const { s, ctx } = enabled(a);
       const day = UsageService.day();
       const cap = embeddingsToday(s.db, day) + 1;
       writeSemanticConfig(s.settings, { enabled: true, maxEmbeddingsPerDay: cap }, s.db);
@@ -917,9 +917,11 @@ describe("PR #22 review", () => {
       const saved = Array.from({ length: 6 }, (_, i) => s.memories.create({ content: `I live in town number ${i}`, category: "fact" }));
       let release!: () => void;
       const opened = new Promise<void>((resolve) => (release = resolve));
-      const original = MockEmbedder.prototype.embed;
+      // Spy on the class of the embedder the code actually uses (mock or Workers AI), not on the mock.
+      const proto = Object.getPrototypeOf(ctx.embedder!) as Embedder;
+      const original = proto.embed;
       let calls = 0;
-      const embed = vi.spyOn(MockEmbedder.prototype, "embed").mockImplementation(async function (this: MockEmbedder, texts: string[]) {
+      const embed = vi.spyOn(proto, "embed").mockImplementation(async function (this: Embedder, texts: string[]) {
         calls++;
         await opened;
         return original.call(this, texts);

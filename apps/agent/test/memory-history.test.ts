@@ -17,7 +17,7 @@ import { createSemanticContext, hybridSearch, selectSemanticMemories } from "../
 import { countVectors } from "../src/semantic/vectorStore";
 import { exportData, importData } from "../src/services/backup";
 import { UsageService } from "../src/services/usage";
-import { BASE, inAgent, loggedIn } from "./helpers";
+import { BASE, fakeAi, inAgent, loggedIn } from "./helpers";
 
 const ns = () => (env as unknown as { TalorysAgent: DurableObjectNamespace<TalorysAgent> }).TalorysAgent;
 
@@ -70,8 +70,8 @@ describe("temporal memory", () => {
   it("keeps the replaced fact as history; present questions get the current fact, past questions get both", async () => {
     const run = freshAgent();
     await run(async (agent) => {
-      // The test pool runs with mock AI, so the memory-history AI check has no Clef runner.
-      expect(agent.clefRun()).toBeNull();
+      // Clef runs only with real Workers AI; with the fake AI the memory-history AI check has no runner.
+      expect(agent.clefRun() === null).toBe(fakeAi());
       const s = agent.services;
       const { memory: vw } = await s.memoryHistory.create({ content: "I own a Volkswagen.", category: "fact" });
       const { memory: tesla, superseded } = await s.memoryHistory.create({ content: "I sold it and bought a Tesla.", category: "fact" });

@@ -5,6 +5,12 @@ import type { TalorysAgent } from "../src/agent/talorys-agent";
 import type { Services } from "../src/services/container";
 import { ALL_TOOLS, ToolExecutor } from "../src/tools";
 
+/** True when the test pool runs the fake AI (TALORYS_MOCK_AI=1 in development), mirroring how the agent picks its provider. */
+export const fakeAi = () => {
+  const e = env as unknown as { TALORYS_ENV?: string; TALORYS_MOCK_AI?: string };
+  return e.TALORYS_ENV === "development" && e.TALORYS_MOCK_AI === "1";
+};
+
 export const BASE = "https://talorys.example.pages.dev";
 export const password = () => (env as unknown as { TEST_PASSWORD: string }).TEST_PASSWORD;
 
