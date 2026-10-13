@@ -10,9 +10,11 @@ The code lives in `apps/agent/src/semantic/` plus one web component
 
 ## Enabling
 
-Turn it on in **Settings → AI → Semantic memory recall**. The card also shows
-the embedder in use, how many memories have vectors, how many are pending, and
-today's embeddings against the cap.
+Turn it on with the **Semantic memory recall** switch near the bottom of
+**Settings → AI**. While it is off, the switch is the only thing in the card.
+Once it is on, the card also shows the embedder in use, how many memories have
+vectors, how many are pending, and today's embeddings against the cap, plus the
+embedding model, daily cap and Reindex settings.
 
 The installer can turn it on for you: answer Yes to "Enable semantic recall?",
 or pass `--semantic` (`--no-semantic` or `-y` alone means No). A Yes adds the
