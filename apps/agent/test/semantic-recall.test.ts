@@ -906,4 +906,34 @@ describe("PR #22 review", () => {
       expect((await pendingMemories(s.db, ctx.embedder!.model)).length).toBeGreaterThanOrEqual(60);
     });
   });
+
+  it("parallel saves cannot pass the daily embedding cap when finding neighbors", async () => {
+    await inAgent(async (a) => {
+      const { s } = enabled(a);
+      const day = UsageService.day();
+      const cap = embeddingsToday(s.db, day) + 1;
+      writeSemanticConfig(s.settings, { enabled: true, maxEmbeddingsPerDay: cap }, s.db);
+      invalidateSemanticCache(s);
+      const saved = Array.from({ length: 6 }, (_, i) => s.memories.create({ content: `I live in town number ${i}`, category: "fact" }));
+      let release!: () => void;
+      const opened = new Promise<void>((resolve) => (release = resolve));
+      const original = MockEmbedder.prototype.embed;
+      let calls = 0;
+      const embed = vi.spyOn(MockEmbedder.prototype, "embed").mockImplementation(async function (this: MockEmbedder, texts: string[]) {
+        calls++;
+        await opened;
+        return original.call(this, texts);
+      });
+      try {
+        const runs = saved.map((m) => semanticNeighbors(s, workerEnv, m, options()));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        release();
+        await Promise.all(runs);
+      } finally {
+        embed.mockRestore();
+      }
+      expect(calls).toBe(1);
+      expect(embeddingsToday(s.db, day)).toBe(cap);
+    });
+  });
 });

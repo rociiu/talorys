@@ -4,7 +4,7 @@ import { now } from "../db/database";
 import type { Env } from "../env";
 import type { Services } from "../services/container";
 import { UsageService } from "../services/usage";
-import { contentHash, embeddingText, embeddingsToday, recordEmbeddings } from "./embeddings";
+import { contentHash, embeddingText, reserveEmbedding } from "./embeddings";
 import { cachedSemanticConfig } from "./index";
 import { ensureSemanticSchema } from "./migrations";
 import { createSemanticContext } from "./recall";
@@ -48,15 +48,11 @@ export async function semanticNeighbors(
       : undefined;
   if (!own) {
     const day = UsageService.day();
-    if (embeddingsToday(db, day) >= config.maxEmbeddingsPerDay) return [];
+    // Check and count in one synchronous step before the call, so concurrent saves cannot all
+    // pass the cap. A failed call still counts, because it was reserved first.
+    if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(text))) return [];
     try {
-      let vectors: Float32Array[];
-      try {
-        vectors = await embedder.embed([text]);
-      } finally {
-        // The call was made, so it counts against the cap even when it failed.
-        recordEmbeddings(db, day, 1, estimateTokens(text));
-      }
+      const vectors = await embedder.embed([text]);
       if (vectors.length !== 1 || vectors[0]!.length !== embedder.dims) throw new Error(`Embedder returned ${vectors.length} vectors for 1 text`);
       upsertVectors(db, [{ memoryId: memory.id, model: embedder.model, dims: embedder.dims, contentHash: hash, vector: vectors[0]!, updatedAt: now() }]);
     } catch (error) {
