@@ -29,10 +29,25 @@ function setup(a: TalorysAgent) {
 }
 
 // forget_memory stays upstream's: it only proposes; the approve route purges the vector (semantic-forget.test.ts).
-const WRAPPED = ["search_memories", "search", "remember", "update_memory"];
+// Destructive item tools stay upstream's too: the next item pass purges their vectors.
+const WRAPPED = [
+  "search_memories",
+  "search",
+  "remember",
+  "update_memory",
+  "list_tasks",
+  "search_notes",
+  "create_task",
+  "update_task",
+  "complete_task",
+  "create_note",
+  "update_note",
+  "create_reminder",
+  "create_automation",
+];
 
 describe("semantic tools", () => {
-  it("keep every upstream tool and replace only the four wrappers' execute", async () => {
+  it("keep every upstream tool and replace only the wrappers' execute", async () => {
     await inAgent((a) => {
       const { sem } = setup(a);
       const tools = semanticTools(sem);
@@ -100,7 +115,7 @@ describe("semantic tools", () => {
     });
   });
 
-  it("wraps exactly the four upstream tools", async () => {
+  it("wraps exactly the listed upstream tools", async () => {
     await inAgent((a) => {
       const { sem } = setup(a);
       const tools = semanticTools(sem);
