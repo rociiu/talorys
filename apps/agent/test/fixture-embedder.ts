@@ -32,12 +32,12 @@ function fnv1a32(s: string): number {
   return h >>> 0;
 }
 
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const axes: string[] = fixture.axes;
 const texts = fixture.texts as Record<string, Cosines>;
 /** Matchers in file order, so the first of two equally long keys wins. */
-const matchers = Object.keys(texts).map((key) => ({ key, re: new RegExp(`\\b${escape(key)}\\b`) }));
+const matchers = Object.keys(texts).map((key) => ({ key, re: new RegExp(`\\b${escapeRegExp(key)}\\b`) }));
 
 function validate(): void {
   if (axes.length > RESIDUAL_START) throw new Error(`surface-vectors.json has ${axes.length} axes, at most ${RESIDUAL_START}`);

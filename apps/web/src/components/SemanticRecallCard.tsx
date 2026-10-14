@@ -20,6 +20,7 @@ interface SemanticStatus {
   pending: number;
   embeddings_today: number;
   cap: number;
+  items?: { vectors: number; pending: number; by_type: { task: number; note: number; automation: number }; items_today: number; items_cap: number };
 }
 
 interface ReindexReport {
@@ -27,6 +28,7 @@ interface ReindexReport {
   pending: number;
   capped: boolean;
   error?: string;
+  surfaces?: { embedded: number; pending: number };
 }
 
 const DEFAULT_CAP = 500;
@@ -46,7 +48,7 @@ function Row({ label, hint, children }: { label: string; hint?: ReactNode; child
 
 /**
  * Settings card for semantic memory recall: the opt-in switch, the daily embedding cap,
- * index status (polled while memories are pending) and the reindex and delete actions.
+ * index status (polled while memories or items are pending) and the reindex and delete actions.
  */
 export function SemanticRecallCard() {
   const qc = useQueryClient();
@@ -62,7 +64,7 @@ export function SemanticRecallCard() {
     queryFn: () => api<SemanticStatus>("/semantic/status"),
     enabled,
     refetchOnMount: "always",
-    refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 ? 3000 : false),
+    refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 || (q.state.data?.items?.pending ?? 0) > 0 ? 3000 : false),
   });
   const savedCap = config.data?.config?.maxEmbeddingsPerDay ?? DEFAULT_CAP;
   const [cap, setCap] = useState(savedCap);
@@ -98,6 +100,8 @@ export function SemanticRecallCard() {
         ["Embeddings today", `${s.embeddings_today} / ${s.cap}`],
       ]
     : [["Status", "Loading…"]];
+  const itemsIndexed = s?.items ? s.items.by_type.task + s.items.by_type.note + s.items.by_type.automation : 0;
+  const itemsPending = s?.items?.pending ?? 0;
   const busy = reindex.isPending || wipe.isPending;
 
   return (
@@ -105,7 +109,8 @@ export function SemanticRecallCard() {
       <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-fg-subtle">Semantic memory recall</h2>
       <Card>
         <div className="divide-y divide-border">
-          <Row label="Semantic memory recall" hint={`Finds memories by meaning using Workers AI embeddings, up to ${savedCap} per day. Off by default.`}>
+          {/* At the default cap: "Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings, up to 500 per day. Off by default." */}
+          <Row label="Semantic memory recall" hint={`Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings, up to ${savedCap} per day. Off by default.`}>
             <div className="flex justify-end">
               <Switch
                 checked={enabled}
@@ -136,6 +141,14 @@ export function SemanticRecallCard() {
                       </p>
                     </div>
                   ))}
+                </div>
+              )}
+              {s && !status.error && (
+                <div className="flex items-center justify-between gap-3 px-5 py-4 text-sm">
+                  <p className="text-xs text-fg-subtle">Tasks, notes, reminders</p>
+                  <p className="font-medium tabular-nums">
+                    {itemsIndexed} indexed, <span data-stat="Items pending">{itemsPending}</span> pending
+                  </p>
                 </div>
               )}
               <Row label="Embedding model" hint="Default: @cf/baai/bge-m3. Must be a Workers AI text embedding model.">
