@@ -116,6 +116,34 @@ select:focus-visible {
   outline: none;
 }
 
+/*
+ * Touch browsers (iOS Safari in particular) zoom the page when a field under
+ * 16px takes focus, which shoves the layout off the right edge. Keep every
+ * text field at 16px on touch screens, whatever size its utilities ask for.
+ * The writer editor sets its own size so its textarea and mirror stay aligned.
+ */
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea:not(.writer-layer),
+  select {
+    font-size: 16px;
+  }
+}
+
+/*
+ * While the on-screen keyboard is up, the fixed bottom nav would ride on top of
+ * it and eat most of the remaining space. Hide it, and drop the room the chat
+ * composer leaves for it, whenever a text field has focus on a phone.
+ */
+@media (max-width: 767px) {
+  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, [contenteditable="true"]):focus) .mobile-nav {
+    display: none;
+  }
+  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, [contenteditable="true"]):focus) .chat-composer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+  }
+}
+
 /* Markdown rendering for chat and notes */
 .prose-talorys {
   @apply text-[15px] leading-7 text-fg;
@@ -157,7 +185,7 @@ select:focus-visible {
   border: 0;
   font-weight: 400;
 }
-@media (max-width: 640px) { .writer-layer { font-size: 15px; } }
+@media (max-width: 640px) { .writer-layer { font-size: 16px; } }
 .writer strong { font-weight: 700; }
 .writer-layer .w-mark { color: var(--fg-subtle); opacity: 0.55; font-weight: 400; }
 .writer-layer .w-heading { font-weight: 700; }
