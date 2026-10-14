@@ -1,6 +1,7 @@
-// Creates local-only development secrets (apps/agent/.dev.vars) if missing.
+// Creates local-only development secrets (apps/agent/.dev.vars) if missing, and adds a Web Push
+// key pair to a file made before push existed (everything else in it is left as is).
 // The dev password defaults to "talorys-dev-password" or $TALORYS_DEV_PASSWORD.
-import { existsSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { webcrypto as crypto } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,8 +30,21 @@ async function vapidKeys() {
   return [`VAPID_PUBLIC_KEY=${publicKey}`, `VAPID_PRIVATE_KEY=${d}`];
 }
 
+/** True when `name=` has a non-empty value in a .dev.vars file. */
+function hasVar(text, name) {
+  return new RegExp(`^${name}=\\S`, "m").test(text);
+}
+
 if (existsSync(target) && !force) {
-  console.log("apps/agent/.dev.vars exists (use --force to regenerate).");
+  const current = readFileSync(target, "utf8");
+  if (hasVar(current, "VAPID_PUBLIC_KEY") && hasVar(current, "VAPID_PRIVATE_KEY")) {
+    console.log("apps/agent/.dev.vars exists (use --force to regenerate).");
+  } else {
+    // Half a pair is unusable, so drop any leftover key line and add a fresh, matching pair.
+    const kept = current.split("\n").filter((line) => !/^VAPID_(PUBLIC|PRIVATE)_KEY=/.test(line)).join("\n").replace(/\n*$/, "\n");
+    writeFileSync(target, `${kept}${(await vapidKeys()).join("\n")}\n`);
+    console.log("Added a Web Push key pair to apps/agent/.dev.vars.");
+  }
 } else {
   const password = process.env.TALORYS_DEV_PASSWORD || "talorys-dev-password";
   mkdirSync(dirname(target), { recursive: true });
