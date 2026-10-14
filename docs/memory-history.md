@@ -32,15 +32,17 @@ live, your car, your job, your diet, your relationship) — and decides:
 
 | New memory vs. old | Example | Result |
 | --- | --- | --- |
-| Explicit replacement | "I moved from London to New York" vs. "I live in London" | Old becomes past, linked to the new one |
-| Explicit change of a one-value topic | "I moved permanently to Paris" vs. "I live in London" | Old becomes past |
-| More detailed version | "Prefers green tea in the morning with honey" vs. "Prefers green tea in the morning" | Old becomes past |
+| Explicit replacement | "I moved from London to New York" vs. "I live in London" | **Both kept**; shown under *Needs review* as a possible update |
+| Explicit change of a one-value topic | "I moved permanently to Paris" vs. "I live in London" | **Both kept**; shown under *Needs review* as a possible update |
+| More detailed version | "Prefers green tea in the morning with honey" vs. "Prefers green tea in the morning" | **Both kept**; shown under *Needs review* as a possible update |
 | Same topic, unclear | "I live in Paris" vs. "I live in London" | **Both kept**; shown under *Needs review* |
 | Addition / unrelated | "I visited Paris" vs. "I live in London" | Nothing changes |
 
-Automatic changes need explicit wording ("sold", "moved", "no longer",
-"replaced", …) and are always reversible: **Restore as current** undoes them.
-Detection only runs when a memory is written, never on every chat message.
+Without the AI check, Talorys never retires a memory on its own. The wording
+rules ("sold", "moved", "no longer", "replaced", …) only flag a likely
+replacement for your review; choose **Mark older as past** to keep the old one
+as history. Detection only runs when a memory is written, never on every chat
+message.
 
 When Talorys rewords a memory with `update_memory`, the new wording is saved as a
 new memory and the old one becomes a past fact linked to it, the same as
@@ -78,7 +80,8 @@ runs only when there is something to compare against.
 Clef has 3 seconds to answer. When Clef can't answer (mock AI or demo mode, the
 daily limit is reached, no answer within 3 seconds, an error or an unexpected
 response), the check falls back to the wording rules:
-rule hits are handled exactly as with the check off, and memories nominated
+rule hits are shown under *Needs review*, as with the check off; nothing is
+retired, and memories nominated
 only by similarity are left alone. Clef and the daily limit are checked before
 any similarity lookup, so such a save spends no embeddings. The new memory is
 embedded on its own if its vector is missing or out of date (counted against
@@ -87,7 +90,8 @@ skipped until the background index catches up. A timeout counts as an AI
 error. A save cancelled while Clef is answering also finishes with the wording
 rules, but is not counted as an AI error.
 
-With the check off, detection is the wording rules alone, as described above.
+With the check off, detection is the wording rules alone, as described above:
+rule hits wait under *Needs review* and no memory is retired automatically.
 
 Turning off **Memory conflict review** disables detection entirely; memories
 are then saved exactly as before.

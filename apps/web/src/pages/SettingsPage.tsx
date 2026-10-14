@@ -300,7 +300,7 @@ function MemoryHistorySection({ settings }: { settings: Settings }) {
     <Section title="Memory history">
       <Row
         label="Memory conflict review"
-        hint="When a new memory clearly replaces an old one (“I sold my car…”), keep the old one as a past fact. Unclear cases wait for you on the Memory page. Uses no AI."
+        hint="Flags a new memory that may replace or contradict an older one (“I sold my car…”) for your review on the Memory page. Never retires a memory on its own. Uses no AI."
       >
         <div className="flex justify-end">
           <Switch checked={mh.conflictReview} onChange={(v) => save.mutate({ memoryHistory: { conflictReview: v } })} label="Memory conflict review" />
