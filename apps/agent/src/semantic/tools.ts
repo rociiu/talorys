@@ -1,13 +1,24 @@
+import type { Automation } from "@talorys/shared";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../tools";
 import type { ImmediateTool } from "../tools/registry";
 import { presentTask } from "../tools/tasks";
 import { localDayBounds } from "../services/time";
 import { startBackgroundIndex } from "./indexer";
 import { type SemanticContext, hybridSearch, savedAt } from "./recall";
-import { noteAdditions, prepareSurfaceSearch, startBackgroundItemPass, taskAdditions } from "./surfaces";
+import {
+  automationAdditions,
+  automationKeywordHits,
+  noteAdditions,
+  prepareSurfaceSearch,
+  startBackgroundItemPass,
+  taskAdditions,
+} from "./surfaces";
 
 const SEARCH_MEMORY_LIMIT = 10;
 const SEARCH_ALL_MEMORY_LIMIT = 5;
+const SEARCH_AUTOMATION_LIMIT = 5;
+/** Upstream `search` shows notes with this many characters, shorter than `search_notes`. */
+const SEARCH_NOTE_EXCERPT_CHARS = 200;
 /** Tasks of one view checked against meaning additions; far above any owner's open list. */
 const VIEW_SCAN_LIMIT = 1000;
 const NOTE_EXCERPT_CHARS = 400;
@@ -41,17 +52,47 @@ function wrapSearchMemories(sem: SemanticContext): ToolDefinition {
   };
 }
 
-/** Upstream `search` with only its `memories` replaced by hybrid hits. */
+/** An automation as `search` shows it, in the shape of upstream `list_automations`. */
+function presentAutomation(a: Automation) {
+  return { id: a.id, name: a.name, kind: a.kind, schedule: a.schedule_description, enabled: a.enabled };
+}
+
+/**
+ * Upstream `search` with its `memories` replaced by hybrid hits, up to three meaning additions
+ * after the keyword tasks and notes, and an `automations` key: keyword hits, then additions,
+ * five at most. Every lookup shares the turn's one query vector.
+ */
 function wrapSearch(sem: SemanticContext): ToolDefinition {
   const base = upstream("search");
   return {
     ...base,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
-      const result = (await base.execute(raw, ctx)) as Record<string, unknown>;
+      const result = (await base.execute(raw, ctx)) as {
+        tasks: { id: string }[];
+        notes: { id: string }[];
+        memories: unknown[];
+        conversations: unknown[];
+      };
       const timezone = ctx.services.settings.get().timezone;
       const hits = await hybridSearch(sem, query, { limit: SEARCH_ALL_MEMORY_LIMIT });
-      return { ...result, memories: hits.map(({ memory: m }) => ({ id: m.id, content: m.content, saved: savedAt(m.updated_at, timezone) })) };
+      const memories = hits.map(({ memory: m }) => ({ id: m.id, content: m.content, saved: savedAt(m.updated_at, timezone) }));
+      const vector = await prepareSurfaceSearch(sem, query);
+      const meaning = "meaning" as const;
+      const tasks = [
+        ...result.tasks,
+        ...taskAdditions(sem, vector, { keywordIds: result.tasks.map((t) => t.id) }).map((t) => ({ ...presentTask(t, ctx.timezone), match: meaning })),
+      ];
+      const notes = [...result.notes, ...noteAdditions(sem, vector, result.notes.map((n) => n.id), SEARCH_NOTE_EXCERPT_CHARS).map((n) => ({ ...n, match: meaning }))];
+      const keyword = automationKeywordHits(sem, query);
+      const automations: (ReturnType<typeof presentAutomation> & { match?: "meaning" })[] = keyword
+        .slice(0, SEARCH_AUTOMATION_LIMIT)
+        .map(presentAutomation);
+      for (const a of automationAdditions(sem, vector, keyword.map((k) => k.id))) {
+        if (automations.length >= SEARCH_AUTOMATION_LIMIT) break;
+        automations.push({ ...presentAutomation(a), match: meaning });
+      }
+      return { tasks, notes, memories, conversations: result.conversations, automations };
     },
   };
 }
