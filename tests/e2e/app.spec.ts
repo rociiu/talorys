@@ -270,6 +270,12 @@ test.describe("Talorys owner experience", () => {
     await login(page);
     const nav = page.getByRole("navigation", { name: "Main" }).last();
     await expect(nav).toBeVisible();
+    // Under 16px, iOS zooms in on focus and shoves the layout sideways (#35).
+    const message = page.getByRole("textbox", { name: "Message" });
+    await message.focus();
+    await expect(message).toHaveCSS("font-size", "16px");
+    // Focus with no on-screen keyboard keeps the bottom bar in place.
+    await expect(nav).toBeVisible();
     await nav.getByRole("link", { name: "Tasks" }).click();
     await expect(page.getByRole("heading", { name: "Tasks", exact: true })).toBeVisible();
     await nav.getByRole("link", { name: "Schedules" }).click();

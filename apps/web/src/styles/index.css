@@ -131,15 +131,15 @@ select:focus-visible {
 }
 
 /*
- * While the on-screen keyboard is up, the fixed bottom nav would ride on top of
- * it and eat most of the remaining space. Hide it, and drop the room the chat
- * composer leaves for it, whenever a text field has focus on a phone.
+ * While the on-screen keyboard is up (see useKeyboardOpenFlag), the fixed bottom
+ * nav would ride on top of it and eat most of the remaining space. Hide it, and
+ * drop the room the chat composer leaves for it.
  */
 @media (max-width: 767px) {
-  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, [contenteditable="true"]):focus) .mobile-nav {
+  html[data-keyboard] .mobile-nav {
     display: none;
   }
-  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, [contenteditable="true"]):focus) .chat-composer {
+  html[data-keyboard] .chat-composer {
     padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
   }
 }
