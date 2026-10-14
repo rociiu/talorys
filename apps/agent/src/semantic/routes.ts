@@ -23,8 +23,10 @@ import {
   startBackgroundBackfill,
   startBackgroundIndex,
 } from "./indexer";
-import { dropSemanticData, ensureSemanticSchema, semanticSchema } from "./migrations";
+import { countIndexedItems, countItemVectors, deleteAllItemVectors, dropItemVectorCache } from "./itemStore";
+import { dropSemanticData, ensureSemanticSchema, semanticSchema, tableExists } from "./migrations";
 import { LAZY_INDEX_BATCH, createSemanticContext, hybridSearch, savedAt } from "./recall";
+import { ITEM_EMBEDDINGS_PER_DAY, type ItemPassReport, itemUsageToday, pendingItems, runItemPass, startBackgroundItemPass } from "./surfaces";
 import { countVectors, deleteAllVectors, dropVectorCache } from "./vectorStore";
 
 /**
@@ -103,7 +105,16 @@ semanticRoutes.use("/memories/*", async (c, next) => {
 semanticRoutes.use("/import", async (c, next) => {
   const config = writeConfig(c);
   await next();
-  if (config !== null && c.req.method === "POST") afterWrite(c, config);
+  if (config === null || c.req.method !== "POST") return;
+  afterWrite(c, config);
+  // A full item pass: re-chunks every note and, by purging orphans first, drops vectors of items a restore removed.
+  try {
+    if (config.enabled && isSuccess(c.res.status)) {
+      void startBackgroundItemPass(createSemanticContext(c.env.agent.services, c.env.env, config), waitUntilOf(c), { full: true });
+    }
+  } catch (error) {
+    console.warn("Semantic import item pass failed", error instanceof Error ? error.message : String(error));
+  }
 });
 
 /**
@@ -144,7 +155,10 @@ semanticRoutes.put("/semantic/config", async (c) => {
   const previous = cachedSemanticConfig(s);
   const config = writeSemanticConfig(s.settings, patch, s.db);
   invalidateSemanticCache(s);
-  if (config.model !== previous?.model) dropVectorCache(s.db);
+  if (config.model !== previous?.model) {
+    dropVectorCache(s.db);
+    dropItemVectorCache(s.db);
+  }
   // A new model (or turning the feature on) leaves every memory pending; embed them in the background.
   if (config.enabled && (config.model !== previous?.model || !previous?.enabled)) {
     try {
@@ -165,6 +179,7 @@ semanticRoutes.get("/semantic/status", async (c) => {
   const embedder = createEmbedder(c.env.env, s.settings, model);
   const schema = config === null ? null : semanticSchema(s.db);
   const current = embedder?.model ?? model;
+  const items = schema && tableExists(s.db, "tal_semantic_item_vectors");
   return c.json({
     enabled,
     ever_enabled: config !== null,
@@ -174,6 +189,13 @@ semanticRoutes.get("/semantic/status", async (c) => {
     pending: !enabled ? 0 : schema ? (await pendingMemories(s.db, current, embedder?.dims)).length : s.memories.count(),
     embeddings_today: schema ? embeddingsToday(s.db, UsageService.day()) : 0,
     cap: config?.maxEmbeddingsPerDay ?? DEFAULT_SEMANTIC_CONFIG.maxEmbeddingsPerDay,
+    items: {
+      vectors: items ? countItemVectors(s.db, current) : 0,
+      pending: enabled && items ? (await pendingItems(s.db, current, embedder?.dims)).pending.length : 0,
+      by_type: items ? countIndexedItems(s.db, current, embedder?.dims ?? 0) : { task: 0, note: 0, automation: 0 },
+      items_today: items ? itemUsageToday(s.db, UsageService.day()).requests : 0,
+      items_cap: ITEM_EMBEDDINGS_PER_DAY,
+    },
   });
 });
 
@@ -212,12 +234,16 @@ semanticRoutes.get("/semantic/search", async (c) => {
   });
 });
 
-/** Drops every vector and re-embeds in batches until done, capped, or a pass embeds nothing. */
+/**
+ * Drops every memory and item vector and re-embeds in batches until done, capped, or a pass
+ * embeds nothing: memories first, then tasks, notes and automations against the item cap.
+ */
 semanticRoutes.post("/semantic/reindex", async (c) => {
   const config = requireEnabled(c);
   const s = c.env.agent.services;
   const ctx = createSemanticContext(s, c.env.env, config);
   deleteAllVectors(s.db);
+  deleteAllItemVectors(s.db);
   // Every pass awaited here starts after the delete: a call during a running pass gets its follow-up.
   let embedded = 0;
   let report: IndexReport;
@@ -226,10 +252,20 @@ semanticRoutes.post("/semantic/reindex", async (c) => {
     embedded += report.embedded;
   } while (report.pending > 0 && !report.capped && report.embedded > 0);
   const pending = (await pendingMemories(s.db, ctx.embedder?.model ?? config.model, ctx.embedder?.dims)).length;
+  let itemsEmbedded = 0;
+  let items: ItemPassReport;
+  let full = true;
+  do {
+    items = await runItemPass(ctx, { maxEmbed: LAZY_INDEX_BATCH, full });
+    itemsEmbedded += items.embedded;
+    full = false;
+  } while (items.pending > 0 && !items.capped && !items.error && items.embedded > 0);
+  const itemsPending = (await pendingItems(s.db, ctx.embedder?.model ?? config.model, ctx.embedder?.dims)).pending.length;
   return c.json({
     embedded,
     pending,
     capped: report.capped ?? false,
+    surfaces: { embedded: itemsEmbedded, pending: itemsPending },
     ...(report.error ? { error: report.error } : report.skipped ? { error: report.skipped } : {}),
   });
 });

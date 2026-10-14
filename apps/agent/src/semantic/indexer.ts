@@ -4,6 +4,7 @@ import { UsageService } from "../services/usage";
 import type { SemanticConfig } from "./config";
 import { type Embedder, contentHash, embeddingText, reserveEmbedding } from "./embeddings";
 import { ensureSemanticSchema } from "./migrations";
+import { type ItemPassReport, runItemPass } from "./surfaces";
 import { deleteAllVectors, deleteVector, purgeOrphanVectors, upsertVectors, vectorMeta } from "./vectorStore";
 
 /** Most memories embedded in one indexer run, and so in one embed call. */
@@ -171,13 +172,17 @@ export function startBackgroundIndex(ctx: IndexerContext, waitUntil?: (promise: 
 
 /**
  * Like `startBackgroundIndex`, but keeps indexing in batches until nothing is pending,
- * the daily cap is hit, a pass embeds nothing, or a pass fails. Used after a model change.
+ * the daily cap is hit, a pass embeds nothing, or a pass fails, then does the same for tasks,
+ * notes and automations against the item cap. Used after enabling and after a model change.
  */
 export function startBackgroundBackfill(ctx: IndexerContext, waitUntil?: (promise: Promise<unknown>) => void): Promise<void> {
   const pass = (async () => {
     let report: IndexReport;
     do report = await runIndexer(ctx, { maxEmbed: DEFAULT_MAX_EMBED });
     while (report.pending > 0 && report.embedded > 0 && !report.capped && !report.error);
+    let items: ItemPassReport;
+    do items = await runItemPass(ctx, { maxEmbed: DEFAULT_MAX_EMBED });
+    while (items.pending > 0 && items.embedded > 0 && !items.capped && !items.error);
   })().catch((error) => console.warn("Semantic background backfill failed", error instanceof Error ? error.message : String(error)));
   waitUntil?.(pass);
   return pass;

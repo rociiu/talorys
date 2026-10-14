@@ -92,6 +92,7 @@ describe("semantic routes", () => {
       pending: 0,
       embeddings_today: 0,
       cap: DEFAULT_SEMANTIC_CONFIG.maxEmbeddingsPerDay,
+      items: expect.any(Object),
     });
     await inAgent((agent) => {
       expect(semanticTableNames(agent.services.db)).toEqual([]);
@@ -114,6 +115,7 @@ describe("semantic routes", () => {
       pending: count,
       embeddings_today: 0,
       cap: 42,
+      items: expect.any(Object),
     });
 
     await c.call("/api/semantic/config", { method: "PUT", body: { enabled: false } });
@@ -200,11 +202,11 @@ describe("semantic routes", () => {
 
     const reindex = await c.call("/api/semantic/reindex", { method: "POST" });
     expect(reindex.status).toBe(200);
-    expect(await reindex.json()).toEqual({ embedded: 61, pending: 0, capped: false });
+    expect(await reindex.json()).toEqual({ embedded: 61, pending: 0, capped: false, surfaces: expect.any(Object) });
     expect(await c.json("/api/semantic/status")).toMatchObject({ vectors: 61, pending: 0, embeddings_today: 2 });
 
     // A second reindex drops the vectors and embeds them all again.
-    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 61, pending: 0, capped: false });
+    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 61, pending: 0, capped: false, surfaces: expect.any(Object) });
 
     const { hits } = await c.json("/api/semantic/search?q=my%20vehicle");
     expect(hits).toHaveLength(1);
@@ -230,7 +232,7 @@ describe("semantic routes", () => {
     });
     const c = await loggedIn();
     await c.call("/api/semantic/config", { method: "PUT", body: { enabled: true, maxEmbeddingsPerDay: 10_000 } });
-    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 5, pending: 0, capped: false });
+    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 5, pending: 0, capped: false, surfaces: expect.any(Object) });
 
     let entered!: () => void;
     let release!: () => void;
@@ -260,7 +262,7 @@ describe("semantic routes", () => {
     const res = await reindex;
     expect(res.status).toBe(200);
     // The stale pass writes the newest memory; the follow-up re-embeds the other five.
-    expect(await res.json()).toEqual({ embedded: 5, pending: 0, capped: false });
+    expect(await res.json()).toEqual({ embedded: 5, pending: 0, capped: false, surfaces: expect.any(Object) });
     expect(await c.json("/api/semantic/status")).toMatchObject({ vectors: 6, pending: 0 });
     await inAgent((agent) => {
       reset(agent.services);
@@ -278,7 +280,7 @@ describe("semantic routes", () => {
     // `reset` dropped the usage table, so today's count starts at zero.
     await enableQuietly({ maxEmbeddingsPerDay: 1 });
 
-    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 50, pending: 10, capped: true });
+    expect(await c.json("/api/semantic/reindex", { method: "POST" })).toEqual({ embedded: 50, pending: 10, capped: true, surfaces: expect.any(Object) });
     const search = await c.call("/api/semantic/search?q=kayak");
     expect(search.status).toBe(200);
     const { hits } = (await search.json()) as { hits: { cosine: number | null }[] };
