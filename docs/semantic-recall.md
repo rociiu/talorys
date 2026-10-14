@@ -77,7 +77,7 @@ while the feature is off is stored and embedded when it is turned on. A stored
 config that is still the untouched old default (`@cf/baai/bge-small-en-v1.5`
 with floors 0.5 and 0.1) reads as the bge-m3 defaults, so such an instance moves
 to bge-m3 without a Settings change. An owner who picks bge-small and sets those
-exact floors by hand also reads as bge-m3.
+exact floors by hand also ends up with a config that reads as bge-m3.
 
 bge-m3 compresses its cosines (correct hits about 0.43 to 0.66), so a newer
 near-duplicate is pulled in beside a selected memory at a stored cosine of 0.57
