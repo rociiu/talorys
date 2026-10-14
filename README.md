@@ -25,7 +25,7 @@ Or install it with [Appflare](https://appflare.dev), which deploys it as a
 
 - **A private assistant** — chat with streaming responses, Markdown and tool activity indicators.
 - **Memory** — durable personal facts and preferences you can view, edit and delete. Only the most relevant memories are sent to the model on each turn.
-- **Semantic recall (optional)** — finds memories by meaning as well as keyword, and lists them newest first with their saved date. Off by default; turn it on with the **Semantic memory recall** switch near the bottom of Settings → AI (its other settings appear once it is on), or install with `--semantic`. See [docs/semantic-recall.md](docs/semantic-recall.md).
+- **Semantic recall (optional)** — finds memories by meaning as well as keyword, lists them newest first with their saved date, and lets the agent find tasks, notes and automations by meaning. Off by default; turn it on with the **Semantic memory recall** switch near the bottom of Settings → AI (its other settings appear once it is on), or install with `--semantic`. See [docs/semantic-recall.md](docs/semantic-recall.md).
 - **Memory history** — facts that change over time: when you say you sold your car, Talorys asks you whether the old one is now a past fact, and with the optional AI check a confident answer does it for you. Unclear conflicts also wait for your review. See [docs/memory-history.md](docs/memory-history.md).
 - **Tasks, notes and projects** — full CRUD in the UI, and from chat ("Add a task to review my project tomorrow").
 - **Automations** — one-time and recurring reminders, daily task digests and optional AI routines, delivered to an in-app notification center. They run on Durable Object alarms, so nothing has to stay online.

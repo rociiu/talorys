@@ -114,6 +114,37 @@ If embedding fails, no embedder is bound, or the daily cap is spent, the vector
 list is empty and the keyword list alone ranks, which matches upstream. If the
 module itself fails, chat falls back to upstream recall.
 
+## Tasks, notes and automations
+
+While the feature is on, the agent's `list_tasks`, `search_notes` and `search`
+tools also find tasks, notes and automations by meaning. The code is in
+`apps/agent/src/semantic/surfaces.ts`; vectors go in
+`tal_semantic_item_vectors`.
+
+What gets embedded:
+
+- **Task:** title and the first 1,000 characters of the description. Status,
+  priority and due date are not embedded.
+- **Note:** the title as one row and the body as another. A body over 4,000
+  characters is split into chunks of up to about 1,200 characters (at most 40);
+  text past the last chunk is left to keyword search.
+- **Automation:** kind, name, message and schedule description. Run state is
+  not embedded, so runs never cause a re-embed.
+
+Items have their own cap: 50 embedding requests and 500,000 estimated tokens a
+day, on their own counter. At bge-m3 rates that is at most 537.5 neurons a day,
+5.4% of the 10,000 free daily neurons. Memories keep the full
+`maxEmbeddingsPerDay`.
+
+Before every search, a change check embeds new or edited items and deletes the
+vectors of deleted ones. Each tool keeps its keyword results as they are and
+adds up to 3 items that clear the floors, each marked `match: "meaning"`.
+There is no top-k fallback for items. Done tasks (except when listing completed
+tasks) and fired one-time reminders are filtered out of the additions.
+
+Items are never put into the system prompt, and the Notes page search is
+unchanged. While the feature is off, the tools behave exactly like upstream.
+
 ## Vector store
 
 `apps/agent/src/semantic/vectorStore.ts` is the only code that reads or writes
@@ -162,6 +193,8 @@ The prefix costs about 10 tokens per memory.
 | Budget | Target |
 | --- | --- |
 | Embedding cap | 500 per day by default (`maxEmbeddingsPerDay`), separate from the AI request limit |
+| Item embedding cap | 50 requests and 500,000 estimated tokens per day for tasks, notes and automations, on their own counter |
+| Item neurons | At most 537.5 per day, 5.4% of the 10,000 free daily neurons |
 | Neurons | About 0.06 per turn at 1,075 neurons per million input tokens; a backfill of 1,000 memories is about 32 |
 | Cosine scan | ≤ 5 ms at 5,000 memories |
 | Storage | One vector row per memory |
@@ -191,6 +224,9 @@ vector stay until the owner approves the action card, and the vector stays if th
 approved action fails. A forgotten memory never appears in recall again. This also
 happens while the feature is turned off, as long as its tables exist.
 
+A deleted task, note or automation loses its vectors on the next item pass,
+which runs before every search that uses them.
+
 Saving a memory (Memory page, `remember`, `update_memory`, or a backup import)
 starts a background index, so new memories do not wait for the next chat turn.
 
@@ -215,9 +251,9 @@ headers.
 | Route | Purpose |
 | --- | --- |
 | `GET /semantic/config`, `PUT /semantic/config` | Read or patch the config |
-| `GET /semantic/status` | Enabled flag, embedder, vectors, pending, embeddings today and cap |
-| `GET /semantic/search?q=&limit=` | Hybrid hits with cosine and fused scores |
-| `POST /semantic/reindex` | Drop all vectors and re-embed |
+| `GET /semantic/status` | Enabled flag, embedder, vectors, pending, embeddings today and cap, plus an `items` block (vectors, pending, `by_type` counts, `items_today`, `items_cap`) |
+| `GET /semantic/search?q=&limit=` | Hybrid memory hits with cosine and fused scores |
+| `POST /semantic/reindex` | Drop all vectors and re-embed; the `surfaces` field reports items embedded and pending |
 | `DELETE /semantic/data` | Body `{"confirm": "DELETE"}`; drop every module table and the config key |
 
 ## Known limitation
