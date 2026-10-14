@@ -61,14 +61,16 @@ type ConflictDecision =
 function ruleDecision(a: ConflictAssessment): ConflictDecision[] {
   const action = decide(a);
   if (action === "none") return [];
-  if (action === "supersede") return [{ oldId: a.oldMemoryId, action }];
+  // Rules alone never retire a memory: a replacement they find waits for the owner's review.
+  if (action === "supersede") return [{ oldId: a.oldMemoryId, action: "review", relationship: "possible_update", reason: a.reason }];
   return [{ oldId: a.oldMemoryId, action, relationship: a.relationship === "possible_update" ? "possible_update" : "contradiction", reason: a.reason }];
 }
 
 /**
  * Memory writes with history: saves first, then (rule-based, no AI by default) checks
- * whether the new memory replaces or may contradict an older one. Explicit replacements
- * keep the old memory as a past fact; unclear cases wait for the owner's review.
+ * whether the new memory replaces or may contradict an older one. Replacements the rules find
+ * wait for the owner's review like unclear cases; only Clef or an explicit correction marks a
+ * memory as past.
  * Recall itself lives in `agent/memory.ts` (keyword) and `semantic/` (hybrid).
  */
 export class MemoryHistoryService {
@@ -154,9 +156,9 @@ export class MemoryHistoryService {
 
   /**
    * Finds likely related current memories (shared words, or the same single-valued topic such
-   * as where the owner lives), classifies each relationship with deterministic rules, supersedes
-   * only explicit replacements and leaves unclear cases for the owner. Runs only on memory
-   * writes, never per chat message.
+   * as where the owner lives), classifies each relationship with deterministic rules and leaves
+   * every replacement or unclear case for the owner to review. Runs only on memory writes, never
+   * per chat message.
    */
   private async detectConflicts(memory: Memory, signal?: AbortSignal): Promise<WriteResult> {
     const candidates = new Map<string, Memory>();
@@ -179,7 +181,7 @@ export class MemoryHistoryService {
    * With the AI check on, rules and semantic similarity only nominate: the rule hits plus up to
    * AI_CANDIDATE_LIMIT memories at or above AI_CANDIDATE_MIN_COSINE go to one Clef call, and only
    * a confident "supersedes" replaces a memory. Clef and the AI budget are checked before any
-   * embedding work; when Clef can't run or answer, rule hits are decided as with the check off.
+   * embedding work; when Clef can't run or answer, rule hits become reviews, as with the check off.
    */
   private async detectWithAi(
     memory: Memory,
@@ -211,7 +213,7 @@ export class MemoryHistoryService {
       const verdict = verdicts?.find((v) => v.memoryId === old.id);
       const rule = nominated.get(old.id);
       if (!verdict) {
-        // No answer: rule hits are decided as with the AI check off; semantic-only ones are left alone.
+        // No answer: rule hits become reviews, as with the AI check off; semantic-only ones are left alone.
         if (rule) decisions.push(...ruleDecision(rule));
         continue;
       }

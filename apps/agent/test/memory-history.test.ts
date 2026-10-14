@@ -74,8 +74,12 @@ describe("temporal memory", () => {
       expect(agent.clefRun() === null).toBe(fakeAi());
       const s = agent.services;
       const { memory: vw } = await s.memoryHistory.create({ content: "I own a Volkswagen.", category: "fact" });
-      const { memory: tesla, superseded } = await s.memoryHistory.create({ content: "I sold it and bought a Tesla.", category: "fact" });
-      expect(superseded.map((m) => m.id)).toEqual([vw.id]);
+      const { memory: tesla, superseded, reviews } = await s.memoryHistory.create({ content: "I sold it and bought a Tesla.", category: "fact" });
+      // The rules alone never retire a memory: the replacement waits for the owner's review.
+      expect(superseded).toHaveLength(0);
+      expect(reviews.map((r) => [r.other_id, r.relationship])).toEqual([[vw.id, "possible_update"]]);
+      expect(s.memories.get(vw.id)?.status).toBe("active");
+      s.memoryHistory.resolveReview(reviews[0]!.id, "mark_historical");
       expect(s.memories.get(vw.id)).toMatchObject({ status: "historical", superseded_by: tesla.id, valid_until: null });
       expect(s.memories.get(tesla.id)?.status).toBe("active");
 
@@ -97,9 +101,11 @@ describe("temporal memory", () => {
     await run(async (agent) => {
       const s = agent.services;
       const { memory: london } = await s.memoryHistory.create({ content: "I live in London" });
-      const { memory: paris, superseded } = await s.memoryHistory.create({ content: "I moved to Paris in March 2025" });
+      const { memory: paris, superseded, reviews } = await s.memoryHistory.create({ content: "I moved to Paris in March 2025" });
       expect(paris.valid_from).toBe("2025-03");
-      expect(superseded[0]).toMatchObject({ id: london.id, valid_until: "2025-03" });
+      expect(superseded).toHaveLength(0);
+      expect(reviews.map((r) => [r.other_id, r.relationship])).toEqual([[london.id, "possible_update"]]);
+      expect(s.memories.get(london.id)?.status).toBe("active");
       const { memory: plain } = await s.memoryHistory.create({ content: "Prefers window seats" });
       expect(plain.valid_from).toBeNull();
     });
@@ -113,7 +119,10 @@ describe("with semantic recall (#9) on", () => {
       const s = agent.services;
       const ctx = enableSemantic(agent);
       const { memory: bug } = await s.memoryHistory.create({ content: "I drive a VW Bug" });
-      const { memory: tesla } = await s.memoryHistory.create({ content: "I sold the VW Bug and bought a Tesla" });
+      const { memory: tesla, reviews } = await s.memoryHistory.create({ content: "I sold the VW Bug and bought a Tesla" });
+      expect(s.memories.get(bug.id)?.status).toBe("active");
+      expect(reviews.map((r) => [r.other_id, r.relationship])).toEqual([[bug.id, "possible_update"]]);
+      s.memoryHistory.resolveReview(reviews[0]!.id, "mark_historical");
       expect(s.memories.get(bug.id)?.status).toBe("historical");
       await runIndexer(ctx);
 
@@ -177,8 +186,9 @@ describe("conflict detection", () => {
       expect(s.memories.list({ status: "review" }).map((m) => m.id).sort()).toEqual([london.id, ambiguous.memory.id].sort());
 
       const moved = await s.memoryHistory.create({ content: "I moved permanently to Berlin." });
-      expect(moved.superseded.map((m) => m.id)).toContain(london.id);
-      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(moved.superseded).toHaveLength(0);
+      expect(moved.reviews.map((r) => r.other_id)).toContain(london.id);
+      expect(s.memories.get(london.id)?.status).toBe("active");
     });
   });
 
@@ -252,34 +262,34 @@ describe("conflict detection", () => {
       expect(r3.reviews.map((r) => r.other_id)).toEqual([r1.memory.id]);
       expect(r3.reviews[0]!.reason).toContain("62% sure");
 
-      // No usable answer (error, or a response that isn't Clef's shape): the rules decide as with
-      // the AI check off, so their confident supersede applies instead of waiting for review.
+      // No usable answer (error, or a response that isn't Clef's shape): as with the AI check off,
+      // the rules' confident supersede becomes a review instead of retiring the older memory.
       fail = true;
       const { memory: vw } = await s.memoryHistory.create({ content: "I own a Volkswagen." });
       const r4 = await s.memoryHistory.create({ content: "I sold it and bought a Tesla." });
-      expect(r4.superseded.map((m) => m.id)).toEqual([vw.id]);
-      expect(r4.reviews).toHaveLength(0);
-      expect(s.memories.get(vw.id)?.status).toBe("historical");
+      expect(r4.superseded).toHaveLength(0);
+      expect(r4.reviews.map((r) => [r.other_id, r.relationship])).toEqual([[vw.id, "possible_update"]]);
+      expect(s.memories.get(vw.id)?.status).toBe("active");
 
       fail = false;
       reply = { answers: { older_1: { choice: "delete_everything", probabilities: { delete_everything: 1 } } } };
       const { memory: bike } = await s.memoryHistory.create({ content: "I ride a red bike" });
       const r5 = await s.memoryHistory.create({ content: "I sold my red bike" });
-      expect(r5.superseded.map((m) => m.id)).toEqual([bike.id]);
-      expect(r5.reviews).toHaveLength(0);
-      expect(s.memories.get(bike.id)?.status).toBe("historical");
+      expect(r5.superseded).toHaveLength(0);
+      expect(r5.reviews.map((r) => [r.other_id, r.relationship])).toEqual([[bike.id, "possible_update"]]);
+      expect(s.memories.get(bike.id)?.status).toBe("active");
       expect(calls).toBe(5);
 
       // Each Clef call reserves one AI request; with the day's budget spent Clef isn't called and
-      // the rules decide as with the AI check off (their confident supersede applies).
+      // the rules decide as with the AI check off (their confident supersede becomes a review).
       expect(s.usage.today().ai_requests).toBe(used + 5);
       s.settings.update({ limits: { ...s.settings.get().limits, maxAiRequestsPerDay: s.usage.today().ai_requests } });
       const { memory: scooter } = await s.memoryHistory.create({ content: "I ride a green scooter" });
       const r6 = await s.memoryHistory.create({ content: "I sold my green scooter" });
       expect(calls).toBe(5);
-      expect(r6.superseded.map((m) => m.id)).toContain(scooter.id);
-      expect(r6.reviews).toHaveLength(0);
-      expect(s.memories.get(scooter.id)?.status).toBe("historical");
+      expect(r6.superseded).toHaveLength(0);
+      expect(r6.reviews.map((r) => [r.other_id, r.relationship])).toEqual([[scooter.id, "possible_update"]]);
+      expect(s.memories.get(scooter.id)?.status).toBe("active");
     });
   });
 
@@ -394,7 +404,8 @@ describe("backup and restore", () => {
     const backup = await source(async (agent) => {
       const s = agent.services;
       await s.memoryHistory.create({ content: "I own a Volkswagen." });
-      await s.memoryHistory.create({ content: "I sold it and bought a Tesla." });
+      const { reviews } = await s.memoryHistory.create({ content: "I sold it and bought a Tesla." });
+      s.memoryHistory.resolveReview(reviews[0]!.id, "mark_historical");
       return JSON.parse(JSON.stringify(exportData(s)));
     });
     expect(backup.version).toBe(1);
@@ -457,7 +468,12 @@ describe("memory history API", () => {
     const tag = crypto.randomUUID().slice(0, 8);
     const { memory: oldCar } = await c.json("/api/memories", { method: "POST", body: { content: `I drive a Volkswagen ${tag}` } });
     const created = await c.json("/api/memories", { method: "POST", body: { content: `I sold my Volkswagen ${tag} and bought a Tesla` } });
-    expect(created.superseded.map((m: any) => m.id)).toEqual([oldCar.id]);
+    // The replacement waits for review; marking the old car historical is the owner's call.
+    expect(created.superseded).toEqual([]);
+    expect(created.reviews).toBe(1);
+    const pending = (await c.json("/api/memories/reviews")).reviews.find((r: any) => r.memory.id === created.memory.id);
+    expect(pending.other.id).toBe(oldCar.id);
+    await c.json(`/api/memories/reviews/${pending.id}`, { method: "POST", body: { action: "mark_historical" } });
 
     const historical = await c.json(`/api/memories?status=historical&q=${tag}`);
     expect(historical.memories.map((m: any) => m.id)).toEqual([oldCar.id]);
@@ -495,7 +511,7 @@ describe("PR #22 review", () => {
     return agent.services;
   }
 
-  it("#2 a rule-confident supersede still applies when Clef cannot answer", async () => {
+  it("#2 a rule-confident supersede becomes a review when Clef cannot answer", async () => {
     const cases: [string, (s: TalorysAgent["services"]) => void][] = [
       ["no Clef", (s) => (s.memoryHistory.hooks.clef = () => null)],
       [
@@ -522,9 +538,9 @@ describe("PR #22 review", () => {
         const { memory: london } = await s.memoryHistory.create({ content: LONDON });
         setup(s);
         const r = await s.memoryHistory.create({ content: MOVED });
-        expect(s.memories.get(london.id)?.status).toBe("historical");
-        expect(r.superseded.map((m) => m.id)).toContain(london.id);
-        expect(r.reviews).toHaveLength(0);
+        expect(s.memories.get(london.id)?.status).toBe("active");
+        expect(r.superseded).toHaveLength(0);
+        expect(r.reviews.map((v) => [v.other_id, v.relationship])).toEqual([[london.id, "possible_update"]]);
       });
     }
   });
@@ -616,7 +632,8 @@ describe("PR #22 review", () => {
       const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
       const result = await Promise.race([s.memoryHistory.create({ content: MOVED }, { signal: controller.signal }), timeout]);
       expect(result).not.toBe("timeout");
-      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.memories.get(london.id)?.status).toBe("active");
+      expect((result as Exclude<typeof result, "timeout">).reviews.map((v) => [v.other_id, v.relationship])).toContainEqual([london.id, "possible_update"]);
     });
   });
 
@@ -650,7 +667,8 @@ describe("PR #22 review", () => {
         expect(res).not.toBe("timeout");
         expect((res as Response).status).toBe(201);
         expect(calls).toBe(0);
-        expect(s.memories.get(london.id)?.status).toBe("historical");
+        expect(s.memories.get(london.id)?.status).toBe("active");
+        expect((await (res as Response).json<{ reviews: number }>()).reviews).toBe(1);
         expect(s.usage.today().ai_errors).toBe(errors);
       } finally {
         s.memoryHistory.hooks = hooks;
@@ -754,7 +772,8 @@ describe("PR #22 review", () => {
       const byAgent = await s.memoryHistory.correct(manual.memory.id, "My locker is number 16", undefined, { source: "agent" });
       expect(byAgent.memory.source).toBe("agent");
 
-      // A cancelled correction stops waiting for Clef and falls back to the rules, like create().
+      // A cancelled correction stops waiting for Clef and falls back to the rules, like create():
+      // the rule replacement of London becomes a review.
       const { memory: london } = await s.memoryHistory.create({ content: LONDON });
       const { memory: desk } = await s.memoryHistory.create({ content: "My desk is by the window" });
       s.memoryHistory.hooks.clef = () => () => new Promise(() => {});
@@ -763,7 +782,8 @@ describe("PR #22 review", () => {
       const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
       const result = await Promise.race([s.memoryHistory.correct(desk.id, MOVED, undefined, { signal: controller.signal }), timeout]);
       expect(result).not.toBe("timeout");
-      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.memories.get(london.id)?.status).toBe("active");
+      expect((result as Exclude<typeof result, "timeout">).reviews.map((v) => [v.other_id, v.relationship])).toContainEqual([london.id, "possible_update"]);
     });
   });
 });
@@ -802,7 +822,8 @@ describe("PR #22 hardening", () => {
       const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1000));
       const result = await Promise.race([s.memoryHistory.create({ content: MOVED }), timeout]);
       expect(result).not.toBe("timeout");
-      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.memories.get(london.id)?.status).toBe("active");
+      expect((result as Exclude<typeof result, "timeout">).reviews.map((v) => [v.other_id, v.relationship])).toContainEqual([london.id, "possible_update"]);
       expect(s.usage.today().ai_errors).toBe(errors + 1);
     });
   });
@@ -820,7 +841,8 @@ describe("PR #22 hardening", () => {
       const timeout = new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 1500));
       const result = await Promise.race([s.memoryHistory.create({ content: MOVED }, { signal: controller.signal }), timeout]);
       expect(result).not.toBe("timeout");
-      expect(s.memories.get(london.id)?.status).toBe("historical");
+      expect(s.memories.get(london.id)?.status).toBe("active");
+      expect((result as Exclude<typeof result, "timeout">).reviews.map((v) => [v.other_id, v.relationship])).toContainEqual([london.id, "possible_update"]);
       expect(s.usage.today().ai_errors).toBe(errors);
     });
   });
