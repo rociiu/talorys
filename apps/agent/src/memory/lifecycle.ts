@@ -114,7 +114,7 @@ export class MemoryLifecycle {
         case "keep_both":
           return { kept: [newer, older], deleted: [] };
         case "mark_historical":
-          return { kept: [newer, this.supersede(older.id, newer.id)], deleted: [] };
+          return { kept: [newer, this.supersede(older.id, newer.id, { validUntil: newer.valid_from })], deleted: [] };
         case "replace":
           this.repo.delete(older.id);
           return { kept: [newer], deleted: [older.id] };

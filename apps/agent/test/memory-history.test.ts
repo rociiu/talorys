@@ -110,6 +110,30 @@ describe("temporal memory", () => {
       expect(plain.valid_from).toBeNull();
     });
   });
+
+  it("mark historical ends the older memory when the newer one starts", async () => {
+    const run = freshAgent();
+    await run(async (agent) => {
+      const s = agent.services;
+      const { memory: london } = await s.memoryHistory.create({ content: "I live in London" });
+      const { memory: paris, reviews } = await s.memoryHistory.create({ content: "I moved to Paris in March 2025" });
+      expect(reviews.map((r) => [r.other_id, r.relationship])).toEqual([[london.id, "possible_update"]]);
+      s.memoryHistory.resolveReview(reviews[0]!.id, "mark_historical");
+      expect(s.memories.get(london.id)).toMatchObject({ status: "historical", superseded_by: paris.id, valid_until: "2025-03" });
+      expect(s.memories.get(paris.id)).toMatchObject({ status: "active", valid_from: "2025-03" });
+    });
+
+    // Without a stated date nothing is invented: the older memory keeps no end date.
+    await freshAgent()(async (agent) => {
+      const s = agent.services;
+      const { memory: berlin } = await s.memoryHistory.create({ content: "I live in Berlin" });
+      const { memory: rome, reviews: romeReviews } = await s.memoryHistory.create({ content: "I moved to Rome" });
+      expect(romeReviews.map((r) => [r.other_id, r.relationship])).toEqual([[berlin.id, "possible_update"]]);
+      s.memoryHistory.resolveReview(romeReviews[0]!.id, "mark_historical");
+      expect(s.memories.get(berlin.id)).toMatchObject({ status: "historical", superseded_by: rome.id, valid_until: null });
+      expect(s.memories.get(rome.id)?.valid_from).toBeNull();
+    });
+  });
 });
 
 describe("with semantic recall (#9) on", () => {
