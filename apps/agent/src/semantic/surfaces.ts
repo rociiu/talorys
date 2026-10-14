@@ -1,4 +1,6 @@
 import type { AutomationKind } from "@talorys/shared";
+import type { Database } from "../db/database";
+import { tableExists } from "./migrations";
 
 /** Notes longer than this many characters are embedded in chunks instead of one body row. */
 export const NOTE_SPLIT_CHARS = 4000;
@@ -86,4 +88,46 @@ export function noteParts(n: { title: string; content: string }): { text: string
   const bodies = n.content.length <= NOTE_SPLIT_CHARS ? [n.content] : chunkNote(n.content);
   for (const body of bodies) parts.push({ text: `${n.title}: ${body}`, body });
   return parts;
+}
+
+/** Item embedding requests per UTC day, counted apart from the shared memory cap. */
+export const ITEM_EMBEDDINGS_PER_DAY = 50;
+/** Estimated item tokens embedded per UTC day (about 537.5 bge-m3 neurons). */
+export const ITEM_TOKENS_PER_DAY = 500_000;
+
+export interface ItemCaps {
+  requests: number;
+  tokens: number;
+}
+
+export const ITEM_CAPS: ItemCaps = { requests: ITEM_EMBEDDINGS_PER_DAY, tokens: ITEM_TOKENS_PER_DAY };
+
+/** Item embedding requests and estimated tokens recorded in `tal_semantic_item_usage` for a UTC day. */
+export function itemUsageToday(db: Database, day: string): { requests: number; tokens: number } {
+  if (!tableExists(db, "tal_semantic_item_usage")) return { requests: 0, tokens: 0 };
+  const row = db.one<{ requests: number; tokens: number }>(`SELECT requests, tokens FROM tal_semantic_item_usage WHERE day = ?`, day);
+  return { requests: row?.requests ?? 0, tokens: row?.tokens ?? 0 };
+}
+
+/**
+ * Reserves one item embedding request for the longest leading run of `textTokens` that fits the
+ * day's token cap and returns its length; 0 means capped until the next UTC day. Check and record
+ * happen in one synchronous step, so concurrent passes cannot overrun. Never touches the shared
+ * `tal_semantic_usage` counter that memory recall draws on.
+ */
+export function reserveItemEmbedding(db: Database, day: string, textTokens: number[], caps: ItemCaps = ITEM_CAPS): number {
+  if (textTokens.length === 0 || !tableExists(db, "tal_semantic_item_usage")) return 0;
+  const used = itemUsageToday(db, day);
+  if (used.requests >= caps.requests) return 0;
+  let n = 0;
+  let total = used.tokens;
+  while (n < textTokens.length && total + Math.round(textTokens[n]!) <= caps.tokens) total += Math.round(textTokens[n++]!);
+  if (n === 0) return 0;
+  db.run(
+    `INSERT INTO tal_semantic_item_usage (day, requests, tokens) VALUES (?, 1, ?)
+     ON CONFLICT(day) DO UPDATE SET requests = requests + 1, tokens = tokens + excluded.tokens`,
+    day,
+    total - used.tokens,
+  );
+  return n;
 }
