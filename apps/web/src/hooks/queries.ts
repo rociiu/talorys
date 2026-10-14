@@ -20,6 +20,7 @@ import { errorMessage, useToast } from "./toast";
 
 export const keys = {
   settings: ["settings"] as const,
+  mcp: ["mcp"] as const,
   conversations: (q?: string) => ["conversations", q ?? ""] as const,
   conversation: (id: string) => ["conversation", id] as const,
   tasks: ["tasks"] as const,

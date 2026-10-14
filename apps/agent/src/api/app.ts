@@ -9,6 +9,7 @@ import { dataRoutes } from "./routes/data";
 import { automationRoutes } from "./routes/automations";
 import { systemRoutes } from "./routes/system";
 import { semanticRoutes } from "../semantic/routes";
+import { mcpRoutes } from "../mcp/routes";
 import { pushRoutes } from "../push/routes";
 
 export interface AppEnv {
@@ -38,6 +39,7 @@ export function createApi() {
   app.route("/", dataRoutes);
   app.route("/", automationRoutes);
   app.route("/", pushRoutes);
+  app.route("/", mcpRoutes);
 
   return app;
 }

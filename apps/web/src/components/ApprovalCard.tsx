@@ -44,6 +44,12 @@ export function ApprovalCard({ action: initial }: { action: PendingAction }) {
         <span className="min-w-0 break-words">
           <span className="text-fg">{action.summary}</span> · {APPROVAL_DONE[status]}
           {status === "failed" && action.error ? `: ${action.error}` : ""}
+          {action.result !== undefined && (
+            // What an external tool returned: plain text, never rendered as Markdown.
+            <span role="region" aria-label="Action result" className="mt-1 block whitespace-pre-wrap break-words text-xs">
+              {action.result}
+            </span>
+          )}
         </span>
       </div>
     );
@@ -59,8 +65,8 @@ export function ApprovalCard({ action: initial }: { action: PendingAction }) {
       </div>
       {action.preview !== undefined && (
         <div className="mt-2">
-          <p className="text-xs font-medium text-fg-muted">New text, in full</p>
-          {/* Plain text, never rendered as Markdown: this is exactly what will be saved. */}
+          <p className="text-xs font-medium text-fg-muted">Exactly what was proposed, in full</p>
+          {/* Plain text, never rendered as Markdown: exactly what will be saved or sent. */}
           <div
             role="region"
             aria-label="Proposed text"

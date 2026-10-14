@@ -14,6 +14,7 @@ export interface StoredPendingAction {
   summary: string;
   payload: string | null;
   preview: string | null;
+  result: string | null;
   status: "pending" | "approved" | "cancelled" | "failed";
   error: string | null;
   created_at: string;
@@ -24,7 +25,7 @@ export interface StoredPendingAction {
 function present(row: StoredPendingAction): PendingAction {
   const expired = row.status === "pending" && row.expires_at <= now();
   const action: PendingAction = { id: row.id, summary: row.summary, status: expired ? "expired" : row.status, error: row.error, expires_at: row.expires_at };
-  return row.preview === null ? action : { ...action, preview: row.preview };
+  return { ...action, ...(row.preview === null ? {} : { preview: row.preview }), ...(row.result === null ? {} : { result: row.result }) };
 }
 
 /**
@@ -40,6 +41,7 @@ export class PendingActionRepository {
       id: newId(),
       ...input,
       preview: input.preview ?? null,
+      result: null,
       status: "pending",
       error: null,
       created_at: createdAt,
@@ -85,6 +87,10 @@ export class PendingActionRepository {
         ? { ...m, tools: m.tools.map((t) => (t.approval ? { ...t, approval: this.view(t.approval.id) ?? t.approval } : t)) }
         : m,
     );
+  }
+
+  storeResult(id: string, result: string): void {
+    this.db.run("UPDATE tal_pending_actions SET result=? WHERE id=?", result.slice(0, 2000), id);
   }
 
   markFailed(id: string, error: string): void {

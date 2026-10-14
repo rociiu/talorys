@@ -78,7 +78,7 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
   automatic retries are off so no call goes uncounted. A scheduled AI run and an
   embedding request are also counted before the call, so concurrent requests
   cannot overrun their caps.
-- No shell, code execution, outbound HTTP, credentials or deployment tools exist.
+- No shell, code execution or deployment tools exist. Owner-connected MCP servers provide bounded external tools.
   Web Push sends are made by the notification service, never by a tool.
 
 ## Push notifications
@@ -137,3 +137,13 @@ under Settings → About → Check for updates.
 ## Reporting
 
 Please report vulnerabilities privately via GitHub Security Advisories.
+
+## MCP servers (external tools)
+
+The owner can connect up to ten remote MCP servers with one static authentication header each. Header values are stored only in `tal_mcp_servers`, omitted from API views and backups, and never included in activity entries. Reflected upstream secrets are redacted before discovery data or call results are persisted. OAuth is not supported.
+
+Production endpoints require HTTPS, no credentials or IP literals, and no local/private host suffixes. Redirects are refused, and a response is cut off once it passes 1 MiB, whether or not it declares its size. Tool names outside the MCP limit of 1-128 characters are skipped. Only development permits HTTP on localhost or 127.0.0.1 with an explicit port. DNS rebinding is not prevented by host syntax validation; connect only servers you trust.
+
+Read-only, non-destructive hints default to Automatic; all other tools default to Ask me first. Hints are untrusted. Approval binds the URL, transport, credentials, enabled state, policy, schema and description; changes refuse approval. Scheduled runs cannot use MCP tools. Calls have timeouts and per-tool, per-turn and per-server daily caps.
+
+Tool descriptions and results are external data, never instructions. Results are bounded, non-text blocks omitted, and they must not create memories unless the owner asks. Servers provide tools only: resources, prompts, sampling and elicitation are unsupported.

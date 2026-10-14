@@ -53,3 +53,11 @@ directory. Stop stray `wrangler` processes; the dev scripts use separate
 directories for the Worker and Pages.
 
 **Port already in use** — stop other dev servers on 5173, 8787 or 8788.
+
+## MCP servers
+
+Open Settings → Tools to check a server's status, test the connection or refresh its tools. Discovery failures retain the server so you can replace credentials and retry. Secrets are never prefilled; use “Secret set · Replace” or clear authentication. Upstream failures show a generic error to avoid leaking headers.
+
+A tool marked unsupported schema or name conflict is unavailable. Input schemas must fit 8 KiB and convert to Zod; provider names must be unique and fit 64 characters. Missing tools are no longer exposed. Changed schemas reset policy to Ask me first. Disabled servers and Off tools cannot run.
+
+If approval reports a changed target, propose the call again after reviewing the current server configuration. Call limits can be adjusted within the displayed ceilings. MCP tools work only in interactive chat, and MCP servers must be re-added after restoring a backup.

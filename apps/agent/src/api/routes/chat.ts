@@ -130,7 +130,7 @@ chatRoutes.post("/chat/cancel", async (c) => {
 /** Owner approval of a destructive action the agent proposed. The agent has no way to call this. */
 chatRoutes.post("/actions/:id/approve", async (c) => {
   const s = c.env.agent.services;
-  const action = await runApprovedAction(ALL_TOOLS, { services: s, timezone: s.settings.get().timezone, mode: "chat" }, c.req.param("id"));
+  const action = await runApprovedAction([...ALL_TOOLS, ...s.mcp.toolsForApproval()], { services: s, timezone: s.settings.get().timezone, mode: "chat" }, c.req.param("id"));
   return c.json({ action });
 });
 

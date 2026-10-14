@@ -13,6 +13,7 @@ Cloudflare free plan. Changes should keep these properties:
   to a paid model.
 - Secrets, API tokens and AI/storage bindings never reach browser code.
 - The agent gets no shell, code execution, arbitrary HTTP or deployment tools.
+  Owner-connected MCP calls must use the guarded client and ToolExecutor; never bypass URL validation, limits or approval.
   New tools need a Zod schema, a permission level, and owner confirmation for
   destructive actions.
 - The installer stays idempotent and never deletes user data.

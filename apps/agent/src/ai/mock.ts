@@ -68,6 +68,8 @@ interface PlannedCall {
 
 function planTools(text: string): PlannedCall[] {
   let m: RegExpMatchArray | null;
+  const external = planMcp(text);
+  if (external) return external;
   if ((m = text.match(/^remember(?: that)?\s+(.+)$/i))) {
     return [{ name: "remember", input: { content: m[1], category: "preference" }, describe: () => `Got it — I'll remember that ${m![1]}.` }];
   }
@@ -111,4 +113,18 @@ function planTools(text: string): PlannedCall[] {
     return [{ name: "search", input: { query: m[1] }, describe: (out) => `Search results:\n\n\`\`\`json\n${JSON.stringify(out, null, 2).slice(0, 1500)}\n\`\`\`` }];
   }
   return [];
+}
+
+function planMcp(text: string): PlannedCall[] | null {
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^call (\S+) tool (\S+)(?: with (.+))?$/i))) {
+    let args: unknown = {};
+    try {
+      args = m[3] ? JSON.parse(m[3]) : {};
+    } catch {
+      return [];
+    }
+    return [{ name: `mcp_${m[1]}_${m[2]}`, input: args, describe: (out) => JSON.stringify(out).slice(0, 1500) }];
+  }
+  return null;
 }

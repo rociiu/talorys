@@ -23,6 +23,7 @@ Or install it with [Appflare](https://appflare.dev), which deploys it as a
 
 ## 1. What Talorys is
 
+- **External MCP tools** — connect servers in Settings → Tools, with per-tool policies and owner approval. Credentials stay private; servers are excluded from backups.
 - **A private assistant** — chat with streaming responses, Markdown and tool activity indicators.
 - **Memory** — durable personal facts and preferences you can view, edit and delete. Only the most relevant memories are sent to the model on each turn.
 - **Semantic recall (optional)** — finds memories by meaning as well as keyword, and lists them newest first with their saved date. Off by default; turn it on with the **Semantic memory recall** switch near the bottom of Settings → AI (its other settings appear once it is on), or install with `--semantic`. See [docs/semantic-recall.md](docs/semantic-recall.md).

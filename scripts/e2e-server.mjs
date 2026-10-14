@@ -30,6 +30,9 @@ async function listening(port, ms = 60_000) {
   throw new Error(`Nothing listening on port ${port} after ${ms} ms`);
 }
 
+start([join(root, "scripts/e2e-mcp-server.mjs")], ".");
+await listening(8790);
+
 // The two wrangler processes are started one after the other: started together, both runtimes
 // can pick the same free internal port and one fails with "bind(): Address already in use".
 start([wrangler, "dev", "--local", "--port", "8787", "--persist-to", state], "apps/agent");

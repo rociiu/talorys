@@ -14,6 +14,9 @@ import { MemoryHistoryService, type MemoryHistoryHooks } from "../memory";
 import { PushSubscriptionRepository } from "../push/repository";
 import { PushService } from "../push/service";
 
+import { McpService } from "../mcp/service";
+import { McpRepository } from "../mcp/repository";
+
 /** All data services for the single owner, bound to one Durable Object's storage. */
 export interface Services {
   db: Database;
@@ -32,6 +35,7 @@ export interface Services {
   automations: AutomationService;
   memoryHistory: MemoryHistoryService;
   push: PushService;
+  mcp: McpService;
 }
 
 /** `background` keeps work alive after the request or alarm that started it (the Durable Object's waitUntil). */
@@ -74,5 +78,6 @@ export function createServices(
     automations: new AutomationService(automationsRepo, settings, activity, scheduler),
     memoryHistory: new MemoryHistoryService(db, memories, settings, usage, activity, memoryHooks),
     push,
+    mcp: new McpService(new McpRepository(db), settings, activity, usage, env, background),
   };
 }

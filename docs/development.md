@@ -61,3 +61,11 @@ embeddings.
 
 Append to `MIGRATIONS` in `apps/agent/src/db/migrations.ts` with the next
 version. Never edit existing entries or drop owner data.
+
+## MCP development
+
+Settings → Tools accepts public HTTPS endpoints. `TALORYS_ENV=development` additionally permits `http://localhost:<port>` and `http://127.0.0.1:<port>` for local fakes. The deterministic provider recognizes `call <slug> tool <tool> with <JSON args>`; for example `call e2e tool echo with {"text":"hi"}`.
+
+`apps/agent/test/mcp-helpers.ts` creates a stateless MCP server inside the worker test runtime with injectable fetch, recorded calls, header checks and failure/cancellation modes. No unit test contacts a remote server. The runtime check exercises Client, CfWorkerJsonSchemaValidator and Zod JSON Schema conversion.
+
+The e2e launcher starts `scripts/e2e-mcp-server.mjs` on 127.0.0.1:8790 before the app. It provides read-only `echo` and approval-default `append_log` tools. `tests/e2e/mcp.spec.ts` covers connection, policies, chat, approval result persistence and removal.

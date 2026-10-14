@@ -112,3 +112,11 @@ No KV/D1/R2/Vectorize/Workflows. One Durable Object holds everything. Static
 assets are served without invoking Functions (Pages routes only `/api/*` to the
 function). Reminders and digests are deterministic. Chat context is bounded and
 summarized only after enough history overflows.
+
+## Remote MCP tools
+
+Migration 7 adds `tal_mcp_servers`, `tal_mcp_tools` and `tal_pending_actions.result`. Configuration is stored separately under `mcp.config` in `tal_settings`. Versions 1–6 remain unchanged. Missing tools retain their policies within the 40-row storage cap; a changed schema resets policy to approval.
+
+Talorys uses the MCP v1 SDK Client directly with CfWorkerJsonSchemaValidator, which works without dynamic code generation. Each discovery or call connects, initializes and closes its client. The Agents SDK MCP client is deliberately unused: it reconnects persisted servers on wake, stores headers in its internal tables and exposes tools outside ToolExecutor.
+
+Chat reads cached definitions and refreshes stale discovery in the background. Auto tools have write permission, approval tools use the existing prepare/snapshot/commit path, and scheduled prompts retain their existing read-only tools. A synchronous SQL reservation enforces the server's daily cap before network awaits. Approved results are persisted and presented as external data. MCP tables and configuration are excluded from backup export/import.

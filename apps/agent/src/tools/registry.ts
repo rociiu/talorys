@@ -7,6 +7,7 @@ export type ToolPermission = "read" | "write" | "destructive";
 
 export interface ToolContext {
   services: Services;
+  signal?: AbortSignal;
   timezone: string;
   /** "chat" for interactive turns; "scheduled" for automation runs (read-only + notify). */
   mode: "chat" | "scheduled";
@@ -196,7 +197,8 @@ export async function runApprovedAction(tools: ToolDefinition[], ctx: ToolContex
     if (!stored.target_version || version !== stored.target_version) {
       throw new ToolError("This item changed after it was proposed, so nothing was done. Ask again to get a new approval.");
     }
-    await tool.commit(stored.target_id, ctx, stored.payload === null ? undefined : JSON.parse(stored.payload));
+    const result = await tool.commit(stored.target_id, ctx, stored.payload === null ? undefined : JSON.parse(stored.payload));
+    if (typeof result === "string") pending.storeResult(actionId, result);
   } catch (error) {
     pending.markFailed(actionId, error instanceof ToolError ? error.message : "The action failed.");
     if (!(error instanceof ToolError)) console.error("Approved action failed", error);

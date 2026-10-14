@@ -1,3 +1,4 @@
+import { MCP_MIGRATION } from "./migration-mcp";
 import type { Database } from "./database";
 
 /**
@@ -244,6 +245,7 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  MCP_MIGRATION,
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

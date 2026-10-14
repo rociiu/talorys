@@ -114,6 +114,8 @@ export interface PendingAction {
   expires_at: string;
   /** Exact text the action will write (e.g. a note's replacement), shown in full on the approval card. */
   preview?: string;
+  /** What an approved external (MCP) call returned, shortened. Third-party data. */
+  result?: string;
 }
 
 export interface ToolActivity {
@@ -141,6 +143,7 @@ export const toolActivitySchema = z.object({
       error: z.string().nullable(),
       expires_at: z.string(),
       preview: z.string().optional(),
+      result: z.string().optional(),
     })
     .optional(),
 }) satisfies z.ZodType<ToolActivity>;

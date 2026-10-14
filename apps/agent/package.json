@@ -18,7 +18,8 @@
     "ai": "^7.0.137",
     "hono": "^4.13.13",
     "workers-ai-provider": "^4.0.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "@cfworker/json-schema": "^4.1.1"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.0",
