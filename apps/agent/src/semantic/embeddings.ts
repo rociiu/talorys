@@ -79,6 +79,7 @@ const MOCK_CONCEPTS: string[][] = [
   ["peanut", "peanuts", "reese's", "reeses", "allergic", "allergy"],
   ["city", "live", "portland", "denver"],
   ["heights", "mountains", "mountain", "hiking", "knee"],
+  ["botany", "plants", "plant", "water", "garden", "fern"],
 ];
 
 const encoder = new TextEncoder();
