@@ -1,6 +1,19 @@
-import type { AutomationKind } from "@talorys/shared";
-import type { Database } from "../db/database";
-import { tableExists } from "./migrations";
+import { type AutomationKind, type ScheduleSpec, describeSchedule } from "@talorys/shared";
+import { type Database, now } from "../db/database";
+import { estimateTokens } from "../ai/provider";
+import { UsageService } from "../services/usage";
+import { contentHash } from "./embeddings";
+import { DEFAULT_MAX_EMBED, type IndexerContext } from "./indexer";
+import {
+  type ItemPartMeta,
+  type ItemType,
+  deleteItemParts,
+  itemVectorMeta,
+  purgeOrphanItemVectors,
+  touchItemSource,
+  upsertItemVectors,
+} from "./itemStore";
+import { ensureSemanticSchema, tableExists } from "./migrations";
 
 /** Notes longer than this many characters are embedded in chunks instead of one body row. */
 export const NOTE_SPLIT_CHARS = 4000;
@@ -130,4 +143,235 @@ export function reserveItemEmbedding(db: Database, day: string, textTokens: numb
     total - used.tokens,
   );
   return n;
+}
+
+export interface PendingItem {
+  type: ItemType;
+  id: string;
+  part: number;
+  text: string;
+  hash: string;
+  /** The source row's updated_at, stored with the vector so an unchanged note is not re-chunked. */
+  sourceUpdatedAt: string;
+}
+
+export interface ItemPassReport {
+  embedded: number;
+  /** Item parts still waiting for a current vector after this pass. */
+  pending: number;
+  purged: number;
+  capped?: true;
+  skipped?: "disabled" | "no-embedder";
+  error?: string;
+}
+
+/** Pending parts are embedded tasks first, then automations, note titles and note bodies. */
+const GROUP_ORDER = { task: 0, automation: 1, noteTitle: 2, noteBody: 3 } as const;
+
+/**
+ * Item parts without a current vector for `model`: no row, a row from another model or (when
+ * `dims` is known) another size, or one whose content hash no longer matches. Tasks and
+ * automations are hashed every time; a note is re-chunked only when its updated_at differs from
+ * the stored one (or `full` is set). Re-chunking deletes the parts past the note's new length and,
+ * when nothing changed, records the new updated_at; `touched` counts those notes. Needs the schema.
+ */
+export async function pendingItems(
+  db: Database,
+  model: string,
+  dims = 0,
+  opts: { full?: boolean } = {},
+): Promise<{ pending: PendingItem[]; touched: number }> {
+  const current = (m: ItemPartMeta) => m.model === model && (dims <= 0 || m.dims === dims);
+  const ranked: (PendingItem & { group: number })[] = [];
+  const check = async (group: number, item: Omit<PendingItem, "hash">, stored: ItemPartMeta | undefined): Promise<boolean> => {
+    const hash = await contentHash(item.text);
+    if (stored && current(stored) && stored.content_hash === hash) return false;
+    ranked.push({ ...item, hash, group });
+    return true;
+  };
+
+  const taskMeta = itemVectorMeta(db, "task");
+  const tasks = db.all<{ id: string; title: string; description: string; updated_at: string }>(
+    `SELECT id, title, description, updated_at FROM tal_tasks`,
+  );
+  for (const t of tasks) {
+    const item = { type: "task" as const, id: t.id, part: 0, text: taskText(t), sourceUpdatedAt: t.updated_at };
+    await check(GROUP_ORDER.task, item, taskMeta.get(t.id)?.find((p) => p.part === 0));
+  }
+
+  // The schedule description is derived from the stored spec exactly as AutomationRepository does.
+  const automationMeta = itemVectorMeta(db, "automation");
+  const automations = db.all<{ id: string; kind: AutomationKind; name: string; message: string; schedule: string; updated_at: string }>(
+    `SELECT id, kind, name, message, schedule, updated_at FROM tal_automations`,
+  );
+  for (const a of automations) {
+    const text = automationText({ ...a, schedule_description: describeSchedule(JSON.parse(a.schedule) as ScheduleSpec) });
+    const item = { type: "automation" as const, id: a.id, part: 0, text, sourceUpdatedAt: a.updated_at };
+    await check(GROUP_ORDER.automation, item, automationMeta.get(a.id)?.find((p) => p.part === 0));
+  }
+
+  let touched = 0;
+  const noteMeta = itemVectorMeta(db, "note");
+  const notes = db.all<{ id: string; title: string; content: string; updated_at: string }>(`SELECT id, title, content, updated_at FROM tal_notes`);
+  for (const n of notes) {
+    const stored = noteMeta.get(n.id) ?? [];
+    if (!opts.full && stored.length > 0 && stored.every((p) => current(p) && p.source_updated_at === n.updated_at)) continue;
+    const byPart = new Map(stored.map((p) => [p.part, p]));
+    const parts = noteParts(n);
+    let changed = 0;
+    for (const [part, { text }] of parts.entries()) {
+      const item = { type: "note" as const, id: n.id, part, text, sourceUpdatedAt: n.updated_at };
+      if (await check(part === 0 ? GROUP_ORDER.noteTitle : GROUP_ORDER.noteBody, item, byPart.get(part))) changed++;
+    }
+    if (stored.some((p) => p.part >= parts.length)) deleteItemParts(db, "note", n.id, parts.length);
+    if (changed === 0 && stored.some((p) => p.source_updated_at !== n.updated_at)) {
+      touchItemSource(db, "note", n.id, n.updated_at);
+      touched++;
+    }
+  }
+
+  ranked.sort(
+    (a, b) =>
+      a.group - b.group ||
+      (a.sourceUpdatedAt < b.sourceUpdatedAt ? -1 : a.sourceUpdatedAt > b.sourceUpdatedAt ? 1 : 0) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) ||
+      a.part - b.part,
+  );
+  return { pending: ranked.map(({ group: _, ...item }) => item), touched };
+}
+
+interface ItemPassOptions {
+  maxEmbed?: number;
+  full?: boolean;
+  caps?: ItemCaps;
+}
+
+/** A pass queued behind the running one: the latest caller's context and caps, the largest batch, full if any caller asked. */
+interface ItemFollowUp {
+  ctx: IndexerContext;
+  maxEmbed: number;
+  full: boolean;
+  caps?: ItemCaps;
+  promise: Promise<ItemPassReport>;
+}
+
+interface ItemPassState {
+  running: Promise<ItemPassReport>;
+  next?: ItemFollowUp;
+}
+
+/**
+ * The running item pass per database and at most one follow-up, so no part is embedded twice.
+ * Kept apart from the memory indexer's guard, so an item pass never delays a memory pass.
+ */
+const itemPasses = new WeakMap<Database, ItemPassState>();
+
+/**
+ * Brings the item vectors in line with tasks, notes and automations: purges orphans, then embeds
+ * up to `maxEmbed` pending parts in one call, counted against the separate item cap. A call
+ * during a running pass gets one follow-up pass that starts once it settles; later callers share
+ * it. Never rejects; embed failures leave the parts pending and are reported in `error`.
+ */
+export function runItemPass(ctx: IndexerContext, opts: ItemPassOptions = {}): Promise<ItemPassReport> {
+  const maxEmbed = opts.maxEmbed ?? DEFAULT_MAX_EMBED;
+  const full = opts.full ?? false;
+  const state = itemPasses.get(ctx.db);
+  if (!state) return startItemPass(ctx, maxEmbed, full, opts.caps);
+  if (state.next) {
+    state.next.ctx = ctx;
+    state.next.maxEmbed = Math.max(state.next.maxEmbed, maxEmbed);
+    state.next.full ||= full;
+    state.next.caps = opts.caps;
+  } else {
+    const next = { ctx, maxEmbed, full, caps: opts.caps } as ItemFollowUp;
+    next.promise = state.running.then(() => startItemPass(next.ctx, next.maxEmbed, next.full, next.caps));
+    state.next = next;
+  }
+  return state.next.promise;
+}
+
+function startItemPass(ctx: IndexerContext, maxEmbed: number, full: boolean, caps?: ItemCaps): Promise<ItemPassReport> {
+  const state: ItemPassState = { running: itemPassOnce(ctx, maxEmbed, full, caps) };
+  itemPasses.set(ctx.db, state);
+  // Runs before a queued follow-up's own reaction, which then replaces this state.
+  void state.running.then(() => {
+    if (itemPasses.get(ctx.db) === state && !state.next) itemPasses.delete(ctx.db);
+  });
+  return state.running;
+}
+
+async function itemPassOnce({ db, config, embedder }: IndexerContext, maxEmbed: number, full: boolean, caps?: ItemCaps): Promise<ItemPassReport> {
+  const report: ItemPassReport = { embedded: 0, pending: 0, purged: 0 };
+  try {
+    if (!config.enabled) return { ...report, skipped: "disabled" };
+    ensureSemanticSchema(db);
+    report.purged = purgeOrphanItemVectors(db);
+    const { pending } = await pendingItems(db, embedder?.model ?? config.model, embedder?.dims, { full });
+    report.pending = pending.length;
+    if (!embedder) return { ...report, skipped: "no-embedder" };
+    if (pending.length === 0) return report;
+    if (config.maxEmbeddingsPerDay === 0) return { ...report, capped: true };
+    const candidates = pending.slice(0, Math.max(0, maxEmbed));
+    if (candidates.length === 0) return report;
+    // Reserved before the call (which counts even if it fails), so concurrent passes cannot overrun the item cap.
+    const n = reserveItemEmbedding(db, UsageService.day(), candidates.map((p) => estimateTokens(p.text)), caps);
+    if (n === 0) return { ...report, capped: true };
+    const batch = candidates.slice(0, n);
+    const vectors = await embedder.embed(batch.map((p) => p.text));
+    if (vectors.length !== batch.length || vectors.some((v) => v.length !== embedder.dims)) {
+      throw new Error(`Embedder returned ${vectors.length} vectors for ${batch.length} texts`);
+    }
+    // A note with parts left for a later pass keeps an empty source_updated_at, so that pass re-chunks it.
+    const unfinished = new Set(pending.slice(n).filter((p) => p.type === "note").map((p) => p.id));
+    const ts = now();
+    upsertItemVectors(
+      db,
+      vectors.map((vector, i) => {
+        const p = batch[i]!;
+        const sourceUpdatedAt = p.type === "note" && unfinished.has(p.id) ? "" : p.sourceUpdatedAt;
+        return { itemType: p.type, itemId: p.id, part: p.part, model: embedder.model, dims: embedder.dims, contentHash: p.hash, sourceUpdatedAt, vector, updatedAt: ts };
+      }),
+    );
+    // Unchanged parts of a finished note still carry its previous updated_at.
+    for (const p of batch) if (p.type === "note" && !unfinished.has(p.id)) touchItemSource(db, "note", p.id, p.sourceUpdatedAt);
+    report.embedded = vectors.length;
+    report.pending -= vectors.length;
+    if (n < candidates.length) report.capped = true;
+    return report;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("Semantic item pass failed", message);
+    return { ...report, error: message };
+  }
+}
+
+/**
+ * Starts an item pass without awaiting it, so a write returns before embedding.
+ * The pass is handed to `waitUntil` when the runtime offers one; failures only log.
+ */
+export function startBackgroundItemPass(
+  ctx: IndexerContext,
+  waitUntil?: (promise: Promise<unknown>) => void,
+  opts: ItemPassOptions = {},
+): Promise<void> {
+  const pass = runItemPass(ctx, opts).then(
+    () => undefined,
+    (error) => console.warn("Semantic background item pass failed", error instanceof Error ? error.message : String(error)),
+  );
+  waitUntil?.(pass);
+  return pass;
+}
+
+/**
+ * Like `startBackgroundItemPass`, but keeps passing in batches until nothing is pending, the item
+ * cap is hit, a pass embeds nothing, or a pass fails. Used after enabling, import or a model change.
+ */
+export function startBackgroundItemBackfill(ctx: IndexerContext, waitUntil?: (promise: Promise<unknown>) => void): Promise<void> {
+  const pass = (async () => {
+    let report: ItemPassReport;
+    do report = await runItemPass(ctx, { maxEmbed: DEFAULT_MAX_EMBED });
+    while (report.pending > 0 && report.embedded > 0 && !report.capped && !report.error);
+  })().catch((error) => console.warn("Semantic background item backfill failed", error instanceof Error ? error.message : String(error)));
+  waitUntil?.(pass);
+  return pass;
 }
