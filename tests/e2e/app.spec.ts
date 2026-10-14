@@ -141,7 +141,7 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByText("Enjoys e2e jazz on Sundays")).toHaveCount(0);
   });
 
-  test("memory history keeps replaced facts as past and asks about unclear conflicts", async ({ page }) => {
+  test("memory history asks before making a replaced fact past and keeps it as history", async ({ page }) => {
     await login(page);
     await page.getByRole("link", { name: "Memory" }).first().click();
     const add = async (content: string) => {
@@ -152,6 +152,10 @@ test.describe("Talorys owner experience", () => {
     };
     await add("I own a Volkswagen history-e2e");
     await add("I sold my Volkswagen history-e2e and bought a Tesla");
+    const conflicts = page.getByRole("region", { name: "Possible conflicts" });
+    await expect(conflicts).toContainText("I own a Volkswagen history-e2e");
+    await conflicts.getByRole("button", { name: "Mark older as past" }).click();
+    await expect(conflicts).toHaveCount(0);
     await page.getByRole("tab", { name: /Historical/ }).click();
     const old = page.getByRole("listitem").filter({ hasText: "I own a Volkswagen history-e2e" });
     await expect(old.getByText("Past")).toBeVisible();
@@ -165,7 +169,6 @@ test.describe("Talorys owner experience", () => {
     await page.getByRole("tab", { name: /All/ }).click();
     await add("I live in Lima history-e2e");
     await add("I live in Quito history-e2e");
-    const conflicts = page.getByRole("region", { name: "Possible conflicts" });
     await expect(conflicts).toContainText("I live in Lima history-e2e");
     await conflicts.getByRole("button", { name: "Keep both" }).click();
     await expect(conflicts).toHaveCount(0);
