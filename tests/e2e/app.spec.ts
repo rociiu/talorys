@@ -133,6 +133,7 @@ test.describe("Talorys owner experience", () => {
     await page.getByRole("button", { name: "Add memory" }).click();
     await page.getByLabel("What should Talorys remember?").fill("Enjoys e2e jazz on Sundays");
     await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByText("Enjoys e2e jazz on Sundays")).toBeVisible();
     await page.getByLabel("Search memories").fill("jazz");
     await expect(page.getByText("Enjoys e2e jazz on Sundays")).toBeVisible();
