@@ -23,10 +23,20 @@ import {
   startBackgroundBackfill,
   startBackgroundIndex,
 } from "./indexer";
-import { countIndexedItems, countItemVectors, deleteAllItemVectors, dropItemVectorCache } from "./itemStore";
+import { ITEM_TYPES, type ItemType, countIndexedItems, countItemVectors, deleteAllItemVectors, dropItemVectorCache } from "./itemStore";
 import { dropSemanticData, ensureSemanticSchema, semanticSchema, tableExists } from "./migrations";
-import { LAZY_INDEX_BATCH, createSemanticContext, hybridSearch, savedAt } from "./recall";
-import { ITEM_EMBEDDINGS_PER_DAY, type ItemPassReport, itemUsageToday, pendingItems, runItemPass, startBackgroundItemPass } from "./surfaces";
+import { LAZY_INDEX_BATCH, type SemanticContext, createSemanticContext, hybridSearch, rrf, savedAt } from "./recall";
+import {
+  ITEM_EMBEDDINGS_PER_DAY,
+  type ItemPassReport,
+  automationKeywordHits,
+  itemUsageToday,
+  pendingItems,
+  prepareSurfaceSearch,
+  runItemPass,
+  scanItemVectors,
+  startBackgroundItemPass,
+} from "./surfaces";
 import { countVectors, deleteAllVectors, dropVectorCache } from "./vectorStore";
 
 /**
@@ -210,28 +220,103 @@ semanticRoutes.delete("/semantic/data", async (c) => {
   return c.json({ deleted: true });
 });
 
+const SEARCH_TYPES = ["memory", "task", "note", "automation"] as const;
+type SearchType = (typeof SEARCH_TYPES)[number];
+
 const searchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   limit: z.coerce.number().int().min(1).default(10).transform((n) => Math.min(n, 50)),
+  types: z
+    .string()
+    .optional()
+    .transform((raw, ctx) => {
+      if (raw === undefined) return undefined;
+      const types = new Set<SearchType>();
+      for (const part of raw.split(",").map((t) => t.trim()).filter(Boolean)) {
+        if (!(SEARCH_TYPES as readonly string[]).includes(part)) {
+          ctx.addIssue({ code: "custom", message: `Unknown type "${part}"; use ${SEARCH_TYPES.join(", ")}.` });
+          return z.NEVER;
+        }
+        types.add(part as SearchType);
+      }
+      if (types.size === 0) {
+        ctx.addIssue({ code: "custom", message: `No type given; use ${SEARCH_TYPES.join(", ")}.` });
+        return z.NEVER;
+      }
+      return types;
+    }),
 });
 
-/** Hybrid hits for a query. Embedding failures and the cap degrade to keyword-only hits. */
+/** One task, note or automation hit on the debug route. */
+interface ItemSearchHit {
+  type: ItemType;
+  id: string;
+  title: string;
+  cosine: number | null;
+  fused: number;
+  match: "keyword" | "meaning" | "both";
+}
+
+/**
+ * Raw retrieval for one item type: vector hits above the floors fused by RRF with the upstream
+ * keyword list. No status filter applies, but items deleted since their vector was stored are skipped.
+ */
+function itemSearchHits(
+  sem: SemanticContext,
+  type: ItemType,
+  vector: Float32Array | null,
+  q: string,
+  limit: number,
+): ItemSearchHit[] {
+  const s = sem.services;
+  const keyword =
+    type === "task"
+      ? s.tasks.list({ q, limit }).map((t) => t.id)
+      : type === "note"
+        ? s.notes.search(q, limit).map((n) => n.id)
+        : automationKeywordHits(sem, q).map((a) => a.id);
+  const cosines = new Map((vector ? scanItemVectors(sem, type, vector) : []).map((h) => [h.id, h.cosine]));
+  const keywordIds = new Set(keyword);
+  const fused = rrf([[...cosines.keys()], keyword]);
+  const title = (id: string): string | null =>
+    type === "task" ? (s.tasks.get(id)?.title ?? null) : type === "note" ? (s.notes.get(id)?.title ?? null) : (s.automations.get(id)?.name ?? null);
+  const out: ItemSearchHit[] = [];
+  for (const [id, score] of [...fused].sort((a, b) => b[1] - a[1] || (cosines.get(b[0]) ?? -1) - (cosines.get(a[0]) ?? -1))) {
+    if (out.length >= limit) break;
+    const name = title(id);
+    if (name === null) continue;
+    const cosine = cosines.get(id) ?? null;
+    out.push({ type, id, title: name, cosine, fused: score, match: cosine === null ? "keyword" : keywordIds.has(id) ? "both" : "meaning" });
+  }
+  return out;
+}
+
+/**
+ * Hybrid hits for a query. Embedding failures and the cap degrade to keyword-only hits. With
+ * `types`, hits for each listed type follow, tagged with `type`; without it the response is memory hits only.
+ */
 semanticRoutes.get("/semantic/search", async (c) => {
   const config = requireEnabled(c);
-  const { q, limit } = query(c, searchQuerySchema);
+  const { q, limit, types } = query(c, searchQuerySchema);
   const s = c.env.agent.services;
   const timezone = s.settings.get().timezone;
-  const hits = await hybridSearch(createSemanticContext(s, c.env.env, config), q, { limit });
-  return c.json({
-    hits: hits.map(({ memory: m, cosine, fused }) => ({
-      id: m.id,
-      content: m.content,
-      category: m.category,
-      cosine,
-      fused,
-      saved: savedAt(m.updated_at, timezone),
-    })),
-  });
+  const sem = createSemanticContext(s, c.env.env, config);
+  const memoryHits =
+    types && !types.has("memory")
+      ? []
+      : (await hybridSearch(sem, q, { limit })).map(({ memory: m, cosine, fused }) => ({
+          ...(types ? { type: "memory" as const } : {}),
+          id: m.id,
+          content: m.content,
+          category: m.category,
+          cosine,
+          fused,
+          saved: savedAt(m.updated_at, timezone),
+        }));
+  if (!types) return c.json({ hits: memoryHits });
+  const itemTypes = ITEM_TYPES.filter((t) => types.has(t));
+  const vector = itemTypes.length ? await prepareSurfaceSearch(sem, q) : null;
+  return c.json({ hits: [...memoryHits, ...itemTypes.flatMap((t) => itemSearchHits(sem, t, vector, q, limit))] });
 });
 
 /**
