@@ -1,79 +1,198 @@
 {
   "axes": [
-    "botany", "travel", "car", "doctor", "vacation", "cottage", "gate", "medication", "garbage", "bills",
-    "gift", "wifi", "pets", "budget", "greeting", "france", "weather", "game", "grocery", "plumber"
+    "botany",
+    "travel",
+    "car",
+    "doctor",
+    "vacation",
+    "cottage",
+    "gate",
+    "medication",
+    "garbage",
+    "bills",
+    "gift",
+    "wifi",
+    "pets",
+    "budget",
+    "greeting",
+    "france",
+    "weather",
+    "game",
+    "grocery",
+    "plumber",
+    "dad",
+    "door"
   ],
   "texts": {
-    "botany": { "botany": 1 },
-    "water the plants": { "botany": 0.62 },
-    "repot the fern": { "botany": 0.61 },
-
-    "travel prep": { "travel": 1 },
-    "renew passport": { "travel": 0.6 },
-
-    "car stuff": { "car": 1 },
-    "brakes looked at": { "car": 0.62 },
-
-    "doc appt soon": { "doctor": 1 },
-    "dr. patel": { "doctor": 0.67 },
-    "book a physical": { "doctor": 0.66 },
-
-    "vacation plans": { "vacation": 1 },
-    "lisbon itinerary": { "vacation": 0.62, "france": 0.359 },
-
-    "get online at the cottage": { "cottage": 1 },
-    "lake house": { "cottage": 0.6 },
-
-    "code for the gate": { "gate": 1 },
-    "gate code 2290": { "gate": 0.7 },
-
-    "medication reminder": { "medication": 1 },
-    "meds reminders": { "medication": 1 },
-    "take lipitor": { "medication": 0.62 },
-    "vitamin d": { "medication": 0.61 },
-
-    "garbage day": { "garbage": 1 },
-    "trash day": { "garbage": 1 },
-    "put the bins out": { "garbage": 0.63 },
-
-    "bill reminders": { "bills": 1 },
-    "pay rent": { "bills": 0.61 },
-
-    "gift for mom": { "gift": 1 },
-    "gardening apron": { "gift": 0.72 },
-
-    "wifi pw": { "wifi": 1 },
-    "homenet-5g": { "wifi": 0.64 },
-
-    "dogs ok here": { "pets": 1 },
-    "pets are allowed": { "pets": 0.66 },
-
-    "budget": { "budget": 1 },
-    "budget line a": { "budget": 0.8 },
-    "budget line b": { "budget": 0.75 },
-    "budget line c": { "budget": 0.7 },
-    "budget memo": { "budget": 0.72 },
-    "budget recap": { "budget": 0.71 },
-    "budget draft": { "budget": 0.65 },
-
-    "hello": { "greeting": 1 },
-    "gm": { "greeting": 1 },
-    "hi": { "greeting": 1 },
-    "thx": { "greeting": 1 },
-    "buy milk and eggs": { "greeting": 0.51 },
-
-    "capital of france": { "france": 1 },
-
-    "weather": { "weather": 1 },
-    "umbrella": { "weather": 0.5 },
-
-    "who won": { "game": 1 },
-
-    "grocery list": { "grocery": 1 },
-    "restaurant review": { "grocery": 0.45 },
-
-    "plumber": { "plumber": 1 },
-    "call the plumber": { "plumber": 0.7 }
+    "botany": {
+      "botany": 1
+    },
+    "water the plants": {
+      "botany": 0.62
+    },
+    "repot the fern": {
+      "botany": 0.61
+    },
+    "travel prep": {
+      "travel": 1
+    },
+    "renew passport": {
+      "travel": 0.6
+    },
+    "car stuff": {
+      "car": 1
+    },
+    "brakes looked at": {
+      "car": 0.62
+    },
+    "doc appt soon": {
+      "doctor": 1
+    },
+    "dr. patel": {
+      "doctor": 0.67
+    },
+    "book a physical": {
+      "doctor": 0.66
+    },
+    "vacation plans": {
+      "vacation": 1
+    },
+    "lisbon itinerary": {
+      "vacation": 0.62,
+      "france": 0.359
+    },
+    "get online at the cottage": {
+      "cottage": 1
+    },
+    "lake house": {
+      "cottage": 0.6
+    },
+    "code for the gate": {
+      "gate": 1
+    },
+    "gate code 2290": {
+      "gate": 0.7
+    },
+    "medication reminder": {
+      "medication": 1
+    },
+    "meds reminders": {
+      "medication": 1
+    },
+    "take lipitor": {
+      "medication": 0.62
+    },
+    "vitamin d": {
+      "medication": 0.61
+    },
+    "garbage day": {
+      "garbage": 1
+    },
+    "trash day": {
+      "garbage": 1
+    },
+    "put the bins out": {
+      "garbage": 0.63
+    },
+    "bill reminders": {
+      "bills": 1
+    },
+    "pay rent": {
+      "bills": 0.61
+    },
+    "gift for mom": {
+      "gift": 1
+    },
+    "gardening apron": {
+      "gift": 0.72
+    },
+    "wifi pw": {
+      "wifi": 1
+    },
+    "homenet-5g": {
+      "wifi": 0.64
+    },
+    "dogs ok here": {
+      "pets": 1
+    },
+    "pets are allowed": {
+      "pets": 0.66
+    },
+    "budget": {
+      "budget": 1
+    },
+    "budget line a": {
+      "budget": 0.8
+    },
+    "budget line b": {
+      "budget": 0.75
+    },
+    "budget line c": {
+      "budget": 0.7
+    },
+    "budget memo": {
+      "budget": 0.72
+    },
+    "budget recap": {
+      "budget": 0.71
+    },
+    "budget draft": {
+      "budget": 0.65
+    },
+    "hello": {
+      "greeting": 1
+    },
+    "gm": {
+      "greeting": 1
+    },
+    "hi": {
+      "greeting": 1
+    },
+    "thx": {
+      "greeting": 1
+    },
+    "buy milk and eggs": {
+      "greeting": 0.51
+    },
+    "capital of france": {
+      "france": 1
+    },
+    "weather": {
+      "weather": 1
+    },
+    "umbrella": {
+      "weather": 0.5
+    },
+    "who won": {
+      "game": 1
+    },
+    "grocery list": {
+      "grocery": 1
+    },
+    "restaurant review": {
+      "grocery": 0.45
+    },
+    "plumber": {
+      "plumber": 1
+    },
+    "call the plumber": {
+      "plumber": 0.7
+    },
+    "gift ideas for dad": {
+      "dad": 1
+    },
+    "cast-iron skillet": {
+      "dad": 0.66
+    },
+    "door code": {
+      "door": 1
+    },
+    "side gate keypad": {
+      "door": 0.64
+    },
+    "garbage night": {
+      "garbage": 1
+    }
   },
   "seedTexts": {
     "Water the plants": "water the plants",
@@ -86,7 +205,6 @@
     "Call Dr. Patel's office to book a physical": "book a physical",
     "Renew passport before the March trip": "renew passport",
     "Get the brakes looked at": "brakes looked at",
-
     "Lisbon itinerary": "lisbon itinerary",
     "Day 1: Alfama walk, Day 2: Belem and Sintra": "",
     "Lake house": "lake house",
@@ -106,10 +224,10 @@
     "Budget memo": "budget memo",
     "Budget recap": "budget recap",
     "Budget draft": "budget draft",
-
     "Take Lipitor": "take lipitor",
     "Put the bins out": "put the bins out",
     "Pay rent": "pay rent",
+    "Take vitamin D": "vitamin d",
     "Morning digest": "",
     "Time to stretch": "",
     "Every Thursday 7 PM: remind me to put the bins out": "put the bins out",
@@ -117,7 +235,6 @@
     "Daily 8 AM: take vitamin D": "vitamin d",
     "call the plumber Tuesday": "call the plumber",
     "remind me to bring an umbrella if rain": "umbrella",
-
     "botany": "botany",
     "any tasks about botany?": "botany",
     "tasks about botany": "botany",
@@ -149,6 +266,13 @@
     "bill reminders?": "bill reminders",
     "meds reminders?": "meds reminders",
     "plumber?": "plumber",
-    "hi": "hi"
+    "hi": "hi",
+    "Father's Day: he's been eyeing a cast-iron skillet, 12 inch, Lodge": "cast-iron skillet",
+    "Side gate keypad: 4417, then press #": "side gate keypad",
+    "Mom's birthday: gardening gloves, the cookbook she mentioned, spa gift card": "",
+    "Garage opener remote lives in the hall drawer": "",
+    "gift ideas for dad?": "gift ideas for dad",
+    "door code?": "door code",
+    "garbage night?": "garbage night"
   }
 }
