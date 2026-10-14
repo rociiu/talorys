@@ -43,11 +43,22 @@ export const MAX_NEWER_PER_HIT = 2;
 /** Everything one recall needs: the indexer context plus the owner's services. */
 export interface SemanticContext extends IndexerContext {
   services: Services;
+  /** Query vectors embedded in this turn by `queryKey`; null records a failed or capped embed. */
+  queryVectors?: Map<string, Float32Array | null>;
 }
+
+/** Distinct query vectors one context keeps; inserting past this drops the oldest. */
+export const MAX_QUERY_VECTORS = 8;
 
 export function createSemanticContext(services: Services, env: Env, config: SemanticConfig): SemanticContext {
   const embedder = createEmbedder(env, services.settings, config.model);
-  return { db: services.db, services, config, embedder: embedder && new MeteredEmbedder(services.db, embedder) };
+  return {
+    db: services.db,
+    services,
+    config,
+    embedder: embedder && new MeteredEmbedder(services.db, embedder),
+    queryVectors: new Map(),
+  };
 }
 
 export interface RecallHit {
@@ -89,6 +100,26 @@ async function embedQuery(ctx: SemanticContext, query: string): Promise<Float32A
     console.warn("Semantic query embedding failed; using keyword recall", error instanceof Error ? error.message : String(error));
     return null;
   }
+}
+
+/** Cache key for a query: trimmed, inner whitespace collapsed, lower-cased. */
+export function queryKey(query: string): string {
+  return query.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * The query's vector, embedded at most once per context (one chat turn or scheduled run).
+ * A null result is kept too, so a failed or capped query falls back to keywords without retrying.
+ */
+export async function queryVector(ctx: SemanticContext, query: string): Promise<Float32Array | null> {
+  const cache = (ctx.queryVectors ??= new Map());
+  const key = queryKey(query);
+  if (cache.has(key)) return cache.get(key)!;
+  const vector = await embedQuery(ctx, query);
+  cache.delete(key);
+  cache.set(key, vector);
+  while (cache.size > MAX_QUERY_VECTORS) cache.delete(cache.keys().next().value!);
+  return vector;
 }
 
 /**
@@ -143,8 +174,8 @@ function scanVectors(ctx: SemanticContext, model: string, query: Float32Array, i
 export async function hybridSearch(ctx: SemanticContext, query: string, opts: { limit: number; includeHistorical?: boolean }): Promise<RecallHit[]> {
   ensureSemanticSchema(ctx.db);
   const includeHistorical = opts.includeHistorical ?? hasHistoricalIntent(query);
-  const queryVector = await embedQuery(ctx, query);
-  const vectorHits = queryVector && ctx.embedder ? scanVectors(ctx, ctx.embedder.model, queryVector, includeHistorical) : [];
+  const vector = await queryVector(ctx, query);
+  const vectorHits = vector && ctx.embedder ? scanVectors(ctx, ctx.embedder.model, vector, includeHistorical) : [];
   const keywordHits = ctx.services.memories.search(query, CANDIDATES_PER_LIST, undefined, includeHistorical ? "all" : "current");
 
   const fused = rrf([vectorHits.map((h) => h.id), keywordHits.map((m) => m.id)]);
