@@ -1,5 +1,6 @@
 import type { Database } from "../db/database";
 import type { Migration } from "../db/migrations";
+import { ITEM_TABLES_V3, dropItemVectorCache } from "./itemStore";
 import { VECTOR_TABLE_V2, convertLegacyVectors, dropVectorCache } from "./vectorStore";
 
 /**
@@ -31,6 +32,11 @@ export const SEMANTIC_MIGRATIONS: Migration[] = [
     name: "unit-length BLOB vectors",
     statements: VECTOR_TABLE_V2,
     after: convertLegacyVectors,
+  },
+  {
+    version: 3,
+    name: "item vectors and item usage",
+    statements: ITEM_TABLES_V3,
   },
 ];
 
@@ -79,7 +85,7 @@ export function semanticTableNames(db: Database): string[] {
 
 /**
  * Drops every `tal_sem%` table, virtual tables first so their shadow tables go with
- * them, then whatever still exists, and forgets the vector cache. Owner data in upstream
+ * them, then whatever still exists, and forgets the vector caches. Owner data in upstream
  * tables is never touched.
  */
 export function dropSemanticData(db: Database): void {
@@ -92,4 +98,5 @@ export function dropSemanticData(db: Database): void {
     for (const name of semanticTableNames(db)) db.run(`DROP TABLE IF EXISTS "${name}"`);
   });
   dropVectorCache(db);
+  dropItemVectorCache(db);
 }

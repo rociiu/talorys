@@ -140,8 +140,8 @@ describe("slim migration v2", () => {
       );
       const before = await v1Store(s, memories);
 
-      expect(ensureSemanticSchema(s.db)).toBe(2);
-      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 2 });
+      expect(ensureSemanticSchema(s.db)).toBe(3);
+      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 3 });
       const after = storedRows(s);
       expect(after).toHaveLength(before.length);
       for (const row of after) {
@@ -157,7 +157,7 @@ describe("slim migration v2", () => {
 
       // Re-running changes nothing.
       const bytes = JSON.stringify(storedRows(s).map((r) => [...new Uint8Array(r.vector as ArrayBuffer)]));
-      expect(ensureSemanticSchema(s.db)).toBe(2);
+      expect(ensureSemanticSchema(s.db)).toBe(3);
       expect(convertLegacyVectors(s.db)).toBe(0);
       expect(JSON.stringify(storedRows(s).map((r) => [...new Uint8Array(r.vector as ArrayBuffer)]))).toBe(bytes);
       reset(s);
@@ -185,7 +185,7 @@ describe("slim migration v2", () => {
       const s = a.services;
       reset(s);
       ensureSemanticSchema(s.db, SEMANTIC_MIGRATIONS.slice(0, 1));
-      expect(ensureSemanticSchema(s.db)).toBe(2);
+      expect(ensureSemanticSchema(s.db)).toBe(3);
       expect(storedRows(s)).toEqual([]);
       reset(s);
     });
@@ -423,7 +423,7 @@ describe("single owner of tal_semantic_vectors", () => {
   });
 });
 
-const SLIM_TABLES = ["tal_semantic_schema", "tal_semantic_usage", "tal_semantic_vectors"];
+const SLIM_TABLES = ["tal_semantic_item_usage", "tal_semantic_item_vectors", "tal_semantic_schema", "tal_semantic_usage", "tal_semantic_vectors"];
 
 /** Eight `tal_sem_*` tables this module does not own, with a v1 schema row. */
 const OTHER_DDL = [
@@ -489,16 +489,16 @@ describe("semantic migrations", () => {
     });
   });
 
-  it("migrates a fresh database to track slim v2", async () => {
+  it("migrates a fresh database to track slim v3", async () => {
     await inAgent((agent) => {
       const s = agent.services;
       resetSemanticOnly(s);
       expect(semanticSchema(s.db)).toBeNull();
       expect(ensureSemanticSchema(s.db)).toBe(SEMANTIC_MIGRATIONS.at(-1)!.version);
-      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 2 });
+      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 3 });
       expect(semanticTableNames(s.db)).toEqual(SLIM_TABLES);
       // Idempotent.
-      expect(ensureSemanticSchema(s.db)).toBe(2);
+      expect(ensureSemanticSchema(s.db)).toBe(3);
       expect(semanticTableNames(s.db)).toEqual(SLIM_TABLES);
       resetSemanticOnly(s);
     });
@@ -514,7 +514,7 @@ describe("semantic migrations", () => {
 
       writeSemanticConfig(s.settings, { enabled: true }, s.db);
       invalidateSemanticCache(s);
-      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 2 });
+      expect(semanticSchema(s.db)).toEqual({ track: "slim", version: 3 });
       expect(semanticTableNames(s.db)).toEqual(expect.arrayContaining([...OTHER_TABLES, ...SLIM_TABLES]));
       expect(otherSnapshot(s)).toEqual(before);
     });
