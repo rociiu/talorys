@@ -222,11 +222,9 @@ export class MemoryHistoryService {
       else if (action === "review") {
         const relationship = verdict.relationship === "contradicts" ? "contradiction" : "possible_update";
         decisions.push({ oldId: old.id, action, relationship, reason: verdict.reason });
-      } else if (rule && decide(rule) === "supersede") {
-        // The rules were confident this replaces the older memory; Clef disagrees, so the owner decides.
-        decisions.push({ oldId: old.id, action: "review", relationship: "possible_update", reason: rule.reason });
-      } else if (rule && !aiDismisses(verdict)) {
-        // A rule review is dropped only when Clef is confident the memories are compatible.
+      } else if (rule && (decide(rule) === "supersede" || !aiDismisses(verdict))) {
+        // A rule replacement Clef did not confirm always waits for the owner's review;
+        // a rule review is dropped only when Clef is confident the memories are compatible.
         decisions.push(...ruleDecision(rule));
       }
     }
