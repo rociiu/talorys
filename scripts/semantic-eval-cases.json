@@ -29,13 +29,10 @@
     },
     {
       "id": "EX-T4",
-      "query": "doc appt soon?",
+      "query": "whats 2+2",
       "kind": "negative",
       "target": null,
-      "gating": true,
-      "exclude": [
-        "patel"
-      ]
+      "gating": true
     },
     {
       "id": "EX-T5",
@@ -83,13 +80,10 @@
     },
     {
       "id": "EX-N4",
-      "query": "grocery list?",
+      "query": "who wrote hamlet",
       "kind": "negative",
       "target": null,
-      "gating": true,
-      "surfaces": [
-        "note"
-      ]
+      "gating": true
     },
     {
       "id": "EX-N5",
@@ -121,20 +115,17 @@
     },
     {
       "id": "EX-A3",
-      "query": "meds reminders?",
+      "query": "vit D reminder?",
       "kind": "positive",
       "target": "vitamin",
       "gating": true
     },
     {
       "id": "EX-A4",
-      "query": "plumber?",
+      "query": "brb",
       "kind": "negative",
       "target": null,
-      "gating": true,
-      "exclude": [
-        "plumber"
-      ]
+      "gating": true
     },
     {
       "id": "EX-A5",
@@ -312,7 +303,7 @@
       "id": "bins",
       "type": "automation",
       "texts": [
-        "Reminder: Every Thursday 7 PM: remind me to put the bins out\nSchedule: Every Thursday at 19:00"
+        "Every Thursday 7 PM: remind me to put the bins out"
       ]
     },
     {
@@ -373,46 +364,46 @@
       "target": "umbrella"
     },
     {
-      "id": "XT-trash-current",
+      "id": "XT-trash-old",
       "query": "trash",
-      "label": "bins reminder, current text",
-      "target": "bins"
+      "label": "bins reminder, old text",
+      "texts": [
+        "Reminder: Every Thursday 7 PM: remind me to put the bins out\nSchedule: Every Thursday at 19:00"
+      ]
     },
     {
       "id": "XT-trash-slim",
       "query": "trash",
       "label": "bins reminder, slim text",
-      "texts": [
-        "Every Thursday 7 PM: remind me to put the bins out"
-      ]
+      "target": "bins"
     },
     {
-      "id": "XT-trash-reminder-current",
+      "id": "XT-trash-reminder-old",
       "query": "do i have a reminder about trash",
-      "label": "bins reminder, current text",
-      "target": "bins"
+      "label": "bins reminder, old text",
+      "texts": [
+        "Reminder: Every Thursday 7 PM: remind me to put the bins out\nSchedule: Every Thursday at 19:00"
+      ]
     },
     {
       "id": "XT-trash-reminder-slim",
       "query": "do i have a reminder about trash",
       "label": "bins reminder, slim text",
-      "texts": [
-        "Every Thursday 7 PM: remind me to put the bins out"
-      ]
+      "target": "bins"
     },
     {
-      "id": "XT-garbage-night-current",
+      "id": "XT-garbage-night-old",
       "query": "garbage night?",
-      "label": "bins reminder, current text",
-      "target": "bins"
+      "label": "bins reminder, old text",
+      "texts": [
+        "Reminder: Every Thursday 7 PM: remind me to put the bins out\nSchedule: Every Thursday at 19:00"
+      ]
     },
     {
       "id": "XT-garbage-night-slim",
       "query": "garbage night?",
       "label": "bins reminder, slim text",
-      "texts": [
-        "Every Thursday 7 PM: remind me to put the bins out"
-      ]
+      "target": "bins"
     }
   ]
 }

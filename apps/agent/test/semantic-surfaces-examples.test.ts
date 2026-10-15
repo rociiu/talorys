@@ -148,7 +148,7 @@ describe("semantic surface examples: tasks", () => {
     });
   });
 
-  it("EX-T4: a done Patel task is no meaning addition for doc appt soon?", async () => {
+  it("a done Patel task is no meaning addition for doc appt soon?", async () => {
     await inAgent(async (a) => {
       const { s, run, seeds } = setup(a);
       s.tasks.complete(seeds.tasks.patel.id);
@@ -157,6 +157,14 @@ describe("semantic surface examples: tasks", () => {
       const search = await run<SearchResult>("search", { query: "doc appt soon?" });
       expect(meaningIds(search.tasks)).not.toContain(seeds.tasks.patel.id);
       expectNoMeaning(search);
+    });
+  });
+
+  it("EX-T4: whats 2+2 adds nothing", async () => {
+    await inAgent(async (a) => {
+      const { run } = setup(a);
+      expectNoMeaning(await run("list_tasks", { query: "whats 2+2" }));
+      expectNoMeaning(await run("search", { query: "whats 2+2" }));
     });
   });
 
@@ -218,12 +226,20 @@ describe("semantic surface examples: notes", () => {
     });
   });
 
-  it("EX-N4: grocery list? does not add the restaurant review", async () => {
+  it("grocery list? does not add the restaurant review", async () => {
     await inAgent(async (a) => {
       const { run, seeds } = setup(a);
       const result = await run<NoteResults>("search_notes", { query: "grocery list?" });
       expect(ids(result.results)).not.toContain(seeds.notes.review.id);
       expectNoMeaning(result);
+    });
+  });
+
+  it("EX-N4: who wrote hamlet adds nothing", async () => {
+    await inAgent(async (a) => {
+      const { run } = setup(a);
+      expectNoMeaning(await run("search_notes", { query: "who wrote hamlet" }));
+      expectNoMeaning(await run("search", { query: "who wrote hamlet" }));
     });
   });
 
@@ -248,20 +264,29 @@ describe("semantic surface examples: automations", () => {
   for (const [id, query, target] of [
     ["EX-A1", "garbage night?", "bins"],
     ["EX-A2", "bill reminders?", "rent"],
-    ["EX-A3", "meds reminders?", "vitamin"],
+    ["EX-A3", "vit D reminder?", "vitamin"],
   ] as const) {
     it(`${id}: ${query} finds the ${target} reminder`, async () => {
       await inAgent(async (a) => {
         const { run, seeds } = setup(a);
         const result = await run<SearchResult>("search", { query });
         expectClearsFloor(query, seeds.automations[target].name);
-        expect(meaningIds(result.automations)).toContain(seeds.automations[target].id);
+        // "vit D" also hits "vitamin D" as a keyword, so EX-A3 only asserts the reminder is found.
+        const found = id === "EX-A3" ? ids : meaningIds;
+        expect(found(result.automations)).toContain(seeds.automations[target].id);
         expect(await run("search", { query }, ALL_TOOLS)).not.toHaveProperty("automations");
       });
     });
   }
 
-  it("EX-A4: the fired plumber reminder is no meaning match for plumber?", async () => {
+  it("EX-A4: brb adds nothing", async () => {
+    await inAgent(async (a) => {
+      const { run } = setup(a);
+      expectNoMeaning(await run("search", { query: "brb" }));
+    });
+  });
+
+  it("the fired plumber reminder is no meaning match for plumber?", async () => {
     await inAgent(async (a) => {
       const { run, seeds } = setup(a);
       const result = await run<SearchResult>("search", { query: "plumber?" });

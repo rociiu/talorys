@@ -23,7 +23,9 @@
     "dad",
     "door",
     "dentist",
-    "trash"
+    "trash",
+    "math",
+    "literature"
   ],
   "texts": {
     "botany": {
@@ -212,6 +214,18 @@
     },
     "teeth cleaning": {
       "dentist": 0.66
+    },
+    "vit d reminder": {
+      "medication": 1
+    },
+    "whats 2+2": {
+      "math": 1
+    },
+    "who wrote hamlet": {
+      "literature": 1
+    },
+    "brb": {
+      "greeting": 1
     }
   },
   "seedTexts": {
@@ -300,6 +314,10 @@
     "Orchid care": "orchid care",
     "Mist the ferns": "mist the ferns",
     "trash": "trash",
-    "do i have a reminder about trash": "reminder about trash"
+    "do i have a reminder about trash": "reminder about trash",
+    "vit D reminder?": "vit d reminder",
+    "whats 2+2": "whats 2+2",
+    "who wrote hamlet": "who wrote hamlet",
+    "brb": "brb"
   }
 }
