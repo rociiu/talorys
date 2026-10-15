@@ -1,4 +1,5 @@
 import { type Automation, type AutomationKind, type ScheduleSpec, type Task, describeSchedule } from "@talorys/shared";
+import type { Usage } from "../ai/provider";
 import { type Database, ftsQuery, now } from "../db/database";
 import { UsageService } from "../services/usage";
 import { conservativeEmbeddingTokens, contentHash } from "./embeddings";
@@ -156,6 +157,23 @@ export function reserveItemEmbedding(db: Database, day: string, textTokens: numb
     total - used.tokens,
   );
   return n;
+}
+
+/**
+ * Moves a day's reserved item tokens by `delta`, once a call reports what it really embedded;
+ * the counter never drops below 0. Each caller corrects only its own reservation.
+ */
+export function adjustItemTokens(db: Database, day: string, delta: number): void {
+  if (!delta || !tableExists(db, "tal_semantic_item_usage")) return;
+  db.run(`UPDATE tal_semantic_item_usage SET tokens = MAX(0, tokens + ?) WHERE day = ?`, Math.round(delta), day);
+}
+
+/**
+ * Corrects a successful item call's reservation to its reported input token count; an
+ * estimate-only usage (or none) keeps the reservation.
+ */
+export function correctItemTokens(db: Database, day: string, reserved: number, usage: Usage | undefined): void {
+  if (usage && usage.inputTokens.estimated === 0) adjustItemTokens(db, day, usage.inputTokens.reported - reserved);
 }
 
 export interface PendingItem {
@@ -341,13 +359,17 @@ async function itemPassOnce({ db, config, embedder }: IndexerContext, maxEmbed: 
     const candidates = pending.slice(0, Math.max(0, maxEmbed));
     if (candidates.length === 0) return report;
     // Reserved before the call (which counts even if it fails), so concurrent passes cannot overrun the item cap.
-    const n = reserveItemEmbedding(db, UsageService.day(), candidates.map((p) => conservativeEmbeddingTokens(p.text)), caps);
+    const day = UsageService.day();
+    const textTokens = candidates.map((p) => conservativeEmbeddingTokens(p.text));
+    const n = reserveItemEmbedding(db, day, textTokens, caps);
     if (n === 0) return { ...report, capped: true };
     const batch = candidates.slice(0, n);
-    const vectors = await embedder.embed(batch.map((p) => p.text));
+    let usage: Usage | undefined;
+    const vectors = await embedder.embed(batch.map((p) => p.text), (reported) => (usage = reported));
     if (vectors.length !== batch.length || vectors.some((v) => v.length !== embedder.dims)) {
       throw new Error(`Embedder returned ${vectors.length} vectors for ${batch.length} texts`);
     }
+    correctItemTokens(db, day, textTokens.slice(0, n).reduce((sum, t) => sum + Math.round(t), 0), usage);
     // A note with parts left for a later pass keeps an empty source_updated_at, so that pass re-chunks it.
     const unfinished = new Set(pending.slice(n).filter((p) => p.type === "note").map((p) => p.id));
     const ts = now();

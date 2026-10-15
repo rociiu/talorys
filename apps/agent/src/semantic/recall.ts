@@ -1,13 +1,13 @@
 import type { Memory } from "@talorys/shared";
 import type { Env } from "../env";
-import { estimateTokens } from "../ai/provider";
+import { type Usage, estimateTokens } from "../ai/provider";
 import type { Services } from "../services/container";
 import { UsageService } from "../services/usage";
 import type { SemanticConfig } from "./config";
 import { MODEL_DIMS, MeteredEmbedder, conservativeEmbeddingTokens, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
-import { reserveItemEmbedding } from "./surfaces";
+import { correctItemTokens, reserveItemEmbedding } from "./surfaces";
 import { cachedVectors, dot, normalize } from "./vectorStore";
 import { hasHistoricalIntent } from "../memory/intent";
 
@@ -118,7 +118,9 @@ async function embedQuery(ctx: SemanticContext, query: string, cap: QueryCap): P
     if (reserveItemEmbedding(db, day, [conservativeEmbeddingTokens(query)]) === 0) return null;
   } else if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {
-    const [vector] = await embedder.embed([query]);
+    let usage: Usage | undefined;
+    const [vector] = await embedder.embed([query], (reported) => (usage = reported));
+    if (cap === "item") correctItemTokens(db, day, Math.round(conservativeEmbeddingTokens(query)), usage);
     return vector && vector.length === embedder.dims ? vector : null;
   } catch (error) {
     console.warn("Semantic query embedding failed; using keyword recall", error instanceof Error ? error.message : String(error));
