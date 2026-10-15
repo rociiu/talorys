@@ -45,8 +45,8 @@ export const MAX_NEWER_PER_HIT = 2;
 export interface SemanticContext extends IndexerContext {
   services: Services;
   /**
-   * Query vectors embedded in this turn by `queryKey`, with the cap that paid for each; a null
-   * vector records a failed or capped embed under that cap.
+   * Query vectors embedded in this turn by `queryKey`; until one is embedded, the caps whose
+   * embed already failed or was capped for that query.
    */
   queryVectors?: Map<string, QueryVectorEntry>;
   /** The owner message (or scheduled prompt) of this turn, set when memory recall runs for it. */
@@ -60,7 +60,8 @@ export type QueryCap = "memory" | "item";
 
 export interface QueryVectorEntry {
   vector: Float32Array | null;
-  cap: QueryCap;
+  /** Caps that tried this query and got no vector, each at most once; empty once a vector exists. */
+  failed: QueryCap[];
 }
 
 /** Distinct query vectors one context keeps; inserting past this drops the oldest. */
@@ -145,10 +146,14 @@ export async function queryVector(ctx: SemanticContext, query: string, cap: Quer
   const cache = (ctx.queryVectors ??= new Map());
   const key = queryKey(query);
   const hit = cache.get(key);
-  if (hit && (hit.vector || hit.cap === cap)) return hit.vector;
+  if (hit && (hit.vector || hit.failed.includes(cap))) return hit.vector;
   const vector = await embedQuery(ctx, query, cap);
+  // Re-read after the await: a concurrent call may have recorded the other cap's outcome.
+  const prior = cache.get(key);
+  if (prior?.vector) return prior.vector;
+  const failed = vector ? [] : [...new Set([...(prior?.failed ?? []), cap])];
   cache.delete(key);
-  cache.set(key, { vector, cap });
+  cache.set(key, { vector, failed });
   while (cache.size > MAX_QUERY_VECTORS) cache.delete(cache.keys().next().value!);
   return vector;
 }

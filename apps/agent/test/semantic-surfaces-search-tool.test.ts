@@ -236,6 +236,8 @@ describe("semantic search tool", () => {
       // Repeat item-cap calls reuse the failed item-cap entry instead of embedding again.
       expect(await run("list_tasks", { query: "medication reminder" })).toEqual(tasks);
       expect(await run("search_notes", { query: "medication reminder" })).toEqual(notes);
+      // A repeat search finds both caps' failures kept and embeds under neither.
+      expect(await run("search", { query: "medication reminder" })).toEqual(search);
       expect(embedder.calls).toEqual([["medication reminder"], ["medication reminder"]]);
 
       const upstream = await run("search", { query: "medication reminder" }, ALL_TOOLS);
