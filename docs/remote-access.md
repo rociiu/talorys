@@ -4,7 +4,7 @@ Machine clients can call your private Talorys install with a **personal access t
 
 This is **not** an MCP server. CORS stays closed: use a server-side client (`curl`, Home Assistant, a CLI, a cron job). Browsers on other origins cannot call these routes.
 
-Cookie + CSRF session access still works for the owner UI. Remote access adds revocable machine credentials so an integration does not need the full owner session.
+Cookie + CSRF session access already works for the owner UI and for scripted session clients. Remote access adds **named, scoped, revocable** personal access tokens so an integration does not need the full owner session.
 
 ## Turning it on and creating a token
 
