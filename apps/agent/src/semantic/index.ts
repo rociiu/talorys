@@ -3,7 +3,7 @@ import type { Services } from "../services/container";
 import { selectRelevantMemories } from "../agent/memory";
 import { readSemanticConfig, writeSemanticConfig, type SemanticConfig } from "./config";
 import type { RunnerExtensions } from "./hooks";
-import { fitItemLines, selectSemanticItems } from "./itemRecall";
+import { itemSection, selectSemanticItems } from "./itemRecall";
 import { ensureSemanticSchema } from "./migrations";
 import { type SemanticContext, createSemanticContext, selectSemanticMemories } from "./recall";
 import { semanticTools } from "./tools";
@@ -65,16 +65,16 @@ export function semanticMemorySelector(ctx: SemanticContext): RunnerExtensions["
 }
 
 /**
- * The runner's item hook: recalled item lines that fit the memory budget. Never throws; on any
- * error the prompt simply has no items section.
+ * The runner's item hook: the items section for the recalled lines, within its own token cap.
+ * Never throws; on any error the prompt simply has no items section.
  */
 export function semanticItemSelector(ctx: SemanticContext): NonNullable<RunnerExtensions["selectItems"]> {
-  return async (query, memories, budget) => {
+  return async (query) => {
     try {
-      return fitItemLines(selectSemanticItems(ctx, query), memories, budget);
+      return itemSection(selectSemanticItems(ctx, query));
     } catch (error) {
       console.warn("Semantic item recall failed", error instanceof Error ? error.message : String(error));
-      return [];
+      return undefined;
     }
   };
 }

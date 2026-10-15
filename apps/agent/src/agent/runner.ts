@@ -115,7 +115,7 @@ export class AgentRunner {
       const selected = this.ext ? await this.ext.selectMemories(userMessage.content) : selectRelevantMemories(s.memories, userMessage.content);
       const memoryBudget = memoryTokenBudget(limits);
       const memories = s.memoryHistory.promptMemories(selected, memoryBudget);
-      const items = this.ext?.selectItems ? await this.ext.selectItems(userMessage.content, memories, memoryBudget) : undefined;
+      const items = this.ext?.selectItems ? await this.ext.selectItems(userMessage.content) : undefined;
       const history = s.pendingActions
         .withCurrentStatus(s.conversations.messages(conversation.id, { limit: 200 }))
         .filter((m) => m.role === "user" || m.status === "complete")
@@ -253,7 +253,7 @@ export class AgentRunner {
       this.ext ? await this.ext.selectMemories(prompt) : selectRelevantMemories(s.memories, prompt),
       memoryBudget,
     );
-    const items = this.ext?.selectItems ? await this.ext.selectItems(prompt, memories, memoryBudget) : undefined;
+    const items = this.ext?.selectItems ? await this.ext.selectItems(prompt) : undefined;
     const system = buildSystemPrompt({
       agentName: settings.agentName,
       timezone: settings.timezone,
