@@ -60,6 +60,8 @@ const seedNotes = (s: Services) => {
   return { lisbon, lake };
 };
 
+const daysFromNow = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+
 /** A paragraph of about 1,100 characters that only `phrase` gives a fixture key. */
 const paragraph = (phrase: string) => `${phrase}. ${"lorem ipsum dolor sit amet ".repeat(45)}`.slice(0, 1100).trim();
 
@@ -109,6 +111,53 @@ describe("semantic surface tools", () => {
       const completed = await run<TaskList>("list_tasks", { view: "completed", query: "doc appt soon?" });
       expect(completed.tasks).toEqual([{ ...presentTask(s.tasks.get(physical.id)!, "UTC"), match: "meaning" }]);
       expect(completed.count).toBe(1);
+    });
+  });
+
+  it("FU3-a: a task due next month is added in the upcoming view, not today", async () => {
+    await inAgent(async (a) => {
+      const { s, run } = setup(a);
+      const cleaning = s.tasks.create({ title: "Teeth cleaning with Dr. Ruiz", due_at: daysFromNow(30) });
+
+      expect(await run<TaskList>("list_tasks", { view: "today", query: "dentist?" })).toEqual({ count: 0, tasks: [] });
+      const upcoming = await run<TaskList>("list_tasks", { view: "upcoming", query: "dentist?" });
+      expect(upcoming).toEqual({ count: 1, tasks: [{ ...presentTask(s.tasks.get(cleaning.id)!, "UTC"), match: "meaning" }] });
+    });
+  });
+
+  it("FU3-b: overdue adds no future task, completed only done ones, open no done one", async () => {
+    await inAgent(async (a) => {
+      const { s, run } = setup(a);
+      const water = s.tasks.create({ title: "Water the plants", due_at: daysFromNow(3) });
+      const fern = s.tasks.create({ title: "Repot the fern", due_at: daysFromNow(-3) });
+      const ids = (r: TaskList) => r.tasks.map((t) => t.id);
+
+      expect(ids(await run<TaskList>("list_tasks", { view: "overdue", query: "botany" }))).toEqual([fern.id]);
+      s.tasks.complete(water.id);
+      expect(ids(await run<TaskList>("list_tasks", { view: "completed", query: "botany" }))).toEqual([water.id]);
+      expect(ids(await run<TaskList>("list_tasks", { view: "open", query: "botany" }))).toEqual([fern.id]);
+    });
+  });
+
+  it("FU3-c: additions only fill the slots keyword hits leave under limit", async () => {
+    await inAgent(async (a) => {
+      const { s, sem, run } = setup(a);
+      const hits = ["Botany101 reading", "Botany101 quiz"].map((title) => s.tasks.create({ title }).id);
+      const water = s.tasks.create({ title: "Water the plants" });
+      s.tasks.create({ title: "Repot the fern" });
+      const embedder = sem.embedder as FixtureEmbedder;
+
+      const full = await run<TaskList>("list_tasks", { query: "botany", limit: 2 });
+      expect(full).toEqual(await run<TaskList>("list_tasks", { query: "botany", limit: 2 }, ALL_TOOLS));
+      expect(full.tasks.map((t) => t.id)).toEqual(hits);
+      expect(embedder.calls).toEqual([]);
+
+      const one = await run<TaskList>("list_tasks", { query: "botany", limit: 3 });
+      expect(one.tasks.map((t) => t.id)).toEqual([...hits, water.id]);
+      expect(one.tasks[2]!.match).toBe("meaning");
+      expect(one.count).toBe(3);
+
+      expect((await run<TaskList>("list_tasks", { query: "botany" })).count).toBe(4);
     });
   });
 

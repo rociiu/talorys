@@ -21,7 +21,8 @@
     "grocery",
     "plumber",
     "dad",
-    "door"
+    "door",
+    "dentist"
   ],
   "texts": {
     "botany": {
@@ -192,13 +193,19 @@
     },
     "garbage night": {
       "garbage": 1
+    },
+    "dentist": {
+      "dentist": 1
+    },
+    "teeth cleaning": {
+      "dentist": 0.66
     }
   },
   "seedTexts": {
     "Water the plants": "water the plants",
     "Repot the fern": "repot the fern",
     "Renew Tesla registration": "",
-    "Call the dentist": "",
+    "Call the dentist": "dentist",
     "Buy milk and eggs": "buy milk and eggs",
     "Clean the gutters": "",
     "Book a physical": "book a physical",
@@ -273,6 +280,9 @@
     "Garage opener remote lives in the hall drawer": "",
     "gift ideas for dad?": "gift ideas for dad",
     "door code?": "door code",
-    "garbage night?": "garbage night"
+    "garbage night?": "garbage night",
+    "Teeth cleaning with Dr. Ruiz": "teeth cleaning",
+    "dentist?": "dentist",
+    "Botany101 reading": ""
   }
 }

@@ -21,6 +21,8 @@ const SEARCH_AUTOMATION_LIMIT = 5;
 const SEARCH_NOTE_EXCERPT_CHARS = 200;
 /** Tasks of one view checked against meaning additions; far above any owner's open list. */
 const VIEW_SCAN_LIMIT = 1000;
+/** Mirrors the default `limit` of upstream `list_tasks` (tools/tasks.ts). */
+const LIST_TASKS_DEFAULT_LIMIT = 25;
 const NOTE_EXCERPT_CHARS = 400;
 
 /** An upstream read or write tool; destructive tools are never wrapped (they run on owner approval). */
@@ -114,7 +116,8 @@ type ListTasksInput = { view?: "today" | "upcoming" | "overdue" | "open" | "comp
 
 /**
  * Upstream `list_tasks`, then up to three tasks of the same view found by meaning, tagged
- * `match: "meaning"`. Upstream hits stay first and unchanged; `count` covers the additions.
+ * `match: "meaning"`, only in slots the keyword hits left under `limit`. Upstream hits stay
+ * first and unchanged; `count` covers the additions.
  */
 function wrapListTasks(sem: SemanticContext): ToolDefinition {
   const base = upstream("list_tasks");
@@ -124,6 +127,8 @@ function wrapListTasks(sem: SemanticContext): ToolDefinition {
       const i = raw as ListTasksInput;
       const result = (await base.execute(raw, ctx)) as { count: number; tasks: { id: string }[] };
       if (!i.query) return result;
+      const slots = (i.limit ?? LIST_TASKS_DEFAULT_LIMIT) - result.tasks.length;
+      if (slots <= 0) return result;
       const vector = await prepareSurfaceSearch(sem, i.query);
       if (!vector) return result;
       // The view mapping is upstream's (tools/tasks.ts), without the keyword filter.
@@ -140,7 +145,7 @@ function wrapListTasks(sem: SemanticContext): ToolDefinition {
           })
           .map((t) => t.id),
       );
-      const added = taskAdditions(sem, vector, { keywordIds: result.tasks.map((t) => t.id), allowedIds, completedView: view === "completed" });
+      const added = taskAdditions(sem, vector, { keywordIds: result.tasks.map((t) => t.id), allowedIds, completedView: view === "completed" }).slice(0, slots);
       if (added.length === 0) return result;
       const tasks = [...result.tasks, ...added.map((t) => ({ ...presentTask(t, ctx.timezone), match: "meaning" as const }))];
       return { ...result, count: tasks.length, tasks };
