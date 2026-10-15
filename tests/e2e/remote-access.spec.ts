@@ -41,21 +41,24 @@ test.describe("Remote access", () => {
     await openSecurity(page);
     const toggle = page.getByRole("switch", { name: "Remote access" });
     await expect(toggle).toHaveAttribute("aria-checked", "false");
-    await expect(page.getByText("Suspended")).toBeVisible();
-    await expect(page.getByText(/CORS stays closed; plaintext tokens are shown once and never stored/)).toBeVisible();
+    await expect(page.getByText("Suspended", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Create personal access tokens so scripts and other apps can use your Talorys data over HTTPS."),
+    ).toBeVisible();
+    await expect(page.getByText("Tokens stay suspended until you turn this back on.")).toBeVisible();
     await expect(page.getByRole("link", { name: "How to use access tokens" })).toHaveAttribute("href", /\/blob\/main\/docs\/remote-access\.md$/);
     await expect(page.getByText("No access tokens yet.")).toBeVisible();
 
     await page.getByLabel("Token name").fill("CI runner");
     await expect(page.getByRole("button", { name: "Generate token" })).toBeDisabled();
     await expect(page.getByLabel("Scope")).toHaveValue("read");
-    await expect(page.getByText(/Write is trusted owner-level access/)).toHaveCount(0);
+    await expect(page.getByText("Write can create, update, and delete tasks, notes, reminders, and memories.")).toHaveCount(0);
     await page.getByLabel("Scope").selectOption("write");
-    await expect(page.getByText(/Write is trusted owner-level access to tasks, notes, reminders and memories/)).toBeVisible();
+    await expect(page.getByText("Write can create, update, and delete tasks, notes, reminders, and memories.")).toBeVisible();
 
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByText("Suspended")).toHaveCount(0);
+    await expect(page.getByText("Suspended", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Generate token" })).toBeEnabled();
     await page.getByLabel("Token name").fill("");
     await expect(page.getByRole("button", { name: "Generate token" })).toBeDisabled();
