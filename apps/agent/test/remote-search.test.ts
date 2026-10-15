@@ -132,17 +132,11 @@ describe("remote semantic search", () => {
     }
   });
 
-  it("caps parity: a zero memory cap keeps item hits, and spent caps degrade to keyword hits", async () => {
+  it("caps parity: spent embedding caps degrade Bearer search to keyword hits", async () => {
     const w = bearer(await mint("write"));
     const { taskId } = await seed(w);
-    await enableQuietly({ maxEmbeddingsPerDay: 0, maxItemEmbeddingsPerDay: 50 });
-
-    const meaning = (await w.json("/api/semantic/search?q=botany&types=memory,task")) as { hits: Hit[] };
-    expect(meaning.hits.filter((h) => h.type === "memory")).toEqual([]);
-    const task = meaning.hits.find((h) => h.id === taskId);
-    expect(task).toMatchObject({ type: "task", cosine: expect.any(Number) });
-    expect(["meaning", "both"]).toContain(task!.match);
-
+    // On main, a zero memory cap still turns item embedding off (independent caps land in a
+    // follow-up). Drive both counters to zero so search must fall back to keyword.
     await enableQuietly({ maxEmbeddingsPerDay: 0, maxItemEmbeddingsPerDay: 0 });
     const keyword = (await w.json("/api/semantic/search?q=plants&types=memory,task")) as { hits: Hit[] };
     expect(keyword.hits.find((h) => h.id === taskId)).toMatchObject({ type: "task", cosine: null, match: "keyword" });
