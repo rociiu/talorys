@@ -7,7 +7,7 @@ import { deleteSemanticConfig, writeSemanticConfig } from "../src/semantic/confi
 import { dropSemanticData, tableExists } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
 import { runItemPass } from "../src/semantic/surfaces";
-import { semanticTools } from "../src/semantic/tools";
+import { SEARCH_DESCRIPTION, SEARCH_MEMORIES_DESCRIPTION, SEARCH_NOTES_DESCRIPTION, semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";
 import type { Services } from "../src/services/container";
@@ -121,7 +121,7 @@ async function routeOutputs() {
 }
 
 describe("semantic surfaces with the feature off", () => {
-  it("S-off-schema: every semantic tool keeps upstream's schema object, description, permission, cap and label", async () => {
+  it("S-off-schema: every semantic tool keeps upstream's schema object, permission, cap and label, and its description outside the search tools", async () => {
     await inAgent(async (a) => {
       const s = a.services;
       reset(s);
@@ -133,10 +133,11 @@ describe("semantic surfaces with the feature off", () => {
       const sem: SemanticContext = { db: s.db, services: s, embedder: new FixtureEmbedder(), config: fixtureConfig(), queryVectors: new Map() };
       const tools: ToolDefinition[] = semanticTools(sem);
       expect(tools.map((t) => t.name)).toEqual(ALL_TOOLS.map((t) => t.name));
+      const reworded: Record<string, string> = { search: SEARCH_DESCRIPTION, search_notes: SEARCH_NOTES_DESCRIPTION, search_memories: SEARCH_MEMORIES_DESCRIPTION };
       for (const tool of tools) {
         const base = ALL_TOOLS.find((t) => t.name === tool.name)!;
         expect(tool.input).toBe(base.input);
-        expect(tool.description).toBe(base.description);
+        expect(tool.description).toBe(reworded[tool.name] ?? base.description);
         expect(tool.permission).toBe(base.permission);
         expect(tool.maxCallsPerTurn).toBe(base.maxCallsPerTurn);
         expect(tool.label).toBe(base.label);

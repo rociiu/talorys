@@ -25,6 +25,13 @@ const VIEW_SCAN_LIMIT = 1000;
 const LIST_TASKS_DEFAULT_LIMIT = 25;
 const NOTE_EXCERPT_CHARS = 400;
 
+/** Steers open questions to `search`; upstream's wording sends vague personal questions to memories alone. */
+export const SEARCH_DESCRIPTION =
+  "Search the owner's tasks, notes, memories, automations and past conversations at once, by keywords and meaning. Use this first for open questions.";
+export const SEARCH_NOTES_DESCRIPTION = "Search the owner's notes by keywords and meaning. Returns titles and short excerpts.";
+export const SEARCH_MEMORIES_DESCRIPTION =
+  "Only for facts you saved about the owner. Use `search` for anything they may have written down. Results marked historical are past facts that are no longer true; set include_history for questions about the past.";
+
 /** An upstream read or write tool; destructive tools are never wrapped (they run on owner approval). */
 function upstream(name: string): ImmediateTool {
   const tool = ALL_TOOLS.find((t) => t.name === name);
@@ -32,11 +39,12 @@ function upstream(name: string): ImmediateTool {
   return tool;
 }
 
-/** `search_memories` with hybrid hits; name, description, schema, permission, cap and label are upstream's. */
+/** `search_memories` with hybrid hits and its own description; name, schema, permission, cap and label are upstream's. */
 function wrapSearchMemories(sem: SemanticContext): ToolDefinition {
   const base = upstream("search_memories");
   return {
     ...base,
+    description: SEARCH_MEMORIES_DESCRIPTION,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query, include_history } = raw as { query: string; include_history?: boolean };
       const timezone = ctx.services.settings.get().timezone;
@@ -68,6 +76,7 @@ function wrapSearch(sem: SemanticContext): ToolDefinition {
   const base = upstream("search");
   return {
     ...base,
+    description: SEARCH_DESCRIPTION,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
       const result = (await base.execute(raw, ctx)) as {
@@ -158,6 +167,7 @@ function wrapSearchNotes(sem: SemanticContext): ToolDefinition {
   const base = upstream("search_notes");
   return {
     ...base,
+    description: SEARCH_NOTES_DESCRIPTION,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
       const result = (await base.execute(raw, ctx)) as { results: { id: string }[] };
@@ -190,7 +200,8 @@ const ITEM_WRITE_TOOLS = ["create_task", "update_task", "complete_task", "create
  * save tools wrapped to index in the background. Destructive item tools stay upstream's: the
  * next item pass purges the vectors of whatever the owner approved deleting. `forget_memory` stays upstream's: it only
  * proposes, and the approve route purges the vector when the owner approves (see routes.ts).
- * Everything but `execute` is the upstream definition, so ToolExecutor enforces the same
+ * The wrappers differ from upstream in `description` (the three search tools only) and
+ * `execute`; everything else is the upstream definition, so ToolExecutor enforces the same
  * permissions, per-turn caps and scheduled read-only mode.
  */
 export function semanticTools(sem: SemanticContext): ToolDefinition[] {

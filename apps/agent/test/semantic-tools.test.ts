@@ -6,7 +6,7 @@ import { MockEmbedder } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
 import { dropSemanticData } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
-import { semanticTools } from "../src/semantic/tools";
+import { SEARCH_DESCRIPTION, SEARCH_MEMORIES_DESCRIPTION, SEARCH_NOTES_DESCRIPTION, semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
@@ -46,15 +46,21 @@ const WRAPPED = [
   "create_automation",
 ];
 
+const DESCRIPTIONS: Record<string, string> = {
+  search: SEARCH_DESCRIPTION,
+  search_notes: SEARCH_NOTES_DESCRIPTION,
+  search_memories: SEARCH_MEMORIES_DESCRIPTION,
+};
+
 describe("semantic tools", () => {
-  it("keep every upstream tool and replace only the wrappers' execute", async () => {
+  it("keep every upstream tool and replace only the wrappers' execute and the search descriptions", async () => {
     await inAgent((a) => {
       const { sem } = setup(a);
       const tools = semanticTools(sem);
       expect(tools.map((t) => t.name)).toEqual(ALL_TOOLS.map((t) => t.name));
       tools.forEach((t, i) => {
         const base = ALL_TOOLS[i]!;
-        expect(t.description).toBe(base.description);
+        expect(t.description).toBe(DESCRIPTIONS[t.name] ?? base.description);
         expect(t.input).toBe(base.input);
         expect(t.permission).toBe(base.permission);
         expect(t.maxCallsPerTurn).toBe(base.maxCallsPerTurn);
