@@ -111,10 +111,10 @@ describe("per-turn item recall", () => {
         `- [note] Budget memo: ${excerpt} (id ${memo.id})`,
       ]);
 
-      expect(selectSemanticItems(sem, "garbage day")).toEqual([`- [reminder] Put the bins out (${bins.schedule_description}; id ${bins.id})`]);
+      expect(selectSemanticItems(sem, "garbage day")).toEqual([`- [reminder] ${bins.schedule_description}: Put the bins out (id ${bins.id})`]);
 
       // Any kind but a reminder is labelled as an automation.
-      expect(automationLine(digest)).toBe(`- [automation] Morning digest (${digest.schedule_description}; id ${digest.id})`);
+      expect(automationLine(digest)).toBe(`- [automation] ${digest.schedule_description}: Morning digest (id ${digest.id})`);
     });
   });
 });
