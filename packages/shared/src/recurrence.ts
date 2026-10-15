@@ -194,9 +194,11 @@ export function describeSchedule(spec: ScheduleSpec): string {
       return `Once at ${spec.at.replace("T", " ")}`;
     case "daily":
       return `Every day at ${spec.time}`;
-    case "weekly":
-      if (spec.days.length === 7) return `Every day at ${spec.time}`;
-      return `Every ${[...spec.days].sort().map((d) => DAY_NAMES[d]).join(", ")} at ${spec.time}`;
+    case "weekly": {
+      const days = [...new Set(spec.days)].sort((a, b) => a - b);
+      if (days.length === 7) return `Every day at ${spec.time}`;
+      return `Every ${days.map((d) => DAY_NAMES[d]).join(", ")} at ${spec.time}`;
+    }
     case "monthly":
       return `Monthly on day ${spec.day} at ${spec.time}`;
     case "interval":

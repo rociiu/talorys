@@ -103,3 +103,14 @@ describe("isValidCalendarDate", () => {
   });
 });
 
+
+describe("describeSchedule", () => {
+  it("lists each weekday once, in week order, even when the rule repeats a day", () => {
+    expect(describeSchedule({ type: "weekly", days: [3, 1, 1], time: "09:00" })).toBe("Every Monday, Wednesday at 09:00");
+  });
+
+  it("does not call a repeated weekday 'every day'", () => {
+    expect(describeSchedule({ type: "weekly", days: [1, 1, 1, 1, 1, 1, 1], time: "09:00" })).toBe("Every Monday at 09:00");
+    expect(describeSchedule({ type: "weekly", days: [0, 1, 2, 3, 4, 5, 6], time: "09:00" })).toBe("Every day at 09:00");
+  });
+});
