@@ -220,19 +220,20 @@ describe("semantic search tool", () => {
     });
   });
 
-  it("Q-fail: a failed query embedding is tried once and tools fall back to keywords", async () => {
+  it("Q-fail: a failed query embedding is tried once per cap and tools fall back to keywords", async () => {
     await inAgent(async (a) => {
       const { s, sem, run } = setup(a);
       seed(s);
       await runItemPass(sem);
       const embedder = sem.embedder as FixtureEmbedder;
       embedder.calls.length = 0;
-      embedder.failNext = 1;
+      // The memory cap and the item cap each try the query once; both attempts fail.
+      embedder.failNext = 2;
 
       const search = await run("search", { query: "medication reminder" });
       const tasks = await run("list_tasks", { query: "medication reminder" });
       const notes = await run("search_notes", { query: "medication reminder" });
-      expect(embedder.calls).toEqual([["medication reminder"]]);
+      expect(embedder.calls).toEqual([["medication reminder"], ["medication reminder"]]);
 
       const upstream = await run("search", { query: "medication reminder" }, ALL_TOOLS);
       expect(search.tasks).toEqual(upstream.tasks);

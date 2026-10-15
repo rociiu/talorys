@@ -22,7 +22,8 @@
     "plumber",
     "dad",
     "door",
-    "dentist"
+    "dentist",
+    "trash"
   ],
   "texts": {
     "botany": {
@@ -100,6 +101,9 @@
     },
     "reminder about trash": {
       "garbage": 1
+    },
+    "trash": {
+      "trash": 1
     },
     "put the bins out": {
       "garbage": 0.63
@@ -295,7 +299,7 @@
     "Botany101 reading": "",
     "Orchid care": "orchid care",
     "Mist the ferns": "mist the ferns",
-    "trash": "",
+    "trash": "trash",
     "do i have a reminder about trash": "reminder about trash"
   }
 }

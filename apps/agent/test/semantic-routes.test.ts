@@ -257,7 +257,8 @@ describe("semantic routes", () => {
     await inEmbed;
 
     const reindex = c.call("/api/semantic/reindex", { method: "POST" });
-    await new Promise((r) => setTimeout(r, 50));
+    // Release the stale pass only once the reindex has deleted the old vectors, however slow the run.
+    for (let i = 0; i < 500 && (await c.json("/api/semantic/status")).vectors !== 0; i++) await new Promise((r) => setTimeout(r, 10));
     release();
     const res = await reindex;
     expect(res.status).toBe(200);
