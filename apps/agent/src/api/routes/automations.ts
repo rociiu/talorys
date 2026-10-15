@@ -1,10 +1,19 @@
 import { automationCreateSchema, automationUpdateSchema } from "@talorys/shared";
 import { Hono } from "hono";
 import { z } from "zod";
+import type { Context } from "hono";
 import type { AppEnv } from "../app";
+import { AppError } from "../errors";
 import { body, query } from "../middleware";
 
 export const automationRoutes = new Hono<AppEnv>();
+
+/** Access tokens may not add or change scheduled AI prompts; reminders and digests stay writable. */
+function denyRemoteAgentPrompt(c: Context<AppEnv>, kind: string): void {
+  if (c.get("remote") && kind === "agent_prompt") {
+    throw new AppError("FORBIDDEN", "Access tokens cannot create or change AI prompt automations.");
+  }
+}
 
 automationRoutes.get("/automations", (c) => {
   const s = c.env.agent.services;
@@ -22,12 +31,15 @@ automationRoutes.get("/automations/:id", (c) =>
 
 automationRoutes.post("/automations", async (c) => {
   const input = await body(c, automationCreateSchema);
+  denyRemoteAgentPrompt(c, input.kind);
   return c.json({ automation: await c.env.agent.services.automations.create(input) }, 201);
 });
 
 automationRoutes.patch("/automations/:id", async (c) => {
+  const id = c.req.param("id");
   const patch = await body(c, automationUpdateSchema);
-  return c.json({ automation: await c.env.agent.services.automations.update(c.req.param("id"), patch) });
+  if (c.get("remote")) denyRemoteAgentPrompt(c, c.env.agent.services.automationsRepo.require(id).kind);
+  return c.json({ automation: await c.env.agent.services.automations.update(id, patch) });
 });
 
 automationRoutes.delete("/automations/:id", async (c) => {
