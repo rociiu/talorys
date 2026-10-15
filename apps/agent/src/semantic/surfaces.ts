@@ -1,8 +1,7 @@
 import { type Automation, type AutomationKind, type ScheduleSpec, type Task, describeSchedule } from "@talorys/shared";
 import { type Database, ftsQuery, now } from "../db/database";
-import { estimateTokens } from "../ai/provider";
 import { UsageService } from "../services/usage";
-import { contentHash } from "./embeddings";
+import { conservativeEmbeddingTokens, contentHash } from "./embeddings";
 import { DEFAULT_MAX_EMBED, type IndexerContext } from "./indexer";
 import {
   type ItemPartMeta,
@@ -342,7 +341,7 @@ async function itemPassOnce({ db, config, embedder }: IndexerContext, maxEmbed: 
     const candidates = pending.slice(0, Math.max(0, maxEmbed));
     if (candidates.length === 0) return report;
     // Reserved before the call (which counts even if it fails), so concurrent passes cannot overrun the item cap.
-    const n = reserveItemEmbedding(db, UsageService.day(), candidates.map((p) => estimateTokens(p.text)), caps);
+    const n = reserveItemEmbedding(db, UsageService.day(), candidates.map((p) => conservativeEmbeddingTokens(p.text)), caps);
     if (n === 0) return { ...report, capped: true };
     const batch = candidates.slice(0, n);
     const vectors = await embedder.embed(batch.map((p) => p.text));

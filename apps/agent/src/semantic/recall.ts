@@ -4,7 +4,7 @@ import { estimateTokens } from "../ai/provider";
 import type { Services } from "../services/container";
 import { UsageService } from "../services/usage";
 import type { SemanticConfig } from "./config";
-import { MODEL_DIMS, MeteredEmbedder, createEmbedder, reserveEmbedding } from "./embeddings";
+import { MODEL_DIMS, MeteredEmbedder, conservativeEmbeddingTokens, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
 import { reserveItemEmbedding } from "./surfaces";
@@ -115,7 +115,7 @@ async function embedQuery(ctx: SemanticContext, query: string, cap: QueryCap): P
   if (cap === "item") {
     // A zero memory cap switches item embedding off too, the same as the item pass.
     if (config.maxEmbeddingsPerDay === 0) return null;
-    if (reserveItemEmbedding(db, day, [estimateTokens(query)]) === 0) return null;
+    if (reserveItemEmbedding(db, day, [conservativeEmbeddingTokens(query)]) === 0) return null;
   } else if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {
     const [vector] = await embedder.embed([query]);
