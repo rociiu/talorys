@@ -39,6 +39,7 @@ import {
   ITEM_EMBEDDINGS_PER_DAY,
   type ItemPassReport,
   automationKeywordHits,
+  itemPassRunning,
   itemUsageToday,
   pendingItems,
   prepareSurfaceSearch,
@@ -269,6 +270,7 @@ semanticRoutes.get("/semantic/status", async (c) => {
       by_type: items ? countIndexedItems(s.db, current, embedder?.dims ?? 0) : { task: 0, note: 0, automation: 0 },
       items_today: items ? itemUsageToday(s.db, UsageService.day()).requests : 0,
       items_cap: ITEM_EMBEDDINGS_PER_DAY,
+      indexing: enabled && itemPassRunning(s.db),
     },
   });
 });

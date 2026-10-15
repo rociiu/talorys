@@ -4,6 +4,7 @@ import { RefreshCw, Trash2 } from "lucide-react";
 import { Button, Card, ConfirmDialog, ErrorNotice, Input, Switch } from "./ui";
 import { useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
+import { statusRefetchInterval } from "./semanticPolling";
 
 // Local mirrors of the /api/semantic/* responses (apps/agent/src/semantic/routes.ts).
 interface SemanticConfig {
@@ -20,7 +21,7 @@ interface SemanticStatus {
   pending: number;
   embeddings_today: number;
   cap: number;
-  items?: { vectors: number; pending: number; by_type: { task: number; note: number; automation: number }; items_today: number; items_cap: number };
+  items?: { vectors: number; pending: number; by_type: { task: number; note: number; automation: number }; items_today: number; items_cap: number; indexing: boolean };
 }
 
 interface ReindexReport {
@@ -48,7 +49,7 @@ function Row({ label, hint, children }: { label: string; hint?: ReactNode; child
 
 /**
  * Settings card for semantic memory recall: the opt-in switch, the daily embedding cap,
- * index status (polled while memories or items are pending) and the reindex and delete actions.
+ * index status (polled while memories are pending or an item pass runs) and the reindex and delete actions.
  */
 export function SemanticRecallCard() {
   const qc = useQueryClient();
@@ -64,7 +65,7 @@ export function SemanticRecallCard() {
     queryFn: () => api<SemanticStatus>("/semantic/status"),
     enabled,
     refetchOnMount: "always",
-    refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 || (q.state.data?.items?.pending ?? 0) > 0 ? 3000 : false),
+    refetchInterval: (q) => statusRefetchInterval(q.state.data),
   });
   const savedCap = config.data?.config?.maxEmbeddingsPerDay ?? DEFAULT_CAP;
   const [cap, setCap] = useState(savedCap);

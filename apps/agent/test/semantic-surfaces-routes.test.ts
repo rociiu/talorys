@@ -8,7 +8,7 @@ import { UsageService } from "../src/services/usage";
 import type { Services } from "../src/services/container";
 
 type Client = Awaited<ReturnType<typeof loggedIn>>;
-type Items = { vectors: number; pending: number; by_type: { task: number; note: number; automation: number }; items_today: number; items_cap: number };
+type Items = { vectors: number; pending: number; by_type: { task: number; note: number; automation: number }; items_today: number; items_cap: number; indexing: boolean };
 
 /** Clears semantic state and every task, note and automation. */
 function reset(s: Services) {
@@ -53,7 +53,7 @@ describe("semantic surface routes", () => {
       a.services.tasks.create({ title: "Renew passport" });
     });
     const c = await loggedIn();
-    expect(await items(c)).toEqual({ vectors: 0, pending: 0, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50 });
+    expect(await items(c)).toEqual({ vectors: 0, pending: 0, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50, indexing: false });
     await inAgent((a) => {
       expect(semanticTableNames(a.services.db)).toEqual([]);
       expect(a.services.db.one(`SELECT name FROM sqlite_master WHERE name = 'tal_semantic_item_vectors'`)).toBeNull();
@@ -62,7 +62,7 @@ describe("semantic surface routes", () => {
     // Once enabled, pending counts parts (a note is a title row plus a body part) without embedding.
     await inAgent((a) => a.services.notes.create({ title: "Packing list", content: "Passport and charger." }));
     await enableQuietly();
-    expect(await items(c)).toEqual({ vectors: 0, pending: 3, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50 });
+    expect(await items(c)).toEqual({ vectors: 0, pending: 3, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50, indexing: false });
     await inAgent((a) => reset(a.services));
   });
 
@@ -141,7 +141,7 @@ describe("semantic surface routes", () => {
 
     expect((await c.call("/api/semantic/data", { method: "DELETE", body: { confirm: "DELETE" } })).status).toBe(200);
     await inAgent((a) => expect(a.services.db.one(`SELECT name FROM sqlite_master WHERE name = 'tal_semantic_item_usage'`)).toBeNull());
-    expect(await items(c)).toEqual({ vectors: 0, pending: 0, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50 });
+    expect(await items(c)).toEqual({ vectors: 0, pending: 0, by_type: { task: 0, note: 0, automation: 0 }, items_today: 0, items_cap: 50, indexing: false });
     await inAgent((a) => reset(a.services));
   });
 
