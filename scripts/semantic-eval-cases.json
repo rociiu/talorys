@@ -1,0 +1,418 @@
+{
+  "cases": [
+    {
+      "id": "EX-T1",
+      "query": "doc appt soon?",
+      "kind": "positive",
+      "target": "patel",
+      "gating": true
+    },
+    {
+      "id": "EX-T2",
+      "query": "travel prep?",
+      "kind": "positive",
+      "target": "passport",
+      "gating": true,
+      "surfaces": [
+        "task"
+      ]
+    },
+    {
+      "id": "EX-T3",
+      "query": "car stuff?",
+      "kind": "positive",
+      "target": "brakes",
+      "gating": true,
+      "surfaces": [
+        "task"
+      ]
+    },
+    {
+      "id": "EX-T4",
+      "query": "doc appt soon?",
+      "kind": "negative",
+      "target": null,
+      "gating": true,
+      "exclude": [
+        "patel"
+      ]
+    },
+    {
+      "id": "EX-T5",
+      "query": "gm",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    },
+    {
+      "id": "EX-T6",
+      "query": "capital of france",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    },
+    {
+      "id": "EX-N1",
+      "query": "gift ideas for dad?",
+      "kind": "positive",
+      "target": "skillet",
+      "gating": true,
+      "surfaces": [
+        "note"
+      ]
+    },
+    {
+      "id": "EX-N2",
+      "query": "door code?",
+      "kind": "positive",
+      "target": "keypad",
+      "gating": true,
+      "surfaces": [
+        "note"
+      ]
+    },
+    {
+      "id": "EX-N3",
+      "query": "dogs ok here?",
+      "kind": "positive",
+      "target": "lease",
+      "gating": true,
+      "surfaces": [
+        "note"
+      ]
+    },
+    {
+      "id": "EX-N4",
+      "query": "grocery list?",
+      "kind": "negative",
+      "target": null,
+      "gating": true,
+      "surfaces": [
+        "note"
+      ]
+    },
+    {
+      "id": "EX-N5",
+      "query": "who won last nite",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    },
+    {
+      "id": "EX-N6",
+      "query": "thx",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    },
+    {
+      "id": "EX-A1",
+      "query": "garbage night?",
+      "kind": "positive",
+      "target": "bins",
+      "gating": true
+    },
+    {
+      "id": "EX-A2",
+      "query": "bill reminders?",
+      "kind": "positive",
+      "target": "rent",
+      "gating": true
+    },
+    {
+      "id": "EX-A3",
+      "query": "meds reminders?",
+      "kind": "positive",
+      "target": "vitamin",
+      "gating": true
+    },
+    {
+      "id": "EX-A4",
+      "query": "plumber?",
+      "kind": "negative",
+      "target": null,
+      "gating": true,
+      "exclude": [
+        "plumber"
+      ]
+    },
+    {
+      "id": "EX-A5",
+      "query": "weather tmrw",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    },
+    {
+      "id": "EX-A6",
+      "query": "hi",
+      "kind": "negative",
+      "target": null,
+      "gating": true
+    }
+  ],
+  "items": [
+    {
+      "id": "patel",
+      "type": "task",
+      "texts": [
+        "Task: Call Dr. Patel's office to book a physical"
+      ]
+    },
+    {
+      "id": "passport",
+      "type": "task",
+      "texts": [
+        "Task: Renew passport before the March trip"
+      ]
+    },
+    {
+      "id": "brakes",
+      "type": "task",
+      "texts": [
+        "Task: Get the brakes looked at"
+      ]
+    },
+    {
+      "id": "plants",
+      "type": "task",
+      "texts": [
+        "Task: Water the plants"
+      ]
+    },
+    {
+      "id": "tesla",
+      "type": "task",
+      "texts": [
+        "Task: Renew Tesla registration"
+      ]
+    },
+    {
+      "id": "dentist",
+      "type": "task",
+      "texts": [
+        "Task: Call the dentist"
+      ]
+    },
+    {
+      "id": "milk",
+      "type": "task",
+      "texts": [
+        "Task: Buy milk and eggs"
+      ]
+    },
+    {
+      "id": "gutters",
+      "type": "task",
+      "texts": [
+        "Task: Clean the gutters"
+      ]
+    },
+    {
+      "id": "skillet",
+      "type": "note",
+      "texts": [
+        "Note: Father's Day: he's been eyeing a cast-iron skillet, 12 inch, Lodge",
+        "Father's Day: he's been eyeing a cast-iron skillet, 12 inch, Lodge: Target has them in stock"
+      ]
+    },
+    {
+      "id": "keypad",
+      "type": "note",
+      "texts": [
+        "Note: Side gate keypad: 4417, then press #",
+        "Side gate keypad: 4417, then press #: Works after dark too"
+      ]
+    },
+    {
+      "id": "apron",
+      "type": "note",
+      "texts": [
+        "Note: Mom: wants a new gardening apron, size M, likes navy",
+        "Mom: wants a new gardening apron, size M, likes navy: Birthday is in May"
+      ]
+    },
+    {
+      "id": "router",
+      "type": "note",
+      "texts": [
+        "Note: Router",
+        "Router: Router: Netgear, network HomeNet-5G, pw on sticker under base"
+      ]
+    },
+    {
+      "id": "lease",
+      "type": "note",
+      "texts": [
+        "Note: Lease",
+        "Lease: Term of the tenancy is twelve months from the signing date. lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum do",
+        "Lease: Utilities for water and power are billed to the tenant monthly. lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsu",
+        "Lease: Pets are allowed with a 300 deposit, one animal per unit.. lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dol",
+        "Lease: Parking is one assigned space behind the building. lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit a",
+        "Lease: Move out requires sixty days of written notice to the landlord. lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsu"
+      ]
+    },
+    {
+      "id": "review",
+      "type": "note",
+      "texts": [
+        "Note: Restaurant review",
+        "Restaurant review: Osteria Nonna: great cacio e pepe, slow service, four stars"
+      ]
+    },
+    {
+      "id": "lisbon",
+      "type": "note",
+      "texts": [
+        "Note: Lisbon itinerary",
+        "Lisbon itinerary: Day 1: Alfama walk, Day 2: Belem and Sintra"
+      ]
+    },
+    {
+      "id": "lake-house",
+      "type": "note",
+      "texts": [
+        "Note: Lake house",
+        "Lake house: Wifi network Loon5G, password maple-4417"
+      ]
+    },
+    {
+      "id": "reading",
+      "type": "note",
+      "texts": [
+        "Note: Reading list",
+        "Reading list: Piranesi, The Overstory"
+      ]
+    },
+    {
+      "id": "mom-birthday",
+      "type": "note",
+      "texts": [
+        "Note: Mom's birthday: gardening gloves, the cookbook she mentioned, spa gift card",
+        "Mom's birthday: gardening gloves, the cookbook she mentioned, spa gift card: Before May"
+      ]
+    },
+    {
+      "id": "garage",
+      "type": "note",
+      "texts": [
+        "Note: Garage opener remote lives in the hall drawer",
+        "Garage opener remote lives in the hall drawer: Spare battery in the same drawer"
+      ]
+    },
+    {
+      "id": "recipes",
+      "type": "note",
+      "texts": [
+        "Note: Weeknight recipes",
+        "Weeknight recipes: Chili, lentil soup, sheet-pan salmon"
+      ]
+    },
+    {
+      "id": "bins",
+      "type": "automation",
+      "texts": [
+        "Reminder: Every Thursday 7 PM: remind me to put the bins out\nSchedule: Every Thursday at 19:00"
+      ]
+    },
+    {
+      "id": "rent",
+      "type": "automation",
+      "texts": [
+        "Reminder: Pay rent\nSchedule: Monthly on day 1 at 09:00"
+      ]
+    },
+    {
+      "id": "vitamin",
+      "type": "automation",
+      "texts": [
+        "Reminder: Take vitamin D\nSchedule: Every day at 08:00"
+      ]
+    },
+    {
+      "id": "plumber",
+      "type": "automation",
+      "texts": [
+        "Reminder: call the plumber Tuesday\nSchedule: Once at 2026-10-20 09:00:00.000Z"
+      ]
+    },
+    {
+      "id": "umbrella",
+      "type": "automation",
+      "texts": [
+        "Reminder: remind me to bring an umbrella if rain\nSchedule: Every day at 08:00"
+      ]
+    },
+    {
+      "id": "lipitor",
+      "type": "automation",
+      "texts": [
+        "Reminder: Take Lipitor\nSchedule: Every day at 08:00"
+      ]
+    },
+    {
+      "id": "digest",
+      "type": "automation",
+      "texts": [
+        "Reminder: Morning digest\nSchedule: Every day at 08:00"
+      ]
+    },
+    {
+      "id": "stretch",
+      "type": "automation",
+      "texts": [
+        "Reminder: Time to stretch\nSchedule: Every day at 08:00"
+      ]
+    }
+  ],
+  "extra": [
+    {
+      "id": "XT-weather-umbrella",
+      "query": "weather tmrw",
+      "label": "umbrella reminder",
+      "target": "umbrella"
+    },
+    {
+      "id": "XT-trash-current",
+      "query": "trash",
+      "label": "bins reminder, current text",
+      "target": "bins"
+    },
+    {
+      "id": "XT-trash-slim",
+      "query": "trash",
+      "label": "bins reminder, slim text",
+      "texts": [
+        "Every Thursday 7 PM: remind me to put the bins out"
+      ]
+    },
+    {
+      "id": "XT-trash-reminder-current",
+      "query": "do i have a reminder about trash",
+      "label": "bins reminder, current text",
+      "target": "bins"
+    },
+    {
+      "id": "XT-trash-reminder-slim",
+      "query": "do i have a reminder about trash",
+      "label": "bins reminder, slim text",
+      "texts": [
+        "Every Thursday 7 PM: remind me to put the bins out"
+      ]
+    },
+    {
+      "id": "XT-garbage-night-current",
+      "query": "garbage night?",
+      "label": "bins reminder, current text",
+      "target": "bins"
+    },
+    {
+      "id": "XT-garbage-night-slim",
+      "query": "garbage night?",
+      "label": "bins reminder, slim text",
+      "texts": [
+        "Every Thursday 7 PM: remind me to put the bins out"
+      ]
+    }
+  ]
+}
