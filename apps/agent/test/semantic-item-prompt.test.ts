@@ -13,7 +13,7 @@ import {
   type PromptContext,
 } from "../src/agent/prompt";
 import { AgentRunner } from "../src/agent/runner";
-import { type AgentEvent, type AIProvider, type GenerateRequest, type ToolRequest } from "../src/ai/provider";
+import type { AgentEvent, AIProvider, GenerateRequest, ToolRequest } from "../src/ai/provider";
 import { invalidateSemanticCache, semanticExtensions, semanticItemSelector, type RunnerExtensions } from "../src/semantic";
 import { deleteSemanticConfig, writeSemanticConfig } from "../src/semantic/config";
 import { conservativeEmbeddingTokens } from "../src/semantic/embeddings";

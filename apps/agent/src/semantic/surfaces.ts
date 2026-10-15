@@ -1,4 +1,4 @@
-import { type Automation, type Task } from "@talorys/shared";
+import type { Automation, Task } from "@talorys/shared";
 import type { Usage } from "../ai/provider";
 import { type Database, ftsQuery, now } from "../db/database";
 import { UsageService } from "../services/usage";
