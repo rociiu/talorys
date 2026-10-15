@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talorys — Your personal AI assistant, in your own cloud</title>
+<meta name="description" content="Talorys is a free, open-source personal AI assistant that runs entirely inside your own Cloudflare account.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav" id="top">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><span class="logo">T.</span>Talorys</a>
+    <nav class="links">
+      <a href="#features">Features</a>
+      <a href="#demo">Demo</a>
+      <a href="#how">How It Works</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://github.com/rociiu/talorys">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="btn btn-primary" href="#how">Get Started</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Free · Open source · Yours to control</p>
+      <h1>Your personal<br>AI assistant,<br><span class="accent">in your own cloud.</span></h1>
+      <p class="lead">Talorys remembers what matters, organizes your life, helps you get things done, and runs in your own Cloudflare account.</p>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href="#how">Get Started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost btn-lg" href="#demo"><span class="play" aria-hidden="true">▶</span> See it in action</a>
+      </div>
+      <ul class="checks">
+        <li>Free and open source</li>
+        <li>Deployed to your own Cloudflare account</li>
+        <li>No Talorys backend or telemetry</li>
+      </ul>
+    </div>
+    <div class="hero-shots">
+      <div class="window">
+        <div class="window-bar"><i></i><i></i><i></i></div>
+        <div class="crop"><img src="screenshots/chat.png" alt="Talorys chat with tool activity"></div>
+      </div>
+      <img class="phone" src="screenshots/mobile.png" alt="Talorys on a phone" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="features" class="wrap features">
+  <article>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></div>
+    <h3>An AI that remembers you</h3>
+    <p>Tell Talorys about your preferences, projects and plans. It remembers useful details so you don't have to repeat yourself — and you can view, edit or delete every memory.</p>
+  </article>
+  <article>
+    <div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 5-5"/></svg></div>
+    <h3>Less organizing. More doing.</h3>
+    <p>Turn conversations into tasks, keep notes, and organize your projects in one place — from the UI or straight from chat.</p>
+  </article>
+  <article>
+    <div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div>
+    <h3>Reminders that work for you</h3>
+    <p>One-time and recurring reminders, daily digests and AI routines run on Durable Object alarms — even when your browser is closed.</p>
+  </article>
+  <article>
+    <div class="icon"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="11" rx="2"/><path d="M3 19h18"/></svg></div>
+    <h3>On any device</h3>
+    <p>Sign in from any modern browser on your computer or phone, and get push notifications on the devices you turn them on for.</p>
+  </article>
+</section>
+
+<section id="demo" class="wrap">
+  <div class="panel demo">
+    <div>
+      <p class="eyebrow">Explore Talorys</p>
+      <h2>See Talorys in action</h2>
+      <p class="sub">Chat, remember, organize and automate — all in one private workspace.</p>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-shot="chat">Chat</button>
+        <button type="button" role="tab" data-shot="tasks">Tasks</button>
+        <button type="button" role="tab" data-shot="memory">Memories</button>
+        <button type="button" role="tab" data-shot="automations">Automations</button>
+      </div>
+    </div>
+    <div class="window">
+      <div class="window-bar"><i></i><i></i><i></i></div>
+      <img id="demo-shot" src="screenshots/chat.png" alt="Talorys chat screen" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="how" class="wrap how">
+  <div class="how-head">
+    <div>
+      <p class="eyebrow">Get started</p>
+      <h2>Deploy in minutes</h2>
+      <p class="sub">Get your own instance of Talorys running on Cloudflare with a single command.</p>
+    </div>
+    <a class="more" href="https://github.com/rociiu/talorys/blob/main/docs/deployment.md">View detailed installation guide →</a>
+  </div>
+  <ol class="steps">
+    <li>
+      <span class="num">1</span>
+      <h4>Prepare your environment</h4>
+      <p>Create a free Cloudflare account and install Node.js 22 or newer.</p>
+    </li>
+    <li>
+      <span class="num">2</span>
+      <h4>Run one command</h4>
+      <div class="cmd"><code>npx create-talorys@latest</code><button type="button" class="copy" aria-label="Copy command">Copy</button></div>
+    </li>
+    <li>
+      <span class="num">3</span>
+      <h4>Start using Talorys</h4>
+      <p>Sign in to Cloudflare, choose an owner password, and open the <code>pages.dev</code> URL the installer prints.</p>
+    </li>
+  </ol>
+</section>
+
+<section id="privacy" class="wrap">
+  <div class="privacy">
+    <div>
+      <p class="eyebrow light">Privacy &amp; ownership</p>
+      <h2>Your data stays in your cloud</h2>
+      <p>Talorys runs in your Cloudflare account. There's no Talorys-hosted backend, no signup, and no telemetry, analytics or tracking.</p>
+      <ul class="checks two">
+        <li>You control your data</li>
+        <li>Built on Cloudflare</li>
+        <li>No Talorys servers</li>
+        <li>Free and open source</li>
+      </ul>
+    </div>
+    <div class="cloud-art dark" aria-hidden="true">
+      <div class="orbit"></div>
+      <div class="cloud">☁</div>
+      <span class="chip c1">📄</span><span class="chip c2">📅</span><span class="chip c3">🔒</span><span class="chip c4">🗄️</span>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="wrap faq">
+  <div class="faq-head">
+    <div><p class="eyebrow">FAQ</p><h2>Frequently asked questions</h2></div>
+    <a class="more" href="https://github.com/rociiu/talorys/blob/main/docs/troubleshooting.md">View troubleshooting →</a>
+  </div>
+  <div class="faq-grid">
+    <article><h4>Is Talorys really free?</h4><p>Talorys is open source and free. It's designed to fit Cloudflare's free plans, which have daily quotas, and it never turns on paid features by itself.</p></article>
+    <article><h4>Do I need technical knowledge?</h4><p>Not much. You need a Cloudflare account and Node.js 22+. One command does the install, and running it again safely picks up where it left off.</p></article>
+    <article><h4>Where does my data go?</h4><p>Your data lives in your Cloudflare account. There's no Talorys-hosted backend, and we don't collect any telemetry.</p></article>
+    <article><h4>Can I use it on mobile?</h4><p>Yes. Talorys works in modern mobile browsers. On iPhone and iPad, add it to your Home Screen to get push notifications.</p></article>
+  </div>
+</section>
+</main>
+
+<footer class="wrap footer">
+  <a class="brand" href="#top"><span class="logo">T.</span>Talorys</a>
+  <span class="tag">Your AI. Your Space. Your Rules.</span>
+  <nav>
+    <a href="https://github.com/rociiu/talorys">GitHub</a>
+    <a href="https://github.com/rociiu/talorys/tree/main/docs">Documentation</a>
+    <a href="https://github.com/rociiu/talorys/blob/main/CONTRIBUTING.md">Contributing</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</footer>
+
+<script>
+  const tabs = document.querySelectorAll('.tabs button');
+  for (const b of tabs) {
+    b.addEventListener('click', () => {
+      for (const x of tabs) x.setAttribute('aria-selected', x === b);
+      const img = document.getElementById('demo-shot');
+      img.src = `screenshots/${b.dataset.shot}.png`;
+      img.alt = `Talorys ${b.textContent.toLowerCase()} screen`;
+    });
+  }
+  for (const b of document.querySelectorAll('.copy')) {
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.previousElementSibling.textContent);
+        b.textContent = 'Copied';
+        setTimeout(() => {
+          b.textContent = 'Copy';
+        }, 1500);
+      } catch {}
+    });
+  }
+</script>
+</body>
+</html>

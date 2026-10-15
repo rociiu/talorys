@@ -2,6 +2,8 @@
 
 **Your personal AI agent. Your own cloud.**
 
+Website: [rociiu.github.io/talorys](https://rociiu.github.io/talorys/)
+
 Talorys is a free, open-source personal AI assistant that runs entirely inside
 **your own Cloudflare account**. It chats with you, remembers what matters,
 manages tasks, notes and projects, and runs reminders and routines on a
