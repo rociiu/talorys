@@ -460,7 +460,7 @@ export function itemPassRunning(db: Database): boolean {
 
 /**
  * Embeds at most SEARCH_REEMBED_MAX pending item parts, hands any left over to a background
- * backfill, then returns the query's vector for this turn (null without an embedder, at the
+ * backfill, then returns the query's vector for this turn (null without an embedder, at the item
  * cap, or on an AI error). A running item pass is never awaited: the search uses the vectors
  * already stored and the backfill picks up after it. Never throws.
  */
@@ -475,7 +475,7 @@ export async function prepareSurfaceSearch(sem: SemanticContext, query: string):
   } catch (error) {
     console.warn("Semantic item pass before search failed", error instanceof Error ? error.message : String(error));
   }
-  return queryVector(sem, query);
+  return queryVector(sem, query, "item");
 }
 
 /**

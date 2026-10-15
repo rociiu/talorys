@@ -7,6 +7,7 @@ import type { SemanticConfig } from "./config";
 import { MODEL_DIMS, MeteredEmbedder, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
+import { reserveItemEmbedding } from "./surfaces";
 import { cachedVectors, dot, normalize } from "./vectorStore";
 import { hasHistoricalIntent } from "../memory/intent";
 
@@ -43,10 +44,21 @@ export const MAX_NEWER_PER_HIT = 2;
 /** Everything one recall needs: the indexer context plus the owner's services. */
 export interface SemanticContext extends IndexerContext {
   services: Services;
-  /** Query vectors embedded in this turn by `queryKey`; null records a failed or capped embed. */
-  queryVectors?: Map<string, Float32Array | null>;
+  /**
+   * Query vectors embedded in this turn by `queryKey`, with the cap that paid for each; a null
+   * vector records a failed or capped embed under that cap.
+   */
+  queryVectors?: Map<string, QueryVectorEntry>;
   /** Keeps background work alive after the turn returns (the Durable Object's waitUntil). */
   waitUntil?: (work: Promise<unknown>) => void;
+}
+
+/** Which daily cap pays for a query embedding: memory recall's or the task, note and automation one. */
+export type QueryCap = "memory" | "item";
+
+export interface QueryVectorEntry {
+  vector: Float32Array | null;
+  cap: QueryCap;
 }
 
 /** Distinct query vectors one context keeps; inserting past this drops the oldest. */
@@ -92,15 +104,19 @@ export function rrf(lists: string[][], k = RRF_K): Map<string, number> {
 }
 
 /**
- * Embeds the query when an embedder is available and today's cap allows one more
- * request. Null on no embedder, the cap, or any AI error, so recall falls back to keywords.
+ * Embeds the query when an embedder is available and today's `cap` allows one more request.
+ * Null on no embedder, the cap, or any AI error, so recall falls back to keywords.
  */
-async function embedQuery(ctx: SemanticContext, query: string): Promise<Float32Array | null> {
+async function embedQuery(ctx: SemanticContext, query: string, cap: QueryCap): Promise<Float32Array | null> {
   const { db, config, embedder } = ctx;
   if (!embedder) return null;
   const day = UsageService.day();
   // Reserved before the call (which counts even if it fails), so concurrent turns cannot overrun the cap.
-  if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
+  if (cap === "item") {
+    // A zero memory cap switches item embedding off too, the same as the item pass.
+    if (config.maxEmbeddingsPerDay === 0) return null;
+    if (reserveItemEmbedding(db, day, [estimateTokens(query)]) === 0) return null;
+  } else if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {
     const [vector] = await embedder.embed([query]);
     return vector && vector.length === embedder.dims ? vector : null;
@@ -116,18 +132,26 @@ export function queryKey(query: string): string {
 }
 
 /**
- * The query's vector, embedded at most once per context (one chat turn or scheduled run).
- * A null result is kept too, so a failed or capped query falls back to keywords without retrying.
+ * The query's vector, embedded at most once per context (one chat turn or scheduled run) and
+ * charged to `cap`. A vector either cap paid for is reused free. A null result is kept too, so a
+ * failed or capped query falls back to keywords without retrying under the same cap; the other
+ * cap may still try its own embed.
  */
-export async function queryVector(ctx: SemanticContext, query: string): Promise<Float32Array | null> {
+export async function queryVector(ctx: SemanticContext, query: string, cap: QueryCap = "memory"): Promise<Float32Array | null> {
   const cache = (ctx.queryVectors ??= new Map());
   const key = queryKey(query);
-  if (cache.has(key)) return cache.get(key)!;
-  const vector = await embedQuery(ctx, query);
+  const hit = cache.get(key);
+  if (hit && (hit.vector || hit.cap === cap)) return hit.vector;
+  const vector = await embedQuery(ctx, query, cap);
   cache.delete(key);
-  cache.set(key, vector);
+  cache.set(key, { vector, cap });
   while (cache.size > MAX_QUERY_VECTORS) cache.delete(cache.keys().next().value!);
   return vector;
+}
+
+/** A vector already embedded for the query in this context, without embedding one. */
+export function peekQueryVector(ctx: SemanticContext, query: string): Float32Array | null {
+  return ctx.queryVectors?.get(queryKey(query))?.vector ?? null;
 }
 
 /**

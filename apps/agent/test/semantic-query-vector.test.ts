@@ -118,7 +118,7 @@ describe("queryVector embeds each query once per turn", () => {
         warn.mockRestore();
       }
       expect(embedder.embedsOf("peanuts")).toBe(1);
-      expect(ctx.queryVectors?.get("peanuts")).toBeNull();
+      expect(ctx.queryVectors?.get("peanuts")).toEqual({ vector: null, cap: "memory" });
     });
   });
 
