@@ -282,6 +282,28 @@ export const MIGRATIONS: Migration[] = [
       // Existing tal_usage_daily token columns stay untouched: provenance/model are unknown.
     },
   },
+  {
+    version: 8,
+    name: "remote access tokens",
+    statements: [
+      // Credentials: only HMAC(SESSION_SECRET, token) is stored, and backups never export them.
+      `CREATE TABLE tal_remote_tokens (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        hint TEXT NOT NULL,
+        scope TEXT NOT NULL CHECK (scope IN ('read','write')),
+        created_at TEXT NOT NULL,
+        last_used_at TEXT
+      )`,
+      `CREATE TABLE tal_remote_auth_failures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client TEXT NOT NULL,
+        at INTEGER NOT NULL
+      )`,
+      `CREATE INDEX tal_remote_auth_failures_at ON tal_remote_auth_failures(at)`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;
