@@ -6,7 +6,8 @@ import type { RunnerExtensions } from "./hooks";
 import { itemSection, selectSemanticItems } from "./itemRecall";
 import { ensureSemanticSchema } from "./migrations";
 import { type SemanticContext, createSemanticContext, selectSemanticMemories } from "./recall";
-import { type ItemCaps, SEARCH_REEMBED_MAX, itemPassRunning, runItemPass } from "./surfaces";
+import { type ItemCaps, itemPassRunning, runItemPass } from "./itemIndex";
+import { SEARCH_REEMBED_MAX } from "./itemSearch";
 import { semanticTools } from "./tools";
 
 export type { RunnerExtensions } from "./hooks";

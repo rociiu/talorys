@@ -4,7 +4,7 @@ import { UsageService } from "../services/usage";
 import type { SemanticConfig } from "./config";
 import { type Embedder, contentHash, embeddingText, reserveEmbedding } from "./embeddings";
 import { ensureSemanticSchema } from "./migrations";
-import { type ItemPassReport, runItemPass } from "./surfaces";
+import { type ItemPassReport, runItemPass } from "./itemIndex";
 import { deleteAllVectors, deleteVector, purgeOrphanVectors, upsertVectors, vectorMeta } from "./vectorStore";
 
 /** Most memories embedded in one indexer run, and so in one embed call. */

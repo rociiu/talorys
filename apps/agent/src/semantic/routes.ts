@@ -35,17 +35,8 @@ import {
 } from "./itemStore";
 import { dropSemanticData, ensureSemanticSchema, semanticSchema, tableExists } from "./migrations";
 import { LAZY_INDEX_BATCH, type SemanticContext, createSemanticContext, hybridSearch, rrf, savedAt } from "./recall";
-import {
-  type ItemPassReport,
-  automationKeywordHits,
-  itemPassRunning,
-  itemUsageToday,
-  pendingItems,
-  prepareSurfaceSearch,
-  runItemPass,
-  scanItemVectors,
-  startBackgroundItemPass,
-} from "./surfaces";
+import { type ItemPassReport, itemPassRunning, itemUsageToday, pendingItems, runItemPass, startBackgroundItemPass } from "./itemIndex";
+import { automationKeywordHits, prepareSurfaceSearch, scanItemVectors } from "./itemSearch";
 import { countVectors, deleteAllVectors, dropVectorCache } from "./vectorStore";
 
 /**

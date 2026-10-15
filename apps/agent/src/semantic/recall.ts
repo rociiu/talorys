@@ -7,7 +7,7 @@ import type { SemanticConfig } from "./config";
 import { MODEL_DIMS, MeteredEmbedder, conservativeEmbeddingTokens, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
-import { correctItemTokens, itemCaps, reserveItemEmbedding } from "./surfaces";
+import { correctItemTokens, itemCaps, reserveItemEmbedding } from "./itemIndex";
 import { cachedVectors, dot, normalize } from "./vectorStore";
 import { hasHistoricalIntent } from "../memory/intent";
 

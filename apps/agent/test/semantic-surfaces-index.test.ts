@@ -7,7 +7,8 @@ import type { IndexerContext } from "../src/semantic/indexer";
 import type { ItemType } from "../src/semantic/itemStore";
 import { dropSemanticData } from "../src/semantic/migrations";
 import { type SemanticContext, hybridSearch } from "../src/semantic/recall";
-import { itemUsageToday, runItemPass, startBackgroundItemBackfill, taskText } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass, startBackgroundItemBackfill } from "../src/semantic/itemIndex";
+import { taskText } from "../src/semantic/itemText";
 import { UsageService } from "../src/services/usage";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 

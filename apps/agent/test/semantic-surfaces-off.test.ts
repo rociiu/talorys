@@ -6,7 +6,7 @@ import { invalidateSemanticCache, semanticExtensions } from "../src/semantic";
 import { deleteSemanticConfig, writeSemanticConfig } from "../src/semantic/config";
 import { dropSemanticData, tableExists } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
-import { runItemPass } from "../src/semantic/surfaces";
+import { runItemPass } from "../src/semantic/itemIndex";
 import { SEARCH_DESCRIPTION, SEARCH_MEMORIES_DESCRIPTION, SEARCH_NOTES_DESCRIPTION, semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";

@@ -7,7 +7,7 @@ import { MeteredEmbedder, MockEmbedder, conservativeEmbeddingTokens } from "../s
 import type { IndexerContext } from "../src/semantic/indexer";
 import { dropSemanticData } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
-import { itemUsageToday, runItemPass } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass } from "../src/semantic/itemIndex";
 import { semanticTools } from "../src/semantic/tools";
 import type { ToolContext } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";

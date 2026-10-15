@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as database from "../src/db/database";
-import { automationKeywordHits } from "../src/semantic/surfaces";
+import { automationKeywordHits } from "../src/semantic/itemSearch";
 
 const SAMPLES = [
   "Remind me to water the plants",

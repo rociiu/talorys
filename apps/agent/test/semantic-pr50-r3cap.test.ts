@@ -13,7 +13,7 @@ import {
 import { MockEmbedder } from "../src/semantic/embeddings";
 import type { IndexerContext } from "../src/semantic/indexer";
 import { dropSemanticData } from "../src/semantic/migrations";
-import { itemUsageToday, runItemPass } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass } from "../src/semantic/itemIndex";
 import { UsageService } from "../src/services/usage";
 import type { Services } from "../src/services/container";
 

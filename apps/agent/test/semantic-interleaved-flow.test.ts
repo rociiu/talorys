@@ -8,7 +8,7 @@ import { deleteSemanticConfig, writeSemanticConfig } from "../src/semantic/confi
 import { ITEM_SECTION_HEADING } from "../src/semantic/itemRecall";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import { type SemanticContext, selectSemanticMemories } from "../src/semantic/recall";
-import { pendingItems } from "../src/semantic/surfaces";
+import { pendingItems } from "../src/semantic/itemIndex";
 import { semanticTools } from "../src/semantic/tools";
 import type { Services } from "../src/services/container";
 

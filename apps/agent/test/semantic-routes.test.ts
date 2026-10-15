@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { client, inAgent, loggedIn, proposeAction } from "./helpers";
 import { MockEmbedder, embeddingsToday } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
-import { itemUsageToday, runItemPass } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass } from "../src/semantic/itemIndex";
 import { UsageService } from "../src/services/usage";
 import { invalidateSemanticCache } from "../src/semantic";
 import {

@@ -5,13 +5,7 @@ import { presentTask } from "../tools/tasks";
 import { localDayBounds } from "../services/time";
 import { startBackgroundIndex } from "./indexer";
 import { type SemanticContext, hybridSearch, peekQueryVector, savedAt } from "./recall";
-import {
-  automationAdditions,
-  automationKeywordHits,
-  noteAdditions,
-  prepareSurfaceSearch,
-  taskAdditions,
-} from "./surfaces";
+import { automationAdditions, automationKeywordHits, noteAdditions, prepareSurfaceSearch, taskAdditions } from "./itemSearch";
 
 const SEARCH_MEMORY_LIMIT = 10;
 const SEARCH_ALL_MEMORY_LIMIT = 5;

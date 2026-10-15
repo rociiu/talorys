@@ -4,7 +4,7 @@ import { invalidateSemanticCache } from "../src/semantic";
 import { deleteSemanticConfig } from "../src/semantic/config";
 import { embeddingsToday } from "../src/semantic/embeddings";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
-import { ITEM_EMBEDDINGS_PER_DAY, itemUsageToday, reserveItemEmbedding } from "../src/semantic/surfaces";
+import { ITEM_EMBEDDINGS_PER_DAY, itemUsageToday, reserveItemEmbedding } from "../src/semantic/itemIndex";
 import type { Services } from "../src/services/container";
 
 const DAY = "2026-10-14";

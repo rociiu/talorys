@@ -5,7 +5,8 @@ import { DEFAULT_SEMANTIC_CONFIG, deleteSemanticConfig } from "../src/semantic/c
 import { MockEmbedder } from "../src/semantic/embeddings";
 import type { IndexerContext } from "../src/semantic/indexer";
 import { dropSemanticData } from "../src/semantic/migrations";
-import { changedItemRows, itemSourceStamp, pendingItems, runItemPass } from "../src/semantic/surfaces";
+import { changedItemRows, pendingItems, runItemPass } from "../src/semantic/itemIndex";
+import { itemSourceStamp } from "../src/semantic/itemText";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 
 /** Clears items and semantic state, seeds `n` tasks and indexes them all. */

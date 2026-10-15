@@ -5,7 +5,7 @@ import { invalidateSemanticCache, semanticMemorySelector } from "../src/semantic
 import { deleteSemanticConfig } from "../src/semantic/config";
 import { dropSemanticData } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
-import { runItemPass } from "../src/semantic/surfaces";
+import { runItemPass } from "../src/semantic/itemIndex";
 import { semanticTools } from "../src/semantic/tools";
 import type { ToolContext } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";

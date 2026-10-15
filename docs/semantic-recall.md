@@ -120,8 +120,9 @@ module itself fails, chat falls back to upstream recall.
 
 While the feature is on, the agent's `list_tasks`, `search_notes` and `search`
 tools also find tasks, notes and automations by meaning. The code is in
-`apps/agent/src/semantic/surfaces.ts`; vectors go in
-`tal_semantic_item_vectors`.
+`apps/agent/src/semantic/`: `itemText.ts` builds the embedded text,
+`itemIndex.ts` runs the embedding pass and its caps, and `itemSearch.ts`
+scores and adds the hits. Vectors go in `tal_semantic_item_vectors`.
 
 What gets embedded:
 

@@ -13,9 +13,13 @@ import {
   chunkNote,
   itemSourceStamp,
   noteParts,
+} from "../src/semantic/itemText";
+import {
   runItemPass,
+} from "../src/semantic/itemIndex";
+import {
   taskText,
-} from "../src/semantic/surfaces";
+} from "../src/semantic/itemText";
 
 /** A paragraph of exactly `length` characters that starts with `tag`. */
 function paragraph(tag: string, length: number): string {

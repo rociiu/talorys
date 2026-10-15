@@ -7,7 +7,7 @@ import { runIndexer } from "../src/semantic/indexer";
 import { MAX_RECALLED_ITEMS, automationLine, selectSemanticItems } from "../src/semantic/itemRecall";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import { type SemanticContext, queryVector, selectSemanticMemories } from "../src/semantic/recall";
-import { itemUsageToday, runItemPass } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass } from "../src/semantic/itemIndex";
 import { formatLocal } from "../src/services/time";
 import { UsageService } from "../src/services/usage";
 import type { TalorysAgent } from "../src/agent/talorys-agent";

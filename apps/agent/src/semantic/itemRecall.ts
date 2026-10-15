@@ -3,7 +3,8 @@ import { presentTask } from "../tools/tasks";
 import { conservativeEmbeddingTokens } from "./embeddings";
 import type { ItemType } from "./itemStore";
 import { type SemanticContext, peekQueryVector } from "./recall";
-import { type ItemHit, NOTE_SPLIT_CHARS, noteParts, scanItemVectors } from "./surfaces";
+import { type ItemHit, scanItemVectors } from "./itemSearch";
+import { NOTE_SPLIT_CHARS, noteParts } from "./itemText";
 
 /** Most task, note and automation lines one turn recalls. */
 export const MAX_RECALLED_ITEMS = 3;

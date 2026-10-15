@@ -5,7 +5,8 @@ import { DEFAULT_SEMANTIC_CONFIG, deleteSemanticConfig } from "../src/semantic/c
 import { MockEmbedder } from "../src/semantic/embeddings";
 import { dropSemanticData } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
-import { SEARCH_REEMBED_MAX, itemPassRunning, pendingItems, prepareSurfaceSearch, runItemPass } from "../src/semantic/surfaces";
+import { itemPassRunning, pendingItems, runItemPass } from "../src/semantic/itemIndex";
+import { SEARCH_REEMBED_MAX, prepareSurfaceSearch } from "../src/semantic/itemSearch";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 
 const QUERY = "where did I put the passport";

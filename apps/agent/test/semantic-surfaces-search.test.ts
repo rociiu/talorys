@@ -10,10 +10,14 @@ import {
   automationKeywordHits,
   noteAdditions,
   prepareSurfaceSearch,
+} from "../src/semantic/itemSearch";
+import {
   runItemPass,
+} from "../src/semantic/itemIndex";
+import {
   scanItemVectors,
   taskAdditions,
-} from "../src/semantic/surfaces";
+} from "../src/semantic/itemSearch";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 
 /** Clears items and semantic state and returns an enabled context searched with the fixture embedder. */

@@ -5,7 +5,8 @@ import { catchUpItems, invalidateSemanticCache, semanticExtensions, semanticItem
 import { deleteSemanticConfig } from "../src/semantic/config";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import { type SemanticContext, selectSemanticMemories } from "../src/semantic/recall";
-import { ITEM_EMBEDDINGS_PER_DAY, SEARCH_REEMBED_MAX, itemUsageToday, pendingItems } from "../src/semantic/surfaces";
+import { ITEM_EMBEDDINGS_PER_DAY, itemUsageToday, pendingItems } from "../src/semantic/itemIndex";
+import { SEARCH_REEMBED_MAX } from "../src/semantic/itemSearch";
 import { UsageService } from "../src/services/usage";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 

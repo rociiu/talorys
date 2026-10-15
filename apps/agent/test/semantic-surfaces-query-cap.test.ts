@@ -6,7 +6,7 @@ import { deleteSemanticConfig } from "../src/semantic/config";
 import { embeddingsToday } from "../src/semantic/embeddings";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import { type SemanticContext, peekQueryVector } from "../src/semantic/recall";
-import { ITEM_EMBEDDINGS_PER_DAY, itemUsageToday, runItemPass } from "../src/semantic/surfaces";
+import { ITEM_EMBEDDINGS_PER_DAY, itemUsageToday, runItemPass } from "../src/semantic/itemIndex";
 import { semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";
