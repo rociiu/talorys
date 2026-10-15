@@ -1,12 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { inAgent } from "./helpers";
+import { invalidateSemanticCache } from "../src/semantic";
+import { DEFAULT_SEMANTIC_CONFIG, deleteSemanticConfig } from "../src/semantic/config";
+import { MockEmbedder, contentHash } from "../src/semantic/embeddings";
+import type { IndexerContext } from "../src/semantic/indexer";
+import { dropSemanticData } from "../src/semantic/migrations";
 import {
-  AUTOMATION_KIND_LABELS,
   NOTE_CHUNK_CHARS,
   NOTE_MAX_CHUNKS,
   NOTE_SPLIT_CHARS,
   automationText,
   chunkNote,
+  itemSourceStamp,
   noteParts,
+  runItemPass,
   taskText,
 } from "../src/semantic/surfaces";
 
@@ -24,15 +31,58 @@ describe("surface embedded text", () => {
     expect(taskText({ title: "T", description: long })).toBe(`Task: T\n${"d".repeat(1000)}`);
   });
 
-  it("TXT-auto: automation text has the kind label, a distinct message and the schedule", () => {
-    const base = { kind: "reminder" as const, name: "Take Lipitor", schedule_description: "Every day at 21:00" };
-    expect(automationText({ ...base, message: " Take Lipitor " })).toBe("Reminder: Take Lipitor\nSchedule: Every day at 21:00");
-    expect(automationText({ ...base, message: "" })).toBe("Reminder: Take Lipitor\nSchedule: Every day at 21:00");
-    expect(automationText({ ...base, message: "With dinner" })).toBe("Reminder: Take Lipitor\nWith dinner\nSchedule: Every day at 21:00");
-    expect(automationText({ ...base, message: "m".repeat(1200) })).toBe(`Reminder: Take Lipitor\n${"m".repeat(1000)}\nSchedule: Every day at 21:00`);
-    expect(AUTOMATION_KIND_LABELS).toEqual({ reminder: "Reminder", task_digest: "Task digest", agent_prompt: "Scheduled AI prompt" });
-    expect(automationText({ ...base, kind: "task_digest", message: "" })).toMatch(/^Task digest: /);
-    expect(automationText({ ...base, kind: "agent_prompt", message: "" })).toMatch(/^Scheduled AI prompt: /);
+  it("TXT-auto: automation text is the name plus a message the name does not already contain", () => {
+    const base = { name: "Take Lipitor" };
+    expect(automationText({ ...base, message: " Take Lipitor " })).toBe("Take Lipitor");
+    expect(automationText({ ...base, message: "take  LIPITOR" })).toBe("Take Lipitor");
+    expect(automationText({ ...base, message: "Lipitor" })).toBe("Take Lipitor");
+    expect(automationText({ ...base, message: "" })).toBe("Take Lipitor");
+    expect(automationText({ ...base, message: " With dinner " })).toBe("Take Lipitor\nWith dinner");
+    expect(automationText({ ...base, message: "m".repeat(1200) })).toBe(`Take Lipitor\n${"m".repeat(1000)}`);
+    expect(automationText({ name: "  ", message: "Water the ferns" })).toBe("Water the ferns");
+  });
+
+  it("HUB-h: the bins reminder embeds as its name alone", () => {
+    const name = "Every Thursday 7 PM: remind me to put the bins out";
+    expect(automationText({ name, message: name })).toBe("Every Thursday 7 PM: remind me to put the bins out");
+    expect(automationText({ name, message: "Put the bins out" })).toBe("Every Thursday 7 PM: remind me to put the bins out");
+  });
+
+  it("HUB-h: a stored automation vector from the previous text shape re-embeds once", async () => {
+    await inAgent(async (a) => {
+      const s = a.services;
+      dropSemanticData(s.db);
+      deleteSemanticConfig(s.settings);
+      invalidateSemanticCache(s);
+      for (const table of ["tal_tasks", "tal_notes", "tal_automations"]) s.db.run(`DELETE FROM ${table}`);
+      const name = "Every Thursday 7 PM: remind me to put the bins out";
+      const bins = s.automationsRepo.create({ name, kind: "reminder", message: name, schedule: { type: "weekly", days: [4], time: "19:00" }, enabled: true });
+      const embedder = new MockEmbedder();
+      const embed = vi.spyOn(embedder, "embed");
+      const ctx: IndexerContext = { db: s.db, embedder, config: { ...DEFAULT_SEMANTIC_CONFIG, enabled: true, maxEmbeddingsPerDay: 10_000 } };
+      expect(await runItemPass(ctx)).toMatchObject({ embedded: 1, pending: 0 });
+      expect(embed.mock.calls.at(-1)![0]).toEqual([name]);
+
+      // Put the row back the way the previous text shape stored it.
+      const updatedAt = s.automationsRepo.require(bins.id).updated_at;
+      const oldText = `Reminder: ${name}\nSchedule: Every Thursday at 19:00`;
+      s.db.run(
+        `UPDATE tal_semantic_item_vectors SET content_hash = ?, source_updated_at = ? WHERE item_type = 'automation' AND item_id = ?`,
+        await contentHash(oldText),
+        `v1:${updatedAt}`,
+        bins.id,
+      );
+      embed.mockClear();
+
+      expect(await runItemPass(ctx)).toMatchObject({ embedded: 1, pending: 0 });
+      expect(embed.mock.calls.flatMap((c) => c[0])).toEqual([name]);
+      const stored = s.db.one<{ s: string }>(`SELECT source_updated_at AS s FROM tal_semantic_item_vectors WHERE item_type = 'automation' AND item_id = ?`, bins.id);
+      expect(stored?.s).toBe(itemSourceStamp("automation", updatedAt));
+
+      embed.mockClear();
+      expect(await runItemPass(ctx)).toMatchObject({ embedded: 0, pending: 0 });
+      expect(embed).not.toHaveBeenCalled();
+    });
   });
 });
 

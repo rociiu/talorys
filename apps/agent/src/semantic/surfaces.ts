@@ -1,4 +1,4 @@
-import { type Automation, type AutomationKind, type ScheduleSpec, type Task, describeSchedule } from "@talorys/shared";
+import { type Automation, type Task } from "@talorys/shared";
 import type { Usage } from "../ai/provider";
 import { type Database, ftsQuery, now } from "../db/database";
 import { UsageService } from "../services/usage";
@@ -25,12 +25,6 @@ export const NOTE_CHUNK_CHARS = 1200;
 /** Chunks embedded per note; text past the last one is left to full-text search. */
 export const NOTE_MAX_CHUNKS = 40;
 
-export const AUTOMATION_KIND_LABELS: Record<AutomationKind, string> = {
-  reminder: "Reminder",
-  task_digest: "Task digest",
-  agent_prompt: "Scheduled AI prompt",
-};
-
 // These text shapes are hashed and stored as content_hash, so changing one re-embeds every item.
 
 /** The text embedded for a task. Status, priority and due date are left out so they never trigger a re-embed. */
@@ -39,19 +33,24 @@ export function taskText(t: { title: string; description: string | null }): stri
   return description.trim() ? `Task: ${t.title}\n${description.slice(0, 1000)}` : `Task: ${t.title}`;
 }
 
-/** The text embedded for an automation. Run state is left out so runs never trigger a re-embed. */
-export function automationText(a: { kind: AutomationKind; name: string; message: string; schedule_description: string }): string {
-  let text = `${AUTOMATION_KIND_LABELS[a.kind]}: ${a.name}`;
+/**
+ * The text embedded for an automation: its name, plus the message when the name does not
+ * already contain it. Kind, schedule and run state are left out so the vector carries what the
+ * automation is about and runs never trigger a re-embed.
+ */
+export function automationText(a: { name: string; message: string }): string {
+  const name = a.name.trim();
   const message = a.message.trim();
-  if (message && message !== a.name.trim()) text += `\n${a.message.slice(0, 1000)}`;
-  return `${text}\nSchedule: ${a.schedule_description}`;
+  const fold = (s: string) => s.replace(/\s+/g, " ").toLowerCase();
+  if (!message || fold(name).includes(fold(message))) return name;
+  return name ? `${name}\n${message.slice(0, 1000)}` : message.slice(0, 1000);
 }
 
 /**
  * Version of the embedded text shape per type. Raising one makes every row of that type a
  * change-check candidate once, so a new text shape is compared against the stored hashes.
  */
-export const ITEM_TEXT_VERSIONS = { task: 1, automation: 1 } as const;
+export const ITEM_TEXT_VERSIONS = { task: 1, automation: 2 } as const;
 
 /** The source stamp stored with a task or automation vector: text version plus the row's updated_at. */
 export function itemSourceStamp(type: keyof typeof ITEM_TEXT_VERSIONS, updatedAt: string): string {
@@ -245,15 +244,13 @@ export async function pendingItems(
     await checkStamped("task", t.id, itemSourceStamp("task", t.updated_at), stored, () => taskText(t));
   }
 
-  // The schedule description is derived from the stored spec exactly as AutomationRepository does.
   const automationMeta = itemVectorMeta(db, "automation");
-  const automations = db.all<{ id: string; kind: AutomationKind; name: string; message: string; schedule: string; updated_at: string }>(
-    `SELECT id, kind, name, message, schedule, updated_at FROM tal_automations`,
+  const automations = db.all<{ id: string; name: string; message: string; updated_at: string }>(
+    `SELECT id, name, message, updated_at FROM tal_automations`,
   );
   for (const a of automations) {
     const stored = automationMeta.get(a.id)?.find((p) => p.part === 0);
-    const text = () => automationText({ ...a, schedule_description: describeSchedule(JSON.parse(a.schedule) as ScheduleSpec) });
-    await checkStamped("automation", a.id, itemSourceStamp("automation", a.updated_at), stored, text);
+    await checkStamped("automation", a.id, itemSourceStamp("automation", a.updated_at), stored, () => automationText(a));
   }
 
   const noteMeta = itemVectorMeta(db, "note");
