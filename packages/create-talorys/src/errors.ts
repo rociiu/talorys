@@ -17,7 +17,8 @@ export class CancelledError extends Error {
   }
 }
 
-const SECRETISH = /(token|secret|password|authorization|bearer|api[_-]?key)\s*[:=]\s*\S+/gi;
+// The value may follow a "Bearer" scheme word and, in JSON, be quoted (and contain spaces).
+const SECRETISH = /(token|secret|password|authorization|bearer|api[_-]?key)(["']?)\s*[:=]\s*(?:bearer\s+)?(?:"[^"\n]*"|'[^'\n]*'|\S+)/gi;
 
 /** Removes ANSI codes and anything that looks like a credential from tool output. */
 export function sanitize(output: string, maxLines = 12): string {
@@ -25,6 +26,7 @@ export function sanitize(output: string, maxLines = 12): string {
     // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escape sequences
     .replace(/\u001b\[[0-9;]*m/g, "")
     .replace(SECRETISH, "$1: [redacted]")
+    .replace(/\bbearer\s+[\w.~+/-]{8,}=*/gi, "Bearer [redacted]")
     .split("\n")
     .map((l) => l.trimEnd())
     .filter((l) => l.trim() && !/^\s*(?:▲|⛅|🪵)/u.test(l) && !l.includes("Proxy environment variables detected"))

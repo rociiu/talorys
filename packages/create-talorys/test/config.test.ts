@@ -69,6 +69,16 @@ describe("wrangler output handling", () => {
     expect(sanitize("Error: token=abc123 failed\napi_key: xyz")).not.toMatch(/abc123|xyz/);
   });
 
+  it("redacts bearer tokens and quoted values, not just the word after the colon", () => {
+    expect(sanitize("Authorization: Bearer abc123token")).not.toMatch(/abc123token/);
+    expect(sanitize("request failed with Bearer abc123token.xyz")).not.toMatch(/abc123token/);
+    expect(sanitize('{"api_token": "abc 123 secret value"}')).not.toMatch(/abc|123|value/);
+  });
+
+  it("keeps ordinary error text readable", () => {
+    expect(sanitize("The token has expired; log in again")).toBe("The token has expired; log in again");
+  });
+
   it("classifies common failures with recovery hints", () => {
     expect(explainWranglerFailure("X", "fetch failed ETIMEDOUT").message).toMatch(/network/);
     expect(explainWranglerFailure("X", "[code: 10001] forbidden").hint).toMatch(/Workers Scripts:Edit/);
