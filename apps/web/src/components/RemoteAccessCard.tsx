@@ -8,8 +8,9 @@ import { api } from "../lib/api";
 import { relativeTime } from "../lib/utils";
 
 const DESCRIPTION =
-  "Machine clients can call your install with a personal access token. CORS stays closed; plaintext tokens are shown once and never stored. Turning this off suspends tokens until you turn it on again; use Revoke or Revoke all to destroy them.";
-const WRITE_HINT = "Write is trusted owner-level access to tasks, notes, reminders and memories, including replacing content and deleting.";
+  "Create personal access tokens so scripts and other apps can use your Talorys data over HTTPS.";
+const SUSPENDED_HINT = "Tokens stay suspended until you turn this back on.";
+const WRITE_HINT = "Write can create, update, and delete tasks, notes, reminders, and memories.";
 const DOCS_URL = `${GITHUB_URL}/blob/main/docs/remote-access.md`;
 
 function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
@@ -92,6 +93,12 @@ export function RemoteAccessCard() {
                     <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                       How to use access tokens
                     </a>
+                    {!enabled && (
+                      <>
+                        {" "}
+                        {SUSPENDED_HINT}
+                      </>
+                    )}
                   </>
                 }
               >
