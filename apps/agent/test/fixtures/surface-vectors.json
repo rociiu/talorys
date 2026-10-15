@@ -25,7 +25,8 @@
     "dentist",
     "trash",
     "math",
-    "literature"
+    "literature",
+    "food"
   ],
   "texts": {
     "botany": {
@@ -226,6 +227,18 @@
     },
     "brb": {
       "greeting": 1
+    },
+    "food plans": {
+      "food": 1
+    },
+    "boiled eggs": {
+      "food": 0.7
+    },
+    "salad for lunch": {
+      "food": 0.68
+    },
+    "steaks for friday dinner": {
+      "food": 0.66
     }
   },
   "seedTexts": {
@@ -318,6 +331,10 @@
     "vit D reminder?": "vit d reminder",
     "whats 2+2": "whats 2+2",
     "who wrote hamlet": "who wrote hamlet",
-    "brb": "brb"
+    "brb": "brb",
+    "food plans next 3 days?": "food plans",
+    "Boiled eggs for breakfast": "boiled eggs",
+    "Make a salad for lunch tomorrow": "salad for lunch",
+    "Pick up steaks for Friday dinner": "steaks for friday dinner"
   }
 }
