@@ -5,7 +5,7 @@ import { readSemanticConfig, writeSemanticConfig, type SemanticConfig } from "./
 import type { RunnerExtensions } from "./hooks";
 import { itemSection, selectSemanticItems } from "./itemRecall";
 import { ensureSemanticSchema } from "./migrations";
-import { type SemanticContext, createSemanticContext, selectSemanticMemories } from "./recall";
+import { type SemanticContext, createSemanticContext, peekQueryVector, queryVector, selectSemanticMemories } from "./recall";
 import { type ItemCaps, itemPassRunning, runItemPass } from "./itemIndex";
 import { SEARCH_REEMBED_MAX } from "./itemSearch";
 import { semanticTools } from "./tools";
@@ -83,12 +83,15 @@ export async function catchUpItems(ctx: SemanticContext, caps?: ItemCaps): Promi
 
 /**
  * The runner's item hook: the items section for the recalled lines, within its own token cap.
- * Never throws; on any error the prompt simply has no items section.
+ * It reuses the vector memory recall embedded for the message; when there is none (the memory
+ * cap is 0 or reached), it embeds the message once against the daily item cap. Never throws; on
+ * any error the prompt simply has no items section.
  */
 export function semanticItemSelector(ctx: SemanticContext): NonNullable<RunnerExtensions["selectItems"]> {
   return async (query) => {
     try {
       await catchUpItems(ctx);
+      if (!peekQueryVector(ctx, query)) await queryVector(ctx, query, "item");
       return itemSection(selectSemanticItems(ctx, query));
     } catch (error) {
       console.warn("Semantic item recall failed", error instanceof Error ? error.message : String(error));
