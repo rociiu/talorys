@@ -54,8 +54,11 @@ export const remoteAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   // Before validation, so a throttled client is refused even with a correct token.
   remote.assertAuthAllowed(client);
   const raw = BEARER.exec(header)?.[1];
-  if (raw && auth.isConfigured()) await auth.syncSecretFingerprint();
-  const caller = raw ? await remote.validate(raw) : null;
+  // Without owner credentials the cookie path rejects everything, so a retained token must too.
+  // It fails like an invalid token, so the response does not reveal the configuration state.
+  const configured = auth.isConfigured();
+  if (raw && configured) await auth.syncSecretFingerprint();
+  const caller = raw && configured ? await remote.validate(raw) : null;
   if (!caller) {
     // Counts every rejection, a token presented while remote access is off included. The shared
     // activity log gets at most one entry per client per throttle window, and none while remote
