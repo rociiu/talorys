@@ -11,6 +11,7 @@ interface SemanticConfig {
   enabled: boolean;
   model: string;
   maxEmbeddingsPerDay: number;
+  maxItemEmbeddingsPerDay: number;
 }
 
 interface SemanticStatus {
@@ -71,6 +72,9 @@ export function SemanticRecallCard() {
   const savedCap = config.data?.config?.maxEmbeddingsPerDay ?? DEFAULT_CAP;
   const [cap, setCap] = useState(savedCap);
   useEffect(() => setCap(savedCap), [savedCap]);
+  const savedItemCap = config.data?.config?.maxItemEmbeddingsPerDay ?? DEFAULT_ITEM_CAP;
+  const [itemCapInput, setItemCapInput] = useState(savedItemCap);
+  useEffect(() => setItemCapInput(savedItemCap), [savedItemCap]);
   const savedModel = config.data?.config?.model ?? "";
   const [model, setModel] = useState(savedModel);
   useEffect(() => setModel(savedModel), [savedModel]);
@@ -92,6 +96,10 @@ export function SemanticRecallCard() {
   const validCap = Number.isInteger(cap) && cap >= 1 && cap <= 10_000;
   const submitCap = () => {
     if (validCap && cap !== savedCap) saveConfig.mutate({ maxEmbeddingsPerDay: cap });
+  };
+  const validItemCap = Number.isInteger(itemCapInput) && itemCapInput >= 1 && itemCapInput <= 10_000;
+  const submitItemCap = () => {
+    if (validItemCap && itemCapInput !== savedItemCap) saveConfig.mutate({ maxItemEmbeddingsPerDay: itemCapInput });
   };
   const s = status.data;
   const itemCap = s?.items?.items_cap ?? DEFAULT_ITEM_CAP;
@@ -153,6 +161,14 @@ export function SemanticRecallCard() {
                   </p>
                 </div>
               )}
+              {s?.items && !status.error && (
+                <div className="flex items-center justify-between gap-3 px-5 py-4 text-sm">
+                  <p className="text-xs text-fg-subtle">Item embeddings today</p>
+                  <p className="font-medium tabular-nums" data-stat="Item embeddings today">
+                    {s.items.items_today} / {itemCap}
+                  </p>
+                </div>
+              )}
               <Row label="Embedding model" hint="Default: @cf/baai/bge-m3. Must be a Workers AI text embedding model.">
                 <form
                   className="flex gap-2"
@@ -177,6 +193,29 @@ export function SemanticRecallCard() {
                 >
                   <Input type="number" min={1} max={10_000} step={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} onBlur={submitCap} aria-label="Max embeddings per day" />
                   <Button type="submit" variant="outline" disabled={!validCap || cap === savedCap} loading={saveConfig.isPending}>
+                    Save
+                  </Button>
+                </form>
+              </Row>
+              <Row label="Max item embeddings per day" hint="For tasks, notes and reminders, counted apart from memories. Items saved after it is spent are found by keyword until the next day.">
+                <form
+                  className="flex gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submitItemCap();
+                  }}
+                >
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10_000}
+                    step={1}
+                    value={itemCapInput}
+                    onChange={(e) => setItemCapInput(Number(e.target.value))}
+                    onBlur={submitItemCap}
+                    aria-label="Max item embeddings per day"
+                  />
+                  <Button type="submit" variant="outline" disabled={!validItemCap || itemCapInput === savedItemCap} loading={saveConfig.isPending}>
                     Save
                   </Button>
                 </form>

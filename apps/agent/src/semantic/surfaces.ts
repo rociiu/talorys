@@ -2,6 +2,7 @@ import type { Automation, Task } from "@talorys/shared";
 import type { Usage } from "../ai/provider";
 import { type Database, ftsTerms, now } from "../db/database";
 import { UsageService } from "../services/usage";
+import { ITEM_EMBEDDINGS_PER_DAY, type SemanticConfig } from "./config";
 import { conservativeEmbeddingTokens, contentHash } from "./embeddings";
 import { DEFAULT_MAX_EMBED, type IndexerContext } from "./indexer";
 import {
@@ -116,8 +117,8 @@ export function noteParts(n: { title: string; content: string }): { text: string
   return parts;
 }
 
-/** Item embedding requests per UTC day, counted apart from the shared memory cap. */
-export const ITEM_EMBEDDINGS_PER_DAY = 50;
+/** Default item embedding requests per UTC day, counted apart from the shared memory cap. */
+export { ITEM_EMBEDDINGS_PER_DAY };
 /** Estimated item tokens embedded per UTC day (about 537.5 bge-m3 neurons). */
 export const ITEM_TOKENS_PER_DAY = 500_000;
 
@@ -127,6 +128,11 @@ export interface ItemCaps {
 }
 
 export const ITEM_CAPS: ItemCaps = { requests: ITEM_EMBEDDINGS_PER_DAY, tokens: ITEM_TOKENS_PER_DAY };
+
+/** The item caps for `config`: its saved daily request cap and the fixed token cap. */
+export function itemCaps(config: Pick<SemanticConfig, "maxItemEmbeddingsPerDay">): ItemCaps {
+  return { requests: config.maxItemEmbeddingsPerDay ?? ITEM_EMBEDDINGS_PER_DAY, tokens: ITEM_TOKENS_PER_DAY };
+}
 
 /** Item embedding requests and estimated tokens recorded in `tal_semantic_item_usage` for a UTC day. */
 export function itemUsageToday(db: Database, day: string): { requests: number; tokens: number } {
@@ -403,7 +409,7 @@ async function itemPassOnce({ db, config, embedder }: IndexerContext, maxEmbed: 
     // Reserved before the call (which counts even if it fails), so concurrent passes cannot overrun the item cap.
     const day = UsageService.day();
     const textTokens = candidates.map((p) => conservativeEmbeddingTokens(p.text));
-    const n = reserveItemEmbedding(db, day, textTokens, caps);
+    const n = reserveItemEmbedding(db, day, textTokens, caps ?? itemCaps(config));
     if (n === 0) return { ...report, capped: true };
     const batch = candidates.slice(0, n);
     let usage: Usage | undefined;

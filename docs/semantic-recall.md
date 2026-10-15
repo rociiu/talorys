@@ -33,6 +33,7 @@ Defaults come from `DEFAULT_SEMANTIC_CONFIG` in
 | `enabled` | `false` | Module on or off |
 | `model` | `@cf/baai/bge-m3` | Workers AI embedding model (1024 dimensions); editable in the card |
 | `maxEmbeddingsPerDay` | `500` | Daily embedding cap (0 to 10,000) |
+| `maxItemEmbeddingsPerDay` | `50` | Daily item embedding request cap for tasks, notes and automations (0 to 10,000) |
 | `vectorFloor.absolute` | `0.55` | Minimum cosine score for a vector hit |
 | `vectorFloor.relative` | `0.1` | A vector hit must also be within this of the best hit |
 | `vectorFloor.backstop` | `0.4` | Minimum cosine for a top-k fallback hit; never above `vectorFloor.absolute` |
@@ -132,10 +133,13 @@ What gets embedded:
 - **Automation:** kind, name, message and schedule description. Run state is
   not embedded, so runs never cause a re-embed.
 
-Items have their own cap: 50 embedding requests and 500,000 estimated tokens a
-day, on their own counter. At bge-m3 rates that is at most 537.5 neurons a day,
-5.4% of the 10,000 free daily neurons. Memories keep the full
-`maxEmbeddingsPerDay`.
+Items have their own cap: `maxItemEmbeddingsPerDay` embedding requests (50 by
+default, editable in the card as "Max item embeddings per day") and 500,000
+estimated tokens a day, on their own counter. The token cap is fixed, so at
+bge-m3 rates items use at most 537.5 neurons a day, 5.4% of the 10,000 free
+daily neurons, whatever the request cap. Setting it to 0 stops item embedding
+for the day; lowering it below what was already used stops it until the next
+UTC day. Memories keep the full `maxEmbeddingsPerDay`.
 
 Saving or editing an item embeds nothing. The next chat turn or meaning search
 runs a change check that embeds up to 8 new or edited item parts against the
@@ -189,7 +193,8 @@ the system prompt behave exactly like upstream.
   section stays within its 300-token cap.
 - **Settings counts.** The Semantic recall card gains a "Tasks, notes,
   reminders" row with how many items are indexed and how many parts are
-  pending, and its hint names the separate item cap of 50 embeddings a day.
+  pending, an "Item embeddings today: N / cap" row, and a "Max item
+  embeddings per day" input for the separate item cap (50 by default).
   Pending parts wait for the next chat turn or search; the card does not embed
   them.
 
@@ -241,7 +246,7 @@ The prefix costs about 10 tokens per memory.
 | Budget | Target |
 | --- | --- |
 | Embedding cap | 500 per day by default (`maxEmbeddingsPerDay`), separate from the AI request limit |
-| Item embedding cap | 50 requests and 500,000 estimated tokens per day for tasks, notes and automations, on their own counter |
+| Item embedding cap | 50 requests by default (`maxItemEmbeddingsPerDay`) and 500,000 estimated tokens per day for tasks, notes and automations, on their own counter |
 | Item neurons | At most 537.5 per day, 5.4% of the 10,000 free daily neurons |
 | Neurons | About 0.06 per turn at 1,075 neurons per million input tokens; a backfill of 1,000 memories is about 32 |
 | Cosine scan | ≤ 5 ms at 5,000 memories |

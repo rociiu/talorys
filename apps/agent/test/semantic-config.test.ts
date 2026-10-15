@@ -67,6 +67,7 @@ describe("semantic config", () => {
         enabled: true,
         model: "@cf/baai/bge-small-en-v1.5",
         maxEmbeddingsPerDay: 300,
+        maxItemEmbeddingsPerDay: 50,
         vectorFloor: { absolute: 0.6, relative: 0.2, backstop: 0.35 },
       });
     });
@@ -88,7 +89,7 @@ describe("semantic config", () => {
 
       const tuned = { ...legacy, vectorFloor: { absolute: 0.6, relative: 0.1 } };
       s.settings.setJson(SEMANTIC_CONFIG_KEY, tuned);
-      expect(readSemanticConfig(s.settings, s.db)).toEqual({ ...tuned, vectorFloor: { ...tuned.vectorFloor, backstop: 0.35 } });
+      expect(readSemanticConfig(s.settings, s.db)).toEqual({ ...tuned, maxItemEmbeddingsPerDay: 50, vectorFloor: { ...tuned.vectorFloor, backstop: 0.35 } });
       reset(s);
     });
   });
@@ -202,7 +203,7 @@ describe("semantic config", () => {
     });
   });
 
-  it("writeSemanticConfig rejects invalid values and stores only the four fields", async () => {
+  it("writeSemanticConfig rejects invalid values and stores only the config fields", async () => {
     await inAgent((agent) => {
       const s = agent.services;
       reset(s);
@@ -214,12 +215,12 @@ describe("semantic config", () => {
         ...DEFAULT_SEMANTIC_CONFIG,
         vectorFloor: { ...DEFAULT_SEMANTIC_CONFIG.vectorFloor, relative: 0.3 },
       });
-      expect(storedKeys(s)).toEqual(["enabled", "maxEmbeddingsPerDay", "model", "vectorFloor"]);
+      expect(storedKeys(s)).toEqual(["enabled", "maxEmbeddingsPerDay", "maxItemEmbeddingsPerDay", "model", "vectorFloor"]);
       reset(s);
     });
   });
 
-  it("PUT /api/semantic/config writes only the four fields", async () => {
+  it("PUT /api/semantic/config writes only the config fields", async () => {
     await inAgent((agent) => reset(agent.services));
     const c = await loggedIn();
     expect(await c.json("/api/semantic/config")).toEqual({ config: null, ever_enabled: false });
@@ -232,7 +233,7 @@ describe("semantic config", () => {
     expect(((await res.json()) as { config: unknown }).config).toEqual({ ...DEFAULT_SEMANTIC_CONFIG, maxEmbeddingsPerDay: 200 });
     await inAgent((agent) => {
       const s = agent.services;
-      expect(storedKeys(s)).toEqual(["enabled", "maxEmbeddingsPerDay", "model", "vectorFloor"]);
+      expect(storedKeys(s)).toEqual(["enabled", "maxEmbeddingsPerDay", "maxItemEmbeddingsPerDay", "model", "vectorFloor"]);
       expect(s.settings.getJson(SEMANTIC_CONFIG_KEY)).toEqual({ ...DEFAULT_SEMANTIC_CONFIG, maxEmbeddingsPerDay: 200 });
     });
     expect(await c.json("/api/semantic/config")).toEqual({

@@ -16,6 +16,8 @@ export const semanticConfigSchema = z.object({
     .max(200)
     .regex(/^@(cf|hf)\/[\w.\-/]+$/, "Must be a Workers AI model id"),
   maxEmbeddingsPerDay: z.number().int().min(0).max(10_000),
+  /** Item embedding requests per UTC day for tasks, notes and automations, apart from the memory cap. */
+  maxItemEmbeddingsPerDay: z.number().int().min(0).max(10_000),
   vectorFloor: z.object({
     absolute: z.number().min(0).max(1),
     relative: z.number().min(0).max(1),
@@ -47,10 +49,14 @@ export function floorDefaultsFor(model: string): VectorFloor {
 const sameFloor = (a: VectorFloor, b: VectorFloor) =>
   a.absolute === b.absolute && a.relative === b.relative && a.backstop === b.backstop;
 
+/** The default daily item embedding request cap. */
+export const ITEM_EMBEDDINGS_PER_DAY = 50;
+
 export const DEFAULT_SEMANTIC_CONFIG: SemanticConfig = {
   enabled: false,
   model: "@cf/baai/bge-m3",
   maxEmbeddingsPerDay: 500,
+  maxItemEmbeddingsPerDay: ITEM_EMBEDDINGS_PER_DAY,
   vectorFloor: floorDefaultsFor("@cf/baai/bge-m3"),
 };
 
@@ -69,7 +75,7 @@ function isLegacyDefault(model: unknown, floor: unknown): boolean {
   );
 }
 
-/** A partial update; fields outside the four config fields are stripped. */
+/** A partial update; fields outside the config fields are stripped. */
 export const semanticConfigPatchSchema = semanticConfigSchema
   .extend({ vectorFloor: semanticConfigSchema.shape.vectorFloor.partial() })
   .partial();
@@ -158,7 +164,7 @@ export function mergeSemanticConfig(current: SemanticConfig | null, patch: Seman
 }
 
 /**
- * Validates a patch and stores the resulting config (only the four config fields).
+ * Validates a patch and stores the resulting config (only the config fields).
  * With `db`, enabling creates the schema before the key is written, so a failed
  * migration never records the feature as on.
  */

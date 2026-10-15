@@ -7,7 +7,7 @@ import type { SemanticConfig } from "./config";
 import { MODEL_DIMS, MeteredEmbedder, conservativeEmbeddingTokens, createEmbedder, reserveEmbedding } from "./embeddings";
 import { type IndexerContext, runIndexer } from "./indexer";
 import { ensureSemanticSchema } from "./migrations";
-import { correctItemTokens, reserveItemEmbedding } from "./surfaces";
+import { correctItemTokens, itemCaps, reserveItemEmbedding } from "./surfaces";
 import { cachedVectors, dot, normalize } from "./vectorStore";
 import { hasHistoricalIntent } from "../memory/intent";
 
@@ -118,7 +118,7 @@ async function embedQuery(ctx: SemanticContext, query: string, cap: QueryCap): P
   if (cap === "item") {
     // A zero memory cap switches item embedding off too, the same as the item pass.
     if (config.maxEmbeddingsPerDay === 0) return null;
-    if (reserveItemEmbedding(db, day, [conservativeEmbeddingTokens(query)]) === 0) return null;
+    if (reserveItemEmbedding(db, day, [conservativeEmbeddingTokens(query)], itemCaps(config)) === 0) return null;
   } else if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {
     let usage: Usage | undefined;

@@ -36,7 +36,6 @@ import {
 import { dropSemanticData, ensureSemanticSchema, semanticSchema, tableExists } from "./migrations";
 import { LAZY_INDEX_BATCH, type SemanticContext, createSemanticContext, hybridSearch, rrf, savedAt } from "./recall";
 import {
-  ITEM_EMBEDDINGS_PER_DAY,
   type ItemPassReport,
   automationKeywordHits,
   itemPassRunning,
@@ -269,7 +268,7 @@ semanticRoutes.get("/semantic/status", async (c) => {
       pending: enabled && items ? (await pendingItems(s.db, current, embedder?.dims, { readOnly: true })).pending.length : 0,
       by_type: items ? countIndexedItems(s.db, current, embedder?.dims ?? 0) : { task: 0, note: 0, automation: 0 },
       items_today: items ? itemUsageToday(s.db, UsageService.day()).requests : 0,
-      items_cap: ITEM_EMBEDDINGS_PER_DAY,
+      items_cap: config?.maxItemEmbeddingsPerDay ?? DEFAULT_SEMANTIC_CONFIG.maxItemEmbeddingsPerDay,
       indexing: enabled && itemPassRunning(s.db),
     },
   });
