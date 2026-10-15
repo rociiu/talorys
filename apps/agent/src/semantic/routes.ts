@@ -23,7 +23,16 @@ import {
   startBackgroundBackfill,
   startBackgroundIndex,
 } from "./indexer";
-import { ITEM_TYPES, type ItemType, countIndexedItems, countItemVectors, deleteAllItemVectors, dropItemVectorCache } from "./itemStore";
+import {
+  ITEM_TYPES,
+  type ItemType,
+  countIndexedItems,
+  countItemVectors,
+  deleteAllItemVectors,
+  deleteItemParts,
+  dropItemVectorCache,
+  purgeOrphanItemVectors,
+} from "./itemStore";
 import { dropSemanticData, ensureSemanticSchema, semanticSchema, tableExists } from "./migrations";
 import { LAZY_INDEX_BATCH, type SemanticContext, createSemanticContext, hybridSearch, rrf, savedAt } from "./recall";
 import {
@@ -124,6 +133,65 @@ semanticRoutes.use("/import", async (c, next) => {
     }
   } catch (error) {
     console.warn("Semantic import item pass failed", error instanceof Error ? error.message : String(error));
+  }
+});
+
+// ---------- Middleware around upstream task, note and automation writes ----------
+
+const ITEM_ROUTES: [string, ItemType][] = [
+  ["tasks", "task"],
+  ["notes", "note"],
+  ["automations", "automation"],
+];
+
+/**
+ * After a successful item write: a delete removes the item's vectors (or, without an id, every
+ * orphaned one), even while the feature is off; any other write starts a background item pass
+ * while the feature is on. The pass only embeds what changed, within the daily item cap.
+ */
+function afterItemWrite(c: Context<AppEnv>, config: SemanticConfig, type: ItemType, id: string | null): void {
+  try {
+    if (!isSuccess(c.res.status)) return;
+    const s = c.env.agent.services;
+    if (c.req.method === "DELETE") {
+      if (id) deleteItemParts(s.db, type, id);
+      else purgeOrphanItemVectors(s.db);
+    } else if (config.enabled) {
+      void startBackgroundItemPass(createSemanticContext(s, c.env.env, config), waitUntilOf(c));
+    }
+  } catch (error) {
+    console.warn("Semantic item on-save hook failed", error instanceof Error ? error.message : String(error));
+  }
+}
+
+for (const [segment, type] of ITEM_ROUTES) {
+  const hook = async (c: Context<AppEnv>, next: () => Promise<void>) => {
+    if (c.req.method === "GET" || c.req.method === "HEAD") return next();
+    const config = writeConfig(c);
+    await next();
+    if (config === null) return;
+    const parts = c.req.path.split("/");
+    const at = parts.indexOf(segment);
+    const id = at >= 0 && parts[at + 1] ? decodeURIComponent(parts[at + 1]!) : null;
+    afterItemWrite(c, config, type, id);
+  };
+  semanticRoutes.use(`/${segment}`, hook);
+  semanticRoutes.use(`/${segment}/*`, hook);
+}
+
+/**
+ * Owner approval of any agent-proposed action: a deleted task, note or automation leaves no
+ * vectors behind, even while the feature is off.
+ */
+semanticRoutes.use("/actions/*", async (c, next) => {
+  const approving = c.req.method === "POST" && c.req.path.endsWith("/approve");
+  const config = approving ? writeConfig(c) : null;
+  await next();
+  if (config === null || !isSuccess(c.res.status)) return;
+  try {
+    purgeOrphanItemVectors(c.env.agent.services.db);
+  } catch (error) {
+    console.warn("Semantic approve item purge failed", error instanceof Error ? error.message : String(error));
   }
 });
 

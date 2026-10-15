@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { client, inAgent, loggedIn, proposeAction } from "./helpers";
 import { MockEmbedder, embeddingsToday } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
+import { itemUsageToday } from "../src/semantic/surfaces";
 import { UsageService } from "../src/services/usage";
 import { invalidateSemanticCache } from "../src/semantic";
 import {
@@ -480,6 +481,120 @@ describe("semantic forget purge", () => {
     await inAgent((a) => {
       expect(vectorIds(a.services)).toEqual([...ids].sort());
       resetAll(a.services);
+    });
+  });
+});
+
+type ItemStatus = { items: { vectors: number; pending: number; items_today: number } };
+
+const itemVectorRows = (s: Services, id: string) =>
+  s.db.all<{ content_hash: string }>(`SELECT content_hash FROM tal_semantic_item_vectors WHERE item_id = ? ORDER BY part`, id);
+
+/** Polls the status until the item pass has nothing pending, without calling any search. */
+async function itemsSettled(c: Awaited<ReturnType<typeof loggedIn>>): Promise<ItemStatus["items"]> {
+  for (let i = 0; i < 200; i++) {
+    const { items } = (await c.json("/api/semantic/status")) as ItemStatus;
+    if (items.pending === 0) return items;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  throw new Error("item indexing did not settle");
+}
+
+async function createItems(c: Awaited<ReturnType<typeof loggedIn>>) {
+  const task = await c.call("/api/tasks", { method: "POST", body: { title: "Book dentist cleaning", description: "Six month checkup" } });
+  const note = await c.call("/api/notes", { method: "POST", body: { title: "Side gate", content: "Keypad combo is 4821" } });
+  const automation = await c.call("/api/automations", {
+    method: "POST",
+    body: { name: "Pick up steaks for Friday dinner", kind: "reminder", message: "Pick up steaks for Friday dinner", schedule: { type: "once", at: "2099-01-01T17:00" } },
+  });
+  expect([task.status, note.status, automation.status]).toEqual([201, 201, 201]);
+  return {
+    task: ((await task.json()) as { task: { id: string } }).task.id,
+    note: ((await note.json()) as { note: { id: string } }).note.id,
+    automation: ((await automation.json()) as { automation: { id: string } }).automation.id,
+  };
+}
+
+function resetItems(s: Services) {
+  resetAll(s);
+  s.db.run(`DELETE FROM tal_tasks`);
+  s.db.run(`DELETE FROM tal_notes`);
+  s.db.run(`DELETE FROM tal_automations`);
+}
+
+describe("semantic item on-save hooks", () => {
+  it("a task, note and automation created in the app reach 0 pending without any search", async () => {
+    await inAgent((a) => resetItems(a.services));
+    await enableQuietly();
+    const c = await loggedIn();
+    const ids = await createItems(c);
+    const items = await itemsSettled(c);
+    expect(items.pending).toBe(0);
+    await inAgent((a) => {
+      for (const id of Object.values(ids)) expect(itemVectorRows(a.services, id).length).toBeGreaterThan(0);
+      resetItems(a.services);
+    });
+  });
+
+  it("an edit re-embeds the item", async () => {
+    await inAgent((a) => resetItems(a.services));
+    await enableQuietly();
+    const c = await loggedIn();
+    const ids = await createItems(c);
+    await itemsSettled(c);
+    const before = await inAgent((a) => itemVectorRows(a.services, ids.task)[0]!.content_hash);
+    expect((await c.call(`/api/tasks/${ids.task}`, { method: "PATCH", body: { title: "Book a teeth cleaning" } })).status).toBe(200);
+    let after = before;
+    for (let i = 0; i < 200 && after === before; i++) {
+      await new Promise((r) => setTimeout(r, 25));
+      after = await inAgent((a) => itemVectorRows(a.services, ids.task)[0]?.content_hash ?? before);
+    }
+    expect(after).not.toBe(before);
+    await inAgent((a) => resetItems(a.services));
+  });
+
+  it("a delete removes the item's vectors in the same request", async () => {
+    await inAgent((a) => resetItems(a.services));
+    await enableQuietly();
+    const c = await loggedIn();
+    const ids = await createItems(c);
+    await itemsSettled(c);
+    expect((await c.call(`/api/tasks/${ids.task}`, { method: "DELETE" })).status).toBe(200);
+    expect((await c.call(`/api/notes/${ids.note}`, { method: "DELETE" })).status).toBe(200);
+    expect((await c.call(`/api/automations/${ids.automation}`, { method: "DELETE" })).status).toBe(200);
+    await inAgent((a) => {
+      for (const id of Object.values(ids)) expect(itemVectorRows(a.services, id)).toEqual([]);
+      resetItems(a.services);
+    });
+  });
+
+  it("with the feature off, app writes embed nothing", async () => {
+    await inAgent((a) => {
+      resetItems(a.services);
+      writeSemanticConfig(a.services.settings, { enabled: false }, a.services.db);
+      invalidateSemanticCache(a.services);
+    });
+    const c = await loggedIn();
+    const ids = await createItems(c);
+    expect((await c.call(`/api/tasks/${ids.task}`, { method: "PATCH", body: { title: "Book a teeth cleaning" } })).status).toBe(200);
+    await new Promise((r) => setTimeout(r, 200));
+    await inAgent((a) => {
+      const s = a.services;
+      const table = s.db.one(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'tal_semantic_item_vectors'`);
+      if (table) expect(s.db.one<{ n: number }>(`SELECT COUNT(*) AS n FROM tal_semantic_item_vectors`)!.n).toBe(0);
+      expect(itemUsageToday(s.db, UsageService.day()).requests).toBe(0);
+      resetItems(s);
+    });
+  });
+
+  it("with the feature never enabled, app writes create no semantic tables", async () => {
+    await inAgent((a) => resetItems(a.services));
+    const c = await loggedIn();
+    await createItems(c);
+    await new Promise((r) => setTimeout(r, 100));
+    await inAgent((a) => {
+      expect(semanticTableNames(a.services.db)).toEqual([]);
+      resetItems(a.services);
     });
   });
 });
