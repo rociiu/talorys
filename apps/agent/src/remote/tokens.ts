@@ -10,6 +10,7 @@ import {
 import type { z } from "zod";
 import { type Database, newId, now } from "../db/database";
 import { AppError, ValidationError } from "../api/errors";
+import { SESSION_IDLE_MS } from "../auth/auth-service";
 import type { SettingsService } from "../services/settings";
 
 /** Internal settings key, outside the exported Settings object, so a backup can neither carry nor set it. */
@@ -72,7 +73,11 @@ export class RemoteTokenService {
     );
   }
 
-  async create(input: z.input<typeof remoteTokenCreateSchema>): Promise<RemoteTokenInfo & { token: string }> {
+  /**
+   * Mints a token. When `sessionId` is given (the owner session that asked), it must still be
+   * current at insert time, so a request authenticated before a password change cannot mint after it.
+   */
+  async create(input: z.input<typeof remoteTokenCreateSchema>, sessionId?: string | null): Promise<RemoteTokenInfo & { token: string }> {
     const parsed = remoteTokenCreateSchema.safeParse(input);
     if (!parsed.success) throw ValidationError.fromZod(parsed.error);
     const { name, scope } = parsed.data;
@@ -83,6 +88,9 @@ export class RemoteTokenService {
     const hash = await hmacSha256Hex(secret, token);
     // Checks and insert run synchronously after the hash, so concurrent creates cannot pass the cap together.
     return this.db.transaction(() => {
+      if (sessionId !== undefined && !this.sessionCurrent(sessionId)) {
+        throw new AppError("UNAUTHORIZED", "Your session ended. Sign in again to create an access token.");
+      }
       if (!this.isEnabled()) throw new AppError("FORBIDDEN", "Remote access is turned off. Turn it on in Settings first.");
       if (this.count() >= MAX_REMOTE_TOKENS) {
         throw new AppError("FORBIDDEN", `You can have at most ${MAX_REMOTE_TOKENS} remote access tokens. Revoke one first.`);
@@ -97,6 +105,16 @@ export class RemoteTokenService {
       );
       return { ...info, token };
     });
+  }
+
+  private sessionCurrent(sessionId: string | null): boolean {
+    if (!sessionId) return false;
+    const row = this.db.one<{ expires_at: string; last_seen_at: string }>(
+      `SELECT expires_at, last_seen_at FROM tal_sessions WHERE id = ?`,
+      sessionId,
+    );
+    const nowMs = Date.now();
+    return !!row && Date.parse(row.expires_at) > nowMs && Date.parse(row.last_seen_at) + SESSION_IDLE_MS > nowMs;
   }
 
   /** The token's identity when remote access is on and the token exists; otherwise null. */

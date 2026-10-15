@@ -25,7 +25,7 @@ remoteRoutes.get("/remote/tokens", (c) => c.json({ tokens: c.env.agent.services.
 remoteRoutes.post("/remote/tokens", async (c) => {
   const s = c.env.agent.services;
   const input = await body(c, remoteTokenCreateSchema, 4 * 1024);
-  const token = await s.remote.create(input);
+  const token = await s.remote.create(input, c.get("sessionId"));
   s.activity.record("remote.token_created", `Created access token "${token.name}" (${token.scope})`);
   return c.json({ token }, 201);
 });
