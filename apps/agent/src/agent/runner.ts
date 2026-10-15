@@ -113,8 +113,7 @@ export class AgentRunner {
 
       // 2. Context: relevant memories, summary, recent history within the token budget.
       const selected = this.ext ? await this.ext.selectMemories(userMessage.content) : selectRelevantMemories(s.memories, userMessage.content);
-      const memoryBudget = memoryTokenBudget(limits);
-      const memories = s.memoryHistory.promptMemories(selected, memoryBudget);
+      const memories = s.memoryHistory.promptMemories(selected, memoryTokenBudget(limits));
       const items = this.ext?.selectItems ? await this.ext.selectItems(userMessage.content) : undefined;
       const history = s.pendingActions
         .withCurrentStatus(s.conversations.messages(conversation.id, { limit: 200 }))
