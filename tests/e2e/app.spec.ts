@@ -232,7 +232,7 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByRole("button", { name: /e2e Errands.*2\/2/ })).toBeVisible();
   });
 
-  test("automations can be scheduled, paused and deleted", async ({ page }) => {
+  test("automations can be scheduled, edited, paused and deleted", async ({ page }) => {
     await login(page);
     await page.getByRole("link", { name: "Automations" }).first().click();
     await page.getByRole("button", { name: "New", exact: true }).click();
@@ -242,11 +242,16 @@ test.describe("Talorys owner experience", () => {
     await page.getByRole("dialog").getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("e2e stand up and stretch").first()).toBeVisible();
     await expect(page.getByText("Every day at 07:30")).toBeVisible();
+    await page.getByRole("button", { name: /Edit e2e stand up/ }).click();
+    await expect(page.getByLabel("Reminder message")).toHaveValue("e2e stand up and stretch");
+    await page.getByLabel("Time").fill("08:15");
+    await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Every day at 08:15")).toBeVisible();
     await page.getByRole("switch", { name: /Pause/ }).first().click();
     await expect(page.getByText("Paused").first()).toBeVisible();
     await page.getByRole("button", { name: /Delete e2e stand up/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
-    await expect(page.getByText("Every day at 07:30")).toHaveCount(0);
+    await expect(page.getByText("Every day at 08:15")).toHaveCount(0);
   });
 
   test("settings show AI limits, usage estimates and sessions", async ({ page }) => {

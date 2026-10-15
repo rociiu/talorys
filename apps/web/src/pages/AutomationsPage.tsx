@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { type Automation, type AutomationKind, type ScheduleSpec, describeSchedule } from "@talorys/shared";
-import { AlarmClock, Bell, Bot, CalendarClock, ListChecks, Plus, Trash2 } from "lucide-react";
+import { AlarmClock, Bell, Bot, CalendarClock, ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
 import { Badge, Button, Card, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch, Textarea } from "../components/ui";
 import { keys, useApiMutation, useAutomations } from "../hooks/queries";
 import { api } from "../lib/api";
@@ -17,6 +17,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function AutomationsPage() {
   const { data, isLoading, error, refetch } = useAutomations();
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Automation | null>(null);
   const [deleting, setDeleting] = useState<Automation | null>(null);
   const tz = data?.timezone ?? "UTC";
 
@@ -69,6 +70,9 @@ export default function AutomationsPage() {
           {a.status !== "completed" && (
             <Switch checked={a.enabled} onChange={() => toggle.mutate(a)} label={a.enabled ? `Pause ${a.name}` : `Resume ${a.name}`} />
           )}
+          <Button variant="ghost" size="icon" onClick={() => setEditing(a)} aria-label={`Edit ${a.name}`}>
+            <Pencil className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => setDeleting(a)} aria-label={`Delete ${a.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -180,7 +184,7 @@ export default function AutomationsPage() {
         </div>
       )}
 
-      <AutomationForm open={creating} onClose={() => setCreating(false)} tz={tz} />
+      <AutomationForm key={editing?.id ?? "new"} open={creating || !!editing} onClose={() => (editing ? setEditing(null) : setCreating(false))} tz={tz} automation={editing} />
       <ConfirmDialog
         open={!!deleting}
         title="Delete schedule?"
@@ -199,16 +203,18 @@ function tomorrowAt9(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00`;
 }
 
-function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => void; tz: string }) {
-  const [kind, setKind] = useState<AutomationKind>("reminder");
-  const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
-  const [type, setType] = useState<ScheduleSpec["type"]>("once");
-  const [at, setAt] = useState(tomorrowAt9());
-  const [time, setTime] = useState("09:00");
-  const [days, setDays] = useState<number[]>([1]);
-  const [day, setDay] = useState(1);
-  const [minutes, setMinutes] = useState(60);
+function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onClose: () => void; tz: string; automation?: Automation | null }) {
+  // Remounted per automation (via `key`), so editing starts from the saved values.
+  const initial = automation?.schedule;
+  const [kind, setKind] = useState<AutomationKind>(automation?.kind ?? "reminder");
+  const [name, setName] = useState(automation?.name ?? "");
+  const [message, setMessage] = useState(automation?.message ?? "");
+  const [type, setType] = useState<ScheduleSpec["type"]>(initial?.type ?? "once");
+  const [at, setAt] = useState(initial?.type === "once" ? initial.at : tomorrowAt9());
+  const [time, setTime] = useState(initial && "time" in initial ? initial.time : "09:00");
+  const [days, setDays] = useState<number[]>(initial?.type === "weekly" ? initial.days : [1]);
+  const [day, setDay] = useState(initial?.type === "monthly" ? initial.day : 1);
+  const [minutes, setMinutes] = useState(initial?.type === "interval" ? initial.minutes : 60);
 
   const schedule: ScheduleSpec =
     type === "once"
@@ -228,13 +234,19 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
     setType("once");
     setAt(tomorrowAt9());
   };
-  const create = useApiMutation(
-    () => api("/automations", { method: "POST", body: { name: name.trim() || message.trim().slice(0, 80) || KIND_META[kind].label, kind, message, schedule } }),
+  const save = useApiMutation(
+    () => {
+      const finalName = name.trim() || message.trim().slice(0, 80) || KIND_META[kind].label;
+      if (!automation) return api("/automations", { method: "POST", body: { name: finalName, kind, message, schedule } });
+      // Saving a finished one-off with a new schedule brings it back to life.
+      const revive = automation.status === "completed" ? { enabled: true } : {};
+      return api(`/automations/${automation.id}`, { method: "PATCH", body: { name: finalName, message, schedule, ...revive } });
+    },
     {
       invalidate: [keys.automations],
-      success: "Scheduled",
+      success: automation ? "Saved" : "Scheduled",
       onSuccess: () => {
-        reset();
+        if (!automation) reset();
         onClose();
       },
     },
@@ -245,29 +257,30 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
     <Dialog
       open={open}
       onClose={onClose}
-      title="New automation"
+      title={automation ? "Edit automation" : "New automation"}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => create.mutate(undefined)} loading={create.isPending} disabled={needsMessage && !message.trim()}>
-            Create
+          <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={needsMessage && !message.trim()}>
+            {automation ? "Save" : "Create"}
           </Button>
         </>
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(KIND_META) as AutomationKind[]).map((k) => {
-            const Icon = KIND_META[k].icon;
-            return (
-              <button type="button"
-                key={k}
-                onClick={() => setKind(k)}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors",
-                  kind === k ? "border-accent bg-accent-soft text-accent" : "border-border text-fg-muted hover:bg-subtle",
+        {!automation && (
+          <div className="grid grid-cols-3 gap-2">
+            {(Object.keys(KIND_META) as AutomationKind[]).map((k) => {
+              const Icon = KIND_META[k].icon;
+              return (
+                <button type="button"
+                  key={k}
+                  onClick={() => setKind(k)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors",
+                    kind === k ? "border-accent bg-accent-soft text-accent" : "border-border text-fg-muted hover:bg-subtle",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -276,6 +289,7 @@ function AutomationForm({ open, onClose, tz }: { open: boolean; onClose: () => v
             );
           })}
         </div>
+        )}
         <p className="text-xs text-fg-subtle">{KIND_META[kind].hint}</p>
         <div>
           <Label htmlFor="auto-name" hint="Optional">
