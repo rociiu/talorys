@@ -6,6 +6,7 @@ import type { RunnerExtensions } from "./hooks";
 import { itemSection, selectSemanticItems } from "./itemRecall";
 import { ensureSemanticSchema } from "./migrations";
 import { type SemanticContext, createSemanticContext, selectSemanticMemories } from "./recall";
+import { type ItemCaps, SEARCH_REEMBED_MAX, itemPassRunning, runItemPass } from "./surfaces";
 import { semanticTools } from "./tools";
 
 export type { RunnerExtensions } from "./hooks";
@@ -65,12 +66,28 @@ export function semanticMemorySelector(ctx: SemanticContext): RunnerExtensions["
 }
 
 /**
+ * Lazily embeds tasks, notes and automations saved or changed since the last pass, at most
+ * SEARCH_REEMBED_MAX parts per turn, against the daily item cap. A running pass is not awaited,
+ * and at the cap, without an embedder or on an error nothing is embedded: the turn scores the
+ * vectors already stored. Never throws.
+ */
+export async function catchUpItems(ctx: SemanticContext, caps?: ItemCaps): Promise<void> {
+  try {
+    if (itemPassRunning(ctx.db)) return;
+    await runItemPass(ctx, { maxEmbed: SEARCH_REEMBED_MAX, ...(caps ? { caps } : {}) });
+  } catch (error) {
+    console.warn("Semantic item catch-up failed", error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
  * The runner's item hook: the items section for the recalled lines, within its own token cap.
  * Never throws; on any error the prompt simply has no items section.
  */
 export function semanticItemSelector(ctx: SemanticContext): NonNullable<RunnerExtensions["selectItems"]> {
   return async (query) => {
     try {
+      await catchUpItems(ctx);
       return itemSection(selectSemanticItems(ctx, query));
     } catch (error) {
       console.warn("Semantic item recall failed", error instanceof Error ? error.message : String(error));

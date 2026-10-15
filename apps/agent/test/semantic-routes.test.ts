@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { client, inAgent, loggedIn, proposeAction } from "./helpers";
 import { MockEmbedder, embeddingsToday } from "../src/semantic/embeddings";
 import { runIndexer } from "../src/semantic/indexer";
-import { itemUsageToday } from "../src/semantic/surfaces";
+import { itemUsageToday, runItemPass } from "../src/semantic/surfaces";
 import { UsageService } from "../src/services/usage";
 import { invalidateSemanticCache } from "../src/semantic";
 import {
@@ -490,16 +490,6 @@ type ItemStatus = { items: { vectors: number; pending: number; items_today: numb
 const itemVectorRows = (s: Services, id: string) =>
   s.db.all<{ content_hash: string }>(`SELECT content_hash FROM tal_semantic_item_vectors WHERE item_id = ? ORDER BY part`, id);
 
-/** Polls the status until the item pass has nothing pending, without calling any search. */
-async function itemsSettled(c: Awaited<ReturnType<typeof loggedIn>>): Promise<ItemStatus["items"]> {
-  for (let i = 0; i < 200; i++) {
-    const { items } = (await c.json("/api/semantic/status")) as ItemStatus;
-    if (items.pending === 0) return items;
-    await new Promise((r) => setTimeout(r, 25));
-  }
-  throw new Error("item indexing did not settle");
-}
-
 async function createItems(c: Awaited<ReturnType<typeof loggedIn>>) {
   const task = await c.call("/api/tasks", { method: "POST", body: { title: "Book dentist cleaning", description: "Six month checkup" } });
   const note = await c.call("/api/notes", { method: "POST", body: { title: "Side gate", content: "Keypad combo is 4821" } });
@@ -522,34 +512,37 @@ function resetItems(s: Services) {
   s.db.run(`DELETE FROM tal_automations`);
 }
 
-describe("semantic item on-save hooks", () => {
-  it("a task, note and automation created in the app reach 0 pending without any search", async () => {
+describe("semantic item writes in the app", () => {
+  it("a task, note and automation saved in the app stay pending until a chat turn or search", async () => {
     await inAgent((a) => resetItems(a.services));
     await enableQuietly();
     const c = await loggedIn();
     const ids = await createItems(c);
-    const items = await itemsSettled(c);
-    expect(items.pending).toBe(0);
+    await new Promise((r) => setTimeout(r, 100));
+    const { items } = (await c.json("/api/semantic/status")) as ItemStatus;
+    // One part each for the task and the automation, two (title and body) for the note.
+    expect(items.pending).toBe(4);
+    expect(items.items_today).toBe(0);
     await inAgent((a) => {
-      for (const id of Object.values(ids)) expect(itemVectorRows(a.services, id).length).toBeGreaterThan(0);
+      for (const id of Object.values(ids)) expect(itemVectorRows(a.services, id)).toEqual([]);
       resetItems(a.services);
     });
   });
 
-  it("an edit re-embeds the item", async () => {
+  it("an edit in the app makes the item pending again without embedding it", async () => {
     await inAgent((a) => resetItems(a.services));
     await enableQuietly();
     const c = await loggedIn();
-    const ids = await createItems(c);
-    await itemsSettled(c);
-    const before = await inAgent((a) => itemVectorRows(a.services, ids.task)[0]!.content_hash);
-    expect((await c.call(`/api/tasks/${ids.task}`, { method: "PATCH", body: { title: "Book a teeth cleaning" } })).status).toBe(200);
-    let after = before;
-    for (let i = 0; i < 200 && after === before; i++) {
-      await new Promise((r) => setTimeout(r, 25));
-      after = await inAgent((a) => itemVectorRows(a.services, ids.task)[0]?.content_hash ?? before);
-    }
-    expect(after).not.toBe(before);
+    const created = await createItems(c);
+    await inAgent(async (a) => {
+      const s = a.services;
+      const sem: SemanticContext = { db: s.db, services: s, embedder: new MockEmbedder(), config: { ...DEFAULT_SEMANTIC_CONFIG, ...readSemanticConfig(s.settings)! } };
+      await runItemPass(sem, { maxEmbed: 50 });
+    });
+    expect(((await c.json("/api/semantic/status")) as ItemStatus).items.pending).toBe(0);
+    expect((await c.call(`/api/tasks/${created.task}`, { method: "PATCH", body: { title: "Book a teeth cleaning" } })).status).toBe(200);
+    await new Promise((r) => setTimeout(r, 100));
+    expect(((await c.json("/api/semantic/status")) as ItemStatus).items.pending).toBe(1);
     await inAgent((a) => resetItems(a.services));
   });
 
@@ -558,7 +551,12 @@ describe("semantic item on-save hooks", () => {
     await enableQuietly();
     const c = await loggedIn();
     const ids = await createItems(c);
-    await itemsSettled(c);
+    await inAgent(async (a) => {
+      const s = a.services;
+      const sem: SemanticContext = { db: s.db, services: s, embedder: new MockEmbedder(), config: { ...DEFAULT_SEMANTIC_CONFIG, ...readSemanticConfig(s.settings)! } };
+      await runItemPass(sem, { maxEmbed: 50 });
+      for (const id of Object.values(ids)) expect(itemVectorRows(s, id).length).toBeGreaterThan(0);
+    });
     expect((await c.call(`/api/tasks/${ids.task}`, { method: "DELETE" })).status).toBe(200);
     expect((await c.call(`/api/notes/${ids.note}`, { method: "DELETE" })).status).toBe(200);
     expect((await c.call(`/api/automations/${ids.automation}`, { method: "DELETE" })).status).toBe(200);

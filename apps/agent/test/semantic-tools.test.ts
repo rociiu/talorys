@@ -29,7 +29,8 @@ function setup(a: TalorysAgent) {
 }
 
 // forget_memory stays upstream's: it only proposes; the approve route purges the vector (semantic-forget.test.ts).
-// Destructive item tools stay upstream's too: the next item pass purges their vectors.
+// Task, note and automation tools stay upstream's: the next chat turn or search embeds what they
+// saved, and an approved delete prunes its vectors.
 const WRAPPED = [
   "search_memories",
   "search",
@@ -37,13 +38,6 @@ const WRAPPED = [
   "update_memory",
   "list_tasks",
   "search_notes",
-  "create_task",
-  "update_task",
-  "complete_task",
-  "create_note",
-  "update_note",
-  "create_reminder",
-  "create_automation",
 ];
 
 const DESCRIPTIONS: Record<string, string> = {

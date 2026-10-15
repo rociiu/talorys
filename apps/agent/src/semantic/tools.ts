@@ -10,7 +10,6 @@ import {
   automationKeywordHits,
   noteAdditions,
   prepareSurfaceSearch,
-  startBackgroundItemPass,
   taskAdditions,
 } from "./surfaces";
 
@@ -190,26 +189,11 @@ function wrapSearchNotes(sem: SemanticContext): ToolDefinition {
   };
 }
 
-/** An upstream task, note or automation write, then a background item pass. */
-function wrapItemIndexAfter(sem: SemanticContext, name: string): ToolDefinition {
-  const base = upstream(name);
-  return {
-    ...base,
-    execute: async (raw: unknown, ctx: ToolContext) => {
-      const result = await base.execute(raw, ctx);
-      void startBackgroundItemPass(sem, sem.waitUntil);
-      return result;
-    },
-  };
-}
-
-const ITEM_WRITE_TOOLS = ["create_task", "update_task", "complete_task", "create_note", "update_note", "create_reminder", "create_automation"];
-
 /**
  * `ALL_TOOLS` with the search tools replaced in place by hybrid versions, `list_tasks` and
- * `search_notes` extended with meaning additions, and the memory, task, note and automation
- * save tools wrapped to index in the background. Destructive item tools stay upstream's: the
- * next item pass purges the vectors of whatever the owner approved deleting. `forget_memory` stays upstream's: it only
+ * `search_notes` extended with meaning additions, and the memory save tools wrapped to index in
+ * the background. Task, note and automation tools stay upstream's: the next chat turn or search
+ * embeds what they saved, and an approved delete prunes its vectors. `forget_memory` stays upstream's: it only
  * proposes, and the approve route purges the vector when the owner approves (see routes.ts).
  * The wrappers differ from upstream in `description` (the three search tools only) and
  * `execute`; everything else is the upstream definition, so ToolExecutor enforces the same
@@ -223,7 +207,6 @@ export function semanticTools(sem: SemanticContext): ToolDefinition[] {
     update_memory: wrapIndexAfter(sem, "update_memory"),
     list_tasks: wrapListTasks(sem),
     search_notes: wrapSearchNotes(sem),
-    ...Object.fromEntries(ITEM_WRITE_TOOLS.map((name) => [name, wrapItemIndexAfter(sem, name)])),
   };
   return ALL_TOOLS.map((t) => wrapped[t.name] ?? t);
 }

@@ -136,7 +136,7 @@ semanticRoutes.use("/import", async (c, next) => {
   }
 });
 
-// ---------- Middleware around upstream task, note and automation writes ----------
+// ---------- Middleware around upstream task, note and automation deletes ----------
 
 const ITEM_ROUTES: [string, ItemType][] = [
   ["tasks", "task"],
@@ -145,20 +145,16 @@ const ITEM_ROUTES: [string, ItemType][] = [
 ];
 
 /**
- * After a successful item write: a delete removes the item's vectors (or, without an id, every
- * orphaned one), even while the feature is off; any other write starts a background item pass
- * while the feature is on. The pass only embeds what changed, within the daily item cap.
+ * After a successful item delete: removes the item's vectors (or, without an id, every orphaned
+ * one), even while the feature is off. Saves and edits embed nothing here; the next chat turn or
+ * search embeds whatever changed.
  */
-function afterItemWrite(c: Context<AppEnv>, config: SemanticConfig, type: ItemType, id: string | null): void {
+function afterItemDelete(c: Context<AppEnv>, type: ItemType, id: string | null): void {
   try {
     if (!isSuccess(c.res.status)) return;
     const s = c.env.agent.services;
-    if (c.req.method === "DELETE") {
-      if (id) deleteItemParts(s.db, type, id);
-      else purgeOrphanItemVectors(s.db);
-    } else if (config.enabled) {
-      void startBackgroundItemPass(createSemanticContext(s, c.env.env, config), waitUntilOf(c));
-    }
+    if (id) deleteItemParts(s.db, type, id);
+    else purgeOrphanItemVectors(s.db);
   } catch (error) {
     console.warn("Semantic item on-save hook failed", error instanceof Error ? error.message : String(error));
   }
@@ -166,14 +162,14 @@ function afterItemWrite(c: Context<AppEnv>, config: SemanticConfig, type: ItemTy
 
 for (const [segment, type] of ITEM_ROUTES) {
   const hook = async (c: Context<AppEnv>, next: () => Promise<void>) => {
-    if (c.req.method === "GET" || c.req.method === "HEAD") return next();
+    if (c.req.method !== "DELETE") return next();
     const config = writeConfig(c);
     await next();
     if (config === null) return;
     const parts = c.req.path.split("/");
     const at = parts.indexOf(segment);
     const id = at >= 0 && parts[at + 1] ? decodeURIComponent(parts[at + 1]!) : null;
-    afterItemWrite(c, config, type, id);
+    afterItemDelete(c, type, id);
   };
   semanticRoutes.use(`/${segment}`, hook);
   semanticRoutes.use(`/${segment}/*`, hook);
