@@ -149,6 +149,8 @@ in each prompt. Review Cloudflare's privacy policy and Workers AI terms.
 
 Security model and threat mitigations: [docs/security.md](docs/security.md).
 
+Calling the API from scripts with personal access tokens: [docs/remote-access.md](docs/remote-access.md).
+
 ## 7. What is free and what may cost money
 
 Talorys is designed to fit the **Cloudflare Workers Free plan** and never enables

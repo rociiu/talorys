@@ -13,6 +13,11 @@ const SUSPENDED_HINT = "Tokens stay suspended until you turn this back on.";
 const WRITE_HINT = "Write can create, update, and delete tasks, notes, reminders, and memories.";
 const DOCS_URL = `${GITHUB_URL}/blob/main/docs/remote-access.md`;
 
+/** A ready-to-run request for the once-only panel, against this install. */
+function curlExample(token: string): string {
+  return `curl -H "Authorization: Bearer ${token}" ${window.location.origin}/api/tasks`;
+}
+
 function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -60,10 +65,10 @@ export function RemoteAccessCard() {
     onSuccess: () => setConfirmAll(false),
   });
 
-  async function copy(token: string) {
+  async function copy(text: string, done = "Token copied") {
     try {
-      await navigator.clipboard.writeText(token);
-      toast("Token copied");
+      await navigator.clipboard.writeText(text);
+      toast(done);
     } catch {
       toast("Could not copy the token. Select it and copy it by hand.", "error");
     }
@@ -135,9 +140,24 @@ export function RemoteAccessCard() {
                 <div className="space-y-3 bg-subtle px-5 py-4" role="region" aria-label="New access token">
                   <p className="text-sm font-medium text-warning">Copy this token now. It will not be shown again.</p>
                   <code className="block break-all rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm">{plaintext}</code>
+                  <p className="text-xs leading-5 text-fg-subtle">
+                    Use it as a Bearer token.{" "}
+                    <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                      Docs
+                    </a>
+                  </p>
+                  <code
+                    data-testid="remote-token-example"
+                    className="block break-all rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs"
+                  >
+                    {curlExample(plaintext)}
+                  </code>
                   <div className="flex flex-wrap justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => void copy(plaintext)}>
                       <Copy className="h-3.5 w-3.5" /> Copy
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => void copy(curlExample(plaintext), "Example copied")}>
+                      <Copy className="h-3.5 w-3.5" /> Copy example
                     </Button>
                     <Button variant="secondary" size="sm" onClick={() => setPlaintext(null)}>
                       Done

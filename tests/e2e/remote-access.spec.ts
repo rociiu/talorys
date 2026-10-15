@@ -22,7 +22,7 @@ async function generate(page: Page, name: string, scope: "read" | "write" = "rea
   await page.getByRole("button", { name: "Generate token" }).click();
   const panel = page.getByRole("region", { name: "New access token" });
   await expect(panel.getByText("Copy this token now. It will not be shown again.")).toBeVisible();
-  const token = (await panel.locator("code").textContent())!.trim();
+  const token = (await panel.locator("code").first().textContent())!.trim();
   expect(token.startsWith("tal_")).toBe(true);
   return token;
 }
@@ -70,6 +70,11 @@ test.describe("Remote access", () => {
     await page.getByRole("switch", { name: "Remote access" }).click();
     const token = await generate(page, "Home server");
     expect((await bearerGet(page, token)).status()).toBe(200);
+    const panel = page.getByRole("region", { name: "New access token" });
+    await expect(panel.getByText("Use it as a Bearer token.")).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Docs" })).toHaveAttribute("href", /\/blob\/main\/docs\/remote-access\.md$/);
+    const origin = new URL(page.url()).origin;
+    await expect(panel.getByTestId("remote-token-example")).toHaveText(`curl -H "Authorization: Bearer ${token}" ${origin}/api/tasks`);
 
     const row = page.getByText(`tal_…${token.slice(-4)}`);
     await expect(row).toBeVisible();

@@ -10,8 +10,8 @@ Cookie + CSRF session access already works for the owner UI and for scripted ses
 
 1. Open **Settings → Security → Remote access**.
 2. Turn **Remote access** on (off by default).
-3. Enter a name (1–64 characters), leave scope at **`read`** unless you need writes, then **Generate**.
-4. **Copy the token immediately.** It starts with `tal_` and is shown only once. Closing the panel loses the plaintext forever.
+3. Enter a name (1–64 characters), leave scope at **`read`** unless you need writes, then **Generate token**.
+4. **Copy the token immediately.** It starts with `tal_` and is shown only once. Closing the panel loses the plaintext forever. The panel also shows a ready-to-run `curl` example for your install.
 5. Store it in your client’s secret store (not in git, chat, or CI logs).
 
 Admin routes (`/api/remote/*`) require the browser session and CSRF header. Tokens cannot manage other tokens.
