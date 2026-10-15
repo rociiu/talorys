@@ -18,6 +18,13 @@ const ENABLED_KEY = "remote.enabled";
 const TOUCH_INTERVAL_MS = 60_000;
 const MAX_TOKEN_LENGTH = 200;
 
+/** Failed Bearer attempts per client count over this window. */
+export const REMOTE_AUTH_WINDOW_MS = 15 * 60_000;
+export const MAX_REMOTE_AUTH_FAILURES = 10;
+/** Soft per-token limit: a fixed window held in memory, so it resets when the Durable Object restarts. */
+export const REMOTE_RATE_WINDOW_MS = 60_000;
+export const REMOTE_REQUESTS_PER_WINDOW = 120;
+
 interface TokenRow extends RemoteTokenInfo {
   token_hash: string;
 }
@@ -34,6 +41,8 @@ export interface RemoteCaller {
  * create() and cannot be recovered from storage.
  */
 export class RemoteTokenService {
+  private readonly windows = new Map<string, { start: number; count: number }>();
+
   constructor(
     private readonly db: Database,
     private readonly settings: SettingsService,
@@ -105,12 +114,51 @@ export class RemoteTokenService {
     return { id: row.id, name: row.name, scope: row.scope };
   }
 
+  // ---------- Rate limiting ----------
+
+  /** Throws RATE_LIMITED when the client has too many recent failed Bearer attempts, even with a good token. */
+  assertAuthAllowed(client: string): void {
+    const nowMs = Date.now();
+    this.db.run(`DELETE FROM tal_remote_auth_failures WHERE at < ?`, nowMs - 24 * 3600_000);
+    const row = this.db.one<{ n: number; oldest: number | null }>(
+      `SELECT count(*) AS n, min(at) AS oldest FROM tal_remote_auth_failures WHERE client = ? AND at > ?`,
+      client,
+      nowMs - REMOTE_AUTH_WINDOW_MS,
+    );
+    if ((row?.n ?? 0) < MAX_REMOTE_AUTH_FAILURES) return;
+    const retryAfter = Math.max(1, Math.ceil(((row?.oldest ?? nowMs) + REMOTE_AUTH_WINDOW_MS - nowMs) / 1000));
+    throw new AppError("RATE_LIMITED", "Too many failed access token attempts. Please wait before trying again.", { retry_after: retryAfter }, {
+      "retry-after": String(retryAfter),
+    });
+  }
+
+  recordAuthFailure(client: string): void {
+    this.db.run(`INSERT INTO tal_remote_auth_failures (client, at) VALUES (?, ?)`, client, Date.now());
+  }
+
+  /** Counts one request against the token's window; throws RATE_LIMITED past the limit. */
+  assertWithinRate(tokenId: string): void {
+    const nowMs = Date.now();
+    let window = this.windows.get(tokenId);
+    if (!window || nowMs - window.start >= REMOTE_RATE_WINDOW_MS) {
+      window = { start: nowMs, count: 0 };
+      this.windows.set(tokenId, window);
+    }
+    if (++window.count <= REMOTE_REQUESTS_PER_WINDOW) return;
+    const retryAfter = Math.max(1, Math.ceil((window.start + REMOTE_RATE_WINDOW_MS - nowMs) / 1000));
+    throw new AppError("RATE_LIMITED", "Too many requests for this access token.", { retry_after: retryAfter }, {
+      "retry-after": String(retryAfter),
+    });
+  }
+
   /** Deletes the token, destroying the credential. */
   revoke(id: string): boolean {
+    this.windows.delete(id);
     return this.db.run(`DELETE FROM tal_remote_tokens WHERE id = ?`, id).changes > 0;
   }
 
   revokeAll(): number {
+    this.windows.clear();
     return this.db.run(`DELETE FROM tal_remote_tokens`).changes;
   }
 }
