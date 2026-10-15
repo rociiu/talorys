@@ -90,14 +90,15 @@ test.describe("Semantic recall", () => {
     await page.getByRole("button", { name: "Add task" }).click();
     await expect(page.getByText(title)).toBeVisible();
 
-    await openAiSettings(page);
-    await expect(page.locator('[data-stat="Items pending"]')).toHaveText("0", { timeout: 20_000 });
-
+    // Saving embeds nothing; the next chat turn embeds the task before it searches.
     // The mock chat AI routes "search ..." to the search tool and prints its JSON output.
     await page.goto("/chat");
     await page.getByRole("textbox", { name: "Message", exact: true }).fill("search botany");
     await page.keyboard.press("Enter");
     await expect(page.getByText(title)).toBeVisible();
+
+    await openAiSettings(page);
+    await expect(page.locator('[data-stat="Items pending"]')).toHaveText("0", { timeout: 20_000 });
 
     expect((await page.request.delete("/api/semantic/data", { headers: CSRF, data: { confirm: "DELETE" } })).status()).toBe(200);
     const tasks = await (await page.request.get(`/api/tasks?q=${encodeURIComponent(title)}`)).json();
