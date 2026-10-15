@@ -5,6 +5,7 @@ import { Button, Card, ConfirmDialog, ErrorNotice, Input, Switch } from "./ui";
 import { useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
 import { statusRefetchInterval } from "./semanticPolling";
+import { isValidCap } from "./semanticCaps";
 
 // Local mirrors of the /api/semantic/* responses (apps/agent/src/semantic/routes.ts).
 interface SemanticConfig {
@@ -93,11 +94,11 @@ export function SemanticRecallCard() {
     onSuccess: () => setConfirmDelete(false),
   });
 
-  const validCap = Number.isInteger(cap) && cap >= 1 && cap <= 10_000;
+  const validCap = isValidCap(cap);
   const submitCap = () => {
     if (validCap && cap !== savedCap) saveConfig.mutate({ maxEmbeddingsPerDay: cap });
   };
-  const validItemCap = Number.isInteger(itemCapInput) && itemCapInput >= 1 && itemCapInput <= 10_000;
+  const validItemCap = isValidCap(itemCapInput);
   const submitItemCap = () => {
     if (validItemCap && itemCapInput !== savedItemCap) saveConfig.mutate({ maxItemEmbeddingsPerDay: itemCapInput });
   };
@@ -191,7 +192,7 @@ export function SemanticRecallCard() {
                     submitCap();
                   }}
                 >
-                  <Input type="number" min={1} max={10_000} step={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} onBlur={submitCap} aria-label="Max embeddings per day" />
+                  <Input type="number" min={0} max={10_000} step={1} value={cap} onChange={(e) => setCap(Number(e.target.value))} onBlur={submitCap} aria-label="Max embeddings per day" />
                   <Button type="submit" variant="outline" disabled={!validCap || cap === savedCap} loading={saveConfig.isPending}>
                     Save
                   </Button>
@@ -207,7 +208,7 @@ export function SemanticRecallCard() {
                 >
                   <Input
                     type="number"
-                    min={1}
+                    min={0}
                     max={10_000}
                     step={1}
                     value={itemCapInput}
