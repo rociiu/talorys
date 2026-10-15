@@ -9,6 +9,7 @@ import type {
   Note,
   Notification,
   Project,
+  RemoteTokenInfo,
   SessionInfo,
   Settings,
   Task,
@@ -34,6 +35,8 @@ export const keys = {
   sessions: ["sessions"] as const,
   system: ["system"] as const,
   update: ["system", "update"] as const,
+  remoteStatus: ["remote", "status"] as const,
+  remoteTokens: ["remote", "tokens"] as const,
 };
 
 export function useSettings() {
@@ -161,6 +164,14 @@ export interface UpdateStatus {
 /** Whether a newer release is published. The server caches the lookup for a day. */
 export function useUpdateStatus() {
   return useQuery({ queryKey: keys.update, queryFn: () => api<UpdateStatus>("/system/update"), staleTime: 60 * 60_000, retry: false });
+}
+
+export function useRemoteStatus() {
+  return useQuery({ queryKey: keys.remoteStatus, queryFn: () => api<{ enabled: boolean; max_tokens: number }>("/remote/status") });
+}
+
+export function useRemoteTokens() {
+  return useQuery({ queryKey: keys.remoteTokens, queryFn: () => api<{ tokens: RemoteTokenInfo[] }>("/remote/tokens").then((r) => r.tokens) });
 }
 
 /**
