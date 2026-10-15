@@ -45,13 +45,19 @@ export function likePattern(q: string): string {
   return `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
-/** Builds a safe FTS5 MATCH expression (OR of quoted prefix terms) from free text. */
-export function ftsQuery(q: string, maxTerms = 8): string | null {
+/** The keyword terms of free text: lower-cased, stopwords dropped, the first `maxTerms` deduplicated. */
+export function ftsTerms(q: string, maxTerms = 8): string[] {
   const terms = (q.toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) ?? [])
     .filter((t) => !STOPWORDS.has(t))
     .slice(0, maxTerms);
+  return [...new Set(terms)];
+}
+
+/** Builds a safe FTS5 MATCH expression (OR of quoted prefix terms) from free text. */
+export function ftsQuery(q: string, maxTerms = 8): string | null {
+  const terms = ftsTerms(q, maxTerms);
   if (terms.length === 0) return null;
-  return [...new Set(terms)].map((t) => `"${t}"*`).join(" OR ");
+  return terms.map((t) => `"${t}"*`).join(" OR ");
 }
 
 const STOPWORDS = new Set(

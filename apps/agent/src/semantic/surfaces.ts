@@ -1,6 +1,6 @@
 import type { Automation, Task } from "@talorys/shared";
 import type { Usage } from "../ai/provider";
-import { type Database, ftsQuery, now } from "../db/database";
+import { type Database, ftsTerms, now } from "../db/database";
 import { UsageService } from "../services/usage";
 import { conservativeEmbeddingTokens, contentHash } from "./embeddings";
 import { DEFAULT_MAX_EMBED, type IndexerContext } from "./indexer";
@@ -608,9 +608,8 @@ export function noteAdditions(
  * list order. Completed automations (fired one-shot reminders) are left out.
  */
 export function automationKeywordHits(sem: SemanticContext, query: string): Automation[] {
-  const match = ftsQuery(query);
-  if (!match) return [];
-  const terms = [...match.matchAll(/"([^"]+)"\*/g)].map((m) => m[1]!);
+  const terms = ftsTerms(query);
+  if (terms.length === 0) return [];
   return sem.services.automations.list().filter((a) => {
     if (a.status === "completed") return false;
     const text = `${a.name}\n${a.message}`.toLowerCase();
