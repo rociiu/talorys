@@ -304,6 +304,17 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX tal_remote_auth_failures_at ON tal_remote_auth_failures(at)`,
     ],
   },
+  {
+    version: 9,
+    name: "daily remote auth failure counter",
+    statements: [
+      // One row per day, so a flood of rejected tokens never grows the activity log.
+      `CREATE TABLE tal_remote_auth_failure_days (
+        day TEXT PRIMARY KEY,
+        failures INTEGER NOT NULL DEFAULT 0
+      )`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

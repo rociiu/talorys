@@ -25,6 +25,12 @@ export const MAX_REMOTE_AUTH_FAILURES = 10;
 /** Soft per-token limit: a fixed window held in memory, so it resets when the Durable Object restarts. */
 export const REMOTE_RATE_WINDOW_MS = 60_000;
 export const REMOTE_REQUESTS_PER_WINDOW = 120;
+/** Daily auth failure counts are kept this many days. */
+const AUTH_FAILURE_DAYS_KEPT = 30;
+
+function utcDay(date = new Date()): string {
+  return date.toISOString().slice(0, 10);
+}
 
 interface TokenRow extends RemoteTokenInfo {
   token_hash: string;
@@ -144,14 +150,40 @@ export class RemoteTokenService {
       nowMs - REMOTE_AUTH_WINDOW_MS,
     );
     if ((row?.n ?? 0) < MAX_REMOTE_AUTH_FAILURES) return;
+    // Counted for telemetry only: adding a throttle row here would extend the lockout.
+    this.countAuthFailure();
     const retryAfter = Math.max(1, Math.ceil(((row?.oldest ?? nowMs) + REMOTE_AUTH_WINDOW_MS - nowMs) / 1000));
     throw new AppError("RATE_LIMITED", "Too many failed access token attempts. Please wait before trying again.", { retry_after: retryAfter }, {
       "retry-after": String(retryAfter),
     });
   }
 
-  recordAuthFailure(client: string): void {
-    this.db.run(`INSERT INTO tal_remote_auth_failures (client, at) VALUES (?, ?)`, client, Date.now());
+  /** Counts one rejected Bearer attempt. True when it is the client's first in the current window. */
+  recordAuthFailure(client: string): boolean {
+    const nowMs = Date.now();
+    const prior = this.db.one<{ n: number }>(
+      `SELECT count(*) AS n FROM tal_remote_auth_failures WHERE client = ? AND at > ?`,
+      client,
+      nowMs - REMOTE_AUTH_WINDOW_MS,
+    )?.n ?? 0;
+    this.db.run(`INSERT INTO tal_remote_auth_failures (client, at) VALUES (?, ?)`, client, nowMs);
+    this.countAuthFailure();
+    return prior === 0;
+  }
+
+  /** Rejected Bearer attempts today (UTC), throttled ones included. */
+  authFailuresToday(): number {
+    return this.db.one<{ failures: number }>(`SELECT failures FROM tal_remote_auth_failure_days WHERE day = ?`, utcDay())?.failures ?? 0;
+  }
+
+  private countAuthFailure(): void {
+    const day = utcDay();
+    this.db.run(
+      `INSERT INTO tal_remote_auth_failure_days (day, failures) VALUES (?, 1)
+       ON CONFLICT(day) DO UPDATE SET failures = failures + 1`,
+      day,
+    );
+    this.db.run(`DELETE FROM tal_remote_auth_failure_days WHERE day < ?`, utcDay(new Date(Date.now() - AUTH_FAILURE_DAYS_KEPT * 86400_000)));
   }
 
   /** Counts one request against the token's window; throws RATE_LIMITED past the limit. */

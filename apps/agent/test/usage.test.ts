@@ -114,9 +114,10 @@ describe("local model consumption", () => {
       db.run("INSERT INTO tal_semantic_usage (day, embedding_requests, embedded_tokens_estimate) VALUES (?, 2, 50)", day);
       db.run("INSERT INTO tal_usage_daily (day, ai_requests, input_tokens, output_tokens) VALUES (?, 3, 120, 20)", day);
       db.run("DROP TABLE tal_model_usage_daily");
-      // Roll back past migrations 7-8: drop tables those versions create so migrate can recreate them.
+      // Roll back past migrations 7-9: drop tables those versions create so migrate can recreate them.
       db.run("DROP TABLE IF EXISTS tal_remote_auth_failures");
       db.run("DROP TABLE IF EXISTS tal_remote_tokens");
+      db.run("DROP TABLE IF EXISTS tal_remote_auth_failure_days");
       db.run("UPDATE tal_schema SET version = 6 WHERE id = 1");
       migrate(db);
       migrate(db);

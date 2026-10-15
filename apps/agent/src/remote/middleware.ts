@@ -57,9 +57,13 @@ export const remoteAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (raw && auth.isConfigured()) await auth.syncSecretFingerprint();
   const caller = raw ? await remote.validate(raw) : null;
   if (!caller) {
-    // Counts every rejection, a token presented while remote access is off included.
-    remote.recordAuthFailure(client);
-    c.env.agent.services.activity.record("remote.auth_failed", `Rejected access token from client ${client}`);
+    // Counts every rejection, a token presented while remote access is off included. The shared
+    // activity log gets at most one entry per client per throttle window, and none while remote
+    // access is off, so a flood of bad tokens cannot push owner events out of it.
+    const first = remote.recordAuthFailure(client);
+    if (first && remote.isEnabled()) {
+      c.env.agent.services.activity.record("remote.auth_failed", `Rejected access token from client ${client}`);
+    }
     throw new AppError("UNAUTHORIZED", "Invalid or revoked access token.");
   }
   remote.assertWithinRate(caller.id);
