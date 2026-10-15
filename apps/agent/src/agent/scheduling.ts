@@ -58,6 +58,9 @@ export class AutomationService {
     patch: { name?: string; message?: string; schedule?: ScheduleSpec; enabled?: boolean },
   ): Promise<Automation> {
     const existing = this.repo.require(id);
+    if (patch.message !== undefined && (existing.kind === "reminder" || existing.kind === "agent_prompt") && !patch.message.trim()) {
+      throw new ValidationError(existing.kind === "reminder" ? "A reminder needs a message." : "An AI automation needs a prompt.");
+    }
     const timingChanged = patch.schedule !== undefined || (patch.enabled !== undefined && patch.enabled !== existing.enabled);
     let next = this.repo.update(id, {
       name: patch.name,

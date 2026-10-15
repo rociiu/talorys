@@ -101,3 +101,27 @@ describe("run now and run history", () => {
     });
   });
 });
+
+describe("editing an automation keeps its message required", () => {
+  it.each([
+    ["reminder", "A reminder needs a message."],
+    ["agent_prompt", "An AI automation needs a prompt."],
+  ] as const)("rejects a blank %s message and leaves the automation unchanged", async (kind, error) => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Edit me", kind, message: "Original", schedule: { type: "daily", time: "09:00" }, enabled: true });
+      await expect(s.automations.update(a.id, { message: "   " })).rejects.toThrow(error);
+      expect(s.automations.get(a.id)?.message).toBe("Original");
+      await s.automations.delete(a.id);
+    });
+  });
+
+  it("still allows a task digest to have no message", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Digest", kind: "task_digest", message: "note", schedule: { type: "daily", time: "09:00" }, enabled: true });
+      expect((await s.automations.update(a.id, { message: "" })).message).toBe("");
+      await s.automations.delete(a.id);
+    });
+  });
+});
