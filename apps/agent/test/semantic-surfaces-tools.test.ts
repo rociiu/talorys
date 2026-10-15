@@ -137,7 +137,7 @@ describe("semantic surface tools", () => {
 
   it("SN-chunk: a long note is returned once with its gate-code chunk as the excerpt", async () => {
     await inAgent(async (a) => {
-      const { s, run } = setup(a);
+      const { s, sem, run } = setup(a);
       seedNotes(s);
       const phrases = ["kitchen", "laundry", "heating", "garden", "parking", "the gate code 2290 opens the side entrance", "recycling", "alarm", "keys"];
       const content = phrases.map(paragraph).join("\n\n").padEnd(10_000, ".");
@@ -147,6 +147,8 @@ describe("semantic surface tools", () => {
       for (let i = 1; i <= 8; i++) s.notes.create({ title: `Gate code ${i}`, content: `Side gate ${i} code is ${1000 + i}` });
       const upstream = await run<NoteResults>("search_notes", { query: "code for the gate" }, ALL_TOOLS);
       expect(upstream.results.map((n) => n.id)).not.toContain(manual.id);
+      // More parts are pending than a search embeds itself, so index them first.
+      await runItemPass(sem);
 
       const result = await run<NoteResults>("search_notes", { query: "code for the gate" });
       const hits = result.results.filter((n) => n.id === manual.id);

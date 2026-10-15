@@ -171,7 +171,7 @@ function wrapItemIndexAfter(sem: SemanticContext, name: string): ToolDefinition 
     ...base,
     execute: async (raw: unknown, ctx: ToolContext) => {
       const result = await base.execute(raw, ctx);
-      void startBackgroundItemPass(sem);
+      void startBackgroundItemPass(sem, sem.waitUntil);
       return result;
     },
   };

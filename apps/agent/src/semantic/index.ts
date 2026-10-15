@@ -49,14 +49,19 @@ export function seedSemanticDefault(services: Services, env: Env): boolean {
 /**
  * Runner extensions for the semantic module, or undefined when the feature is off so
  * the runner keeps its upstream behaviour. Never throws: a failure here must not break chat.
+ * `background` keeps work started by a turn alive after it returns.
  */
-export function semanticExtensions(services: Services, env: Env): RunnerExtensions | undefined {
+export function semanticExtensions(
+  services: Services,
+  env: Env,
+  background?: (work: Promise<unknown>) => void,
+): RunnerExtensions | undefined {
   try {
     seedSemanticDefault(services, env);
     const config = cachedSemanticConfig(services);
     if (!config?.enabled) return undefined;
     ensureSemanticSchema(services.db);
-    const ctx = createSemanticContext(services, env, config);
+    const ctx = createSemanticContext(services, env, config, background);
     return {
       // Recall must never fail a turn; on any error the upstream keyword selection stands in.
       selectMemories: async (query) => {

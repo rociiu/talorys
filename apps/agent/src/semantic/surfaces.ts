@@ -450,13 +450,28 @@ export function scanItemVectors(sem: SemanticContext, type: ItemType, vector: Fl
   return kept.slice(0, CANDIDATES_PER_LIST).map(({ id, cosine, part }) => ({ id, cosine, part }));
 }
 
+/** Item parts a search embeds before it returns; the rest are left to a background backfill. */
+export const SEARCH_REEMBED_MAX = 8;
+
+/** Whether an item pass is running for this database. */
+export function itemPassRunning(db: Database): boolean {
+  return itemPasses.has(db);
+}
+
 /**
- * Brings the item vectors up to date with one capped pass, then returns the query's vector for
- * this turn (null without an embedder, at the cap, or on an AI error). Never throws.
+ * Embeds at most SEARCH_REEMBED_MAX pending item parts, hands any left over to a background
+ * backfill, then returns the query's vector for this turn (null without an embedder, at the
+ * cap, or on an AI error). A running item pass is never awaited: the search uses the vectors
+ * already stored and the backfill picks up after it. Never throws.
  */
 export async function prepareSurfaceSearch(sem: SemanticContext, query: string): Promise<Float32Array | null> {
   try {
-    await runItemPass(sem, { maxEmbed: DEFAULT_MAX_EMBED });
+    if (itemPassRunning(sem.db)) {
+      void startBackgroundItemBackfill(sem, sem.waitUntil);
+    } else {
+      const report = await runItemPass(sem, { maxEmbed: SEARCH_REEMBED_MAX });
+      if (report.pending > 0 && !report.capped && !report.error && !report.skipped) void startBackgroundItemBackfill(sem, sem.waitUntil);
+    }
   } catch (error) {
     console.warn("Semantic item pass before search failed", error instanceof Error ? error.message : String(error));
   }

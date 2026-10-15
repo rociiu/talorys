@@ -31,8 +31,11 @@ function context(a: TalorysAgent, embedder: FixtureEmbedder | null = new Fixture
   const sem: SemanticContext = { db: s.db, services: s, embedder, config: fixtureConfig(), queryVectors: new Map() };
   const toolCtx: ToolContext = { services: s, timezone: "UTC", mode: "chat" };
   const tools = semanticTools(sem);
-  const run = <T = SearchResult>(name: string, input: unknown, from: ToolDefinition[] = tools) =>
-    (from.find((t) => t.name === name) as ImmediateTool).execute(input, toolCtx) as Promise<T>;
+  // Everything seeded is indexed first: a search embeds only a few pending parts itself.
+  const run = async <T = SearchResult>(name: string, input: unknown, from: ToolDefinition[] = tools) => {
+    await runItemPass(sem, { maxEmbed: 500 });
+    return (from.find((t) => t.name === name) as ImmediateTool).execute(input, toolCtx) as Promise<T>;
+  };
   return { s, sem, run };
 }
 

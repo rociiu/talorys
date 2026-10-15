@@ -45,12 +45,19 @@ export interface SemanticContext extends IndexerContext {
   services: Services;
   /** Query vectors embedded in this turn by `queryKey`; null records a failed or capped embed. */
   queryVectors?: Map<string, Float32Array | null>;
+  /** Keeps background work alive after the turn returns (the Durable Object's waitUntil). */
+  waitUntil?: (work: Promise<unknown>) => void;
 }
 
 /** Distinct query vectors one context keeps; inserting past this drops the oldest. */
 export const MAX_QUERY_VECTORS = 8;
 
-export function createSemanticContext(services: Services, env: Env, config: SemanticConfig): SemanticContext {
+export function createSemanticContext(
+  services: Services,
+  env: Env,
+  config: SemanticConfig,
+  waitUntil?: (work: Promise<unknown>) => void,
+): SemanticContext {
   const embedder = createEmbedder(env, services.settings, config.model);
   return {
     db: services.db,
@@ -58,6 +65,7 @@ export function createSemanticContext(services: Services, env: Env, config: Sema
     config,
     embedder: embedder && new MeteredEmbedder(services.db, embedder),
     queryVectors: new Map(),
+    ...(waitUntil ? { waitUntil } : {}),
   };
 }
 

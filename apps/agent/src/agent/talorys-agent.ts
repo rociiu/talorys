@@ -104,7 +104,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
   }
 
   runner(): AgentRunner {
-    return new AgentRunner(this.services, this.aiProvider(), semanticExtensions(this.services, this.env));
+    return new AgentRunner(this.services, this.aiProvider(), semanticExtensions(this.services, this.env, (work) => this.ctx.waitUntil(work)));
   }
 
   refreshUnread(): void {

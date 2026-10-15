@@ -5,6 +5,7 @@ import { invalidateSemanticCache } from "../src/semantic";
 import { deleteSemanticConfig } from "../src/semantic/config";
 import { dropSemanticData } from "../src/semantic/migrations";
 import type { SemanticContext } from "../src/semantic/recall";
+import { runItemPass } from "../src/semantic/surfaces";
 import { semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS, type ToolContext, type ToolDefinition } from "../src/tools";
 import type { ImmediateTool } from "../src/tools/registry";
@@ -32,8 +33,11 @@ function setup(a: TalorysAgent) {
   const sem: SemanticContext = { db: s.db, services: s, embedder: new FixtureEmbedder(), config: fixtureConfig(), queryVectors: new Map() };
   const toolCtx: ToolContext = { services: s, timezone: "UTC", mode: "chat" };
   const tools = semanticTools(sem);
-  const run = <T>(name: string, input: unknown, from: ToolDefinition[] = tools) =>
-    (from.find((t) => t.name === name) as ImmediateTool).execute(input, toolCtx) as Promise<T>;
+  // The whole seed is indexed first: a search embeds only a few pending parts itself.
+  const run = async <T>(name: string, input: unknown, from: ToolDefinition[] = tools) => {
+    await runItemPass(sem, { maxEmbed: 500 });
+    return (from.find((t) => t.name === name) as ImmediateTool).execute(input, toolCtx) as Promise<T>;
+  };
   return { s, run, seeds: seed(s) };
 }
 
