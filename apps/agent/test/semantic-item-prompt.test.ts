@@ -17,10 +17,10 @@ import { type AgentEvent, type AIProvider, type GenerateRequest, type ToolReques
 import { invalidateSemanticCache, semanticExtensions, semanticItemSelector, type RunnerExtensions } from "../src/semantic";
 import { deleteSemanticConfig } from "../src/semantic/config";
 import { conservativeEmbeddingTokens } from "../src/semantic/embeddings";
-import { ITEM_SECTION_HEADING, ITEM_SECTION_TOKEN_BUDGET, itemSection } from "../src/semantic/itemRecall";
+import { ITEM_LINE_EXCERPT_CHARS, ITEM_SECTION_HEADING, ITEM_SECTION_TOKEN_BUDGET, itemSection } from "../src/semantic/itemRecall";
 import { dropSemanticData, ensureSemanticSchema } from "../src/semantic/migrations";
 import { type SemanticContext, selectSemanticMemories } from "../src/semantic/recall";
-import { runItemPass } from "../src/semantic/surfaces";
+import { NOTE_SPLIT_CHARS, noteParts, runItemPass } from "../src/semantic/surfaces";
 import { semanticTools } from "../src/semantic/tools";
 import { ALL_TOOLS } from "../src/tools";
 import type { Services } from "../src/services/container";
@@ -92,6 +92,11 @@ async function chatSystem(s: Services, ext: RunnerExtensions | undefined, messag
     // drain
   }
   return provider.calls[0]!.system;
+}
+
+/** The memory sections of a system prompt, current and historical. */
+function memorySections(system: string): string[] {
+  return system.split("\n\n").filter((x) => x.startsWith("Relevant things you remember") || x.startsWith("Historical context"));
 }
 
 async function scheduledSystem(s: Services, ext: RunnerExtensions | undefined, prompt: string): Promise<string> {
@@ -239,6 +244,68 @@ describe("items section in the system prompt", () => {
       const system = await chatSystem(s, ext, "any tasks about botany?");
       expect(system).toContain(HEADER);
       expect(system).toContain(`- [task] Water the plants (id ${water.id})`);
+    });
+  });
+
+  it("CI-g: memory lines are the same with the items hook present or absent", async () => {
+    await inAgent(async (a) => {
+      const { s, ext } = await setup(a);
+      s.memories.create({ content: "Prefers watering the plants before work", category: "preference" });
+      s.memories.create({ content: "Prefers morning meetings", category: "preference" });
+      const { selectItems: _selectItems, ...withoutItems } = ext;
+      const message = "any tasks about botany?";
+      const withSection = await chatSystem(s, ext, message);
+      const without = await chatSystem(s, withoutItems, message);
+      expect(withSection).toContain(HEADER);
+      expect(memorySections(withSection)).toHaveLength(1);
+      expect(memorySections(withSection)).toEqual(memorySections(without));
+      // The section is the only difference.
+      const section = withSection.slice(withSection.indexOf(HEADER));
+      expect(withSection.replace(`\n\n${section}`, "")).toBe(without);
+    });
+  });
+
+  it("CI-h: items over the fixed cap drop while the memory lines stay the same", async () => {
+    await inAgent(async (a) => {
+      const { s, ext } = await setup(a);
+      s.memories.create({ content: "Prefers watering the plants before work", category: "preference" });
+      // Each line is about 125 conservative tokens, so the heading and two fit and the third does not.
+      const long = [1, 2, 3].map((n) => `- [note] Long ${n}: ${"leaf ".repeat(96).trim()} (id n${n})`);
+      expect(conservativeEmbeddingTokens([HEADER, ...long].join("\n"))).toBeGreaterThan(ITEM_SECTION_TOKEN_BUDGET);
+      const section = itemSection(long);
+      expect(section).toBe([HEADER, long[0], long[1]].join("\n"));
+      expect(conservativeEmbeddingTokens(section!)).toBeLessThanOrEqual(ITEM_SECTION_TOKEN_BUDGET);
+
+      const { selectItems: _selectItems, ...withoutItems } = ext;
+      const capped: RunnerExtensions = { ...ext, selectItems: async () => itemSection(long) };
+      const message = "any tasks about botany?";
+      const withSection = await chatSystem(s, capped, message);
+      expect(withSection).toContain(section!);
+      expect(withSection).not.toContain(long[2]!);
+      expect(memorySections(withSection)).toHaveLength(1);
+      expect(memorySections(withSection)).toEqual(memorySections(await chatSystem(s, withoutItems, message)));
+    });
+  });
+
+  it("CI-i: a long note matched in a middle chunk shows only that chunk", async () => {
+    await inAgent(async (a) => {
+      const { s, sem, ext } = await setup(a);
+      const filler = (tag: string) => `${tag} ${"lorem ipsum dolor sit amet ".repeat(40).trim()}`;
+      const content = [filler("Opening page."), `Orchid care in the greenhouse. ${filler("Middle page.")}`, filler("Third page."), filler("Closing page.")].join("\n\n");
+      expect(content.length).toBeGreaterThan(NOTE_SPLIT_CHARS);
+      const journal = s.notes.create({ title: "Field journal", content });
+      // Part 0 is the title; the match sits in part 2, the second of four body chunks.
+      expect(noteParts(journal).map((p) => p.body?.split(" ")[0] ?? null)).toEqual([null, "Opening", "Orchid", "Third", "Closing"]);
+      await runItemPass(sem, { maxEmbed: 500 });
+
+      const system = await chatSystem(s, ext, "any tasks about botany?");
+      const line = system.split("\n").find((l) => l.endsWith(`(id ${journal.id})`));
+      expect(line).toBeDefined();
+      const excerpt = line!.slice("- [note] Field journal: ".length, -` (id ${journal.id})`.length);
+      expect(excerpt.startsWith("Orchid care in the greenhouse.")).toBe(true);
+      expect(excerpt.length).toBeLessThanOrEqual(ITEM_LINE_EXCERPT_CHARS);
+      expect(line).not.toContain("Opening page");
+      expect(system).not.toContain("Third page");
     });
   });
 
