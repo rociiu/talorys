@@ -52,6 +52,6 @@ authRoutes.post("/password", async (c) => {
   const input = await body(c, changePasswordSchema, 4096);
   const s = c.env.agent.services;
   await s.auth.changePassword(input.current_password, input.new_password, c.get("sessionId"), clientId(c));
-  s.activity.record("auth.password_changed", "Password changed; other sessions signed out");
+  s.activity.record("auth.password_changed", "Password changed; other sessions signed out and access tokens revoked");
   return c.json({ changed: true });
 });

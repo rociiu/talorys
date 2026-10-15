@@ -84,8 +84,8 @@ export class AuthService {
     return { sessionSecret: this.secrets.sessionSecret! };
   }
 
-  /** Detects a CLI password reset (secret changed) and invalidates stale state. */
-  private async syncSecretFingerprint(): Promise<void> {
+  /** Detects a CLI password reset (secret changed) and invalidates stale state, remote tokens included. */
+  async syncSecretFingerprint(): Promise<void> {
     const { sessionSecret } = this.requireConfigured();
     const secret = this.secretHash() ?? `plain$${await hmacSha256Hex(sessionSecret, this.secrets.password!)}`;
     const fingerprint = (await sha256Hex(secret)).slice(0, 32);
@@ -95,6 +95,7 @@ export class AuthService {
       if (stored !== null) {
         this.settings.delete(OVERRIDE_KEY);
         this.db.run(`DELETE FROM tal_sessions`);
+        this.db.run(`DELETE FROM tal_remote_tokens`);
       }
       this.settings.setJson(FINGERPRINT_KEY, fingerprint);
     });
@@ -250,6 +251,7 @@ export class AuthService {
     this.db.transaction(() => {
       this.settings.setJson(OVERRIDE_KEY, hash);
       this.revokeAllExcept(keepSessionId);
+      this.db.run(`DELETE FROM tal_remote_tokens`);
     });
   }
 }
