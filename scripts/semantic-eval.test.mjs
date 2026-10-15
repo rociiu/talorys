@@ -5,10 +5,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { SetupError, main, readModelAndFloor, renderMarkdown, scoreCases } from "./semantic-eval.mjs";
+import { SetupError, main, readModelAndFloor, readSectionCap, renderMarkdown, scoreCases } from "./semantic-eval.mjs";
 
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 const CONFIG = readFileSync(here("../apps/agent/src/semantic/config.ts"), "utf8");
+const ITEM_RECALL = readFileSync(here("../apps/agent/src/semantic/itemRecall.ts"), "utf8");
 const CASES = JSON.parse(readFileSync(here("./semantic-eval-cases.json"), "utf8"));
 const FLOOR = 0.55;
 
@@ -149,6 +150,61 @@ describe("the cases file", () => {
     assert.match(md, /^\| XT-weather-umbrella \| weather tmrw \| umbrella reminder \| -?\d\.\d{3} \|$/m);
     assert.match(md, /Model: `@cf\/baai\/bge-m3`/);
     assert.match(md, /Floor: 0\.55/);
+  });
+});
+
+describe("prompt section", () => {
+  it("CI-o: a negative with an item at 0.6 fails because it would add a section", async () => {
+    const { doc, table } = smallDoc(0.7, 0.3, 0.6);
+    const r = await scoreCases(doc, fakeEmbed(table), FLOOR, 3);
+    const n = r.cases.find((c) => c.id === "EX-N");
+    assert.ok(n.sectionItems > 0);
+    assert.equal(n.pass, false);
+    assert.equal(r.pass, false);
+  });
+
+  it("CI-o: a negative with every item under 0.55 passes with no section", async () => {
+    const { doc, table } = smallDoc(0.7, 0.3, 0.54);
+    const r = await scoreCases(doc, fakeEmbed(table), FLOOR, 3);
+    const n = r.cases.find((c) => c.id === "EX-N");
+    assert.equal(n.sectionItems, 0);
+    assert.equal(n.pass, true);
+  });
+
+  it("CI-o: a score exactly at the floor counts, and the section stops at the cap", async () => {
+    const doc = {
+      cases: [{ id: "EX-N", query: "n", kind: "negative", target: null, gating: true }],
+      items: ["a", "b", "c"].map((id) => ({ id, type: "note", texts: [`Note: ${id}`] })),
+    };
+    // 0.6 is exact for a 3-4-5 vector, so it can stand in for the floor without rounding.
+    const table = { n: [1, 0], "Note: a": at(0.9), "Note: b": at(0.8), "Note: c": [0.6, 0.8] };
+    assert.equal((await scoreCases(doc, fakeEmbed(table), 0.6, 2)).cases[0].sectionItems, 2);
+    assert.equal((await scoreCases(doc, fakeEmbed(table), 0.6, 3)).cases[0].sectionItems, 3);
+  });
+
+  it("CI-o: an empty pool gives no section", async () => {
+    const doc = {
+      cases: [{ id: "EX-N", query: "n", kind: "negative", target: null, gating: true, surfaces: ["automation"] }],
+      items: [{ id: "a", type: "note", texts: ["Note: a"] }],
+    };
+    const r = await scoreCases(doc, fakeEmbed({ n: [1, 0], "Note: a": at(0.9) }), FLOOR, 3);
+    assert.equal(r.cases[0].sectionItems, 0);
+    assert.equal(r.cases[0].pass, true);
+  });
+
+  it("CI-o: the report has a Prompt section column before Result", async () => {
+    const { doc, table } = smallDoc(0.7, 0.3, 0.6);
+    const md = renderMarkdown(await scoreCases(doc, fakeEmbed(table), FLOOR, 3), { model: "m", date: "d", floor: FLOOR });
+    assert.match(md, /\| Distractor cosine \| Prompt section \| Result \|/);
+    assert.match(md, /^\| EX-N \|.*\| 1 item \| FAIL \|$/m);
+    const { doc: quiet, table: quietTable } = smallDoc(0.7, 0.3, 0.3);
+    const quietMd = renderMarkdown(await scoreCases(quiet, fakeEmbed(quietTable), FLOOR, 3), { model: "m", date: "d", floor: FLOOR });
+    assert.match(quietMd, /^\| EX-N \|.*\| none \| pass \|$/m);
+  });
+
+  it("CI-o: the cap reader reads MAX_RECALLED_ITEMS from the real source", () => {
+    assert.equal(readSectionCap(ITEM_RECALL), 3);
+    assert.throws(() => readSectionCap(ITEM_RECALL.replace("MAX_RECALLED_ITEMS", "OTHER")), SetupError);
   });
 });
 

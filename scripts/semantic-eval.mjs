@@ -19,6 +19,13 @@ export function readModelAndFloor(configSource) {
   return { model, floor: Number(floor) };
 }
 
+/** The most items one prompt section lists, read from the agent's item recall source. */
+export function readSectionCap(itemRecallSource) {
+  const cap = itemRecallSource.match(/export const MAX_RECALLED_ITEMS\s*=\s*(\d+)\s*;/)?.[1];
+  if (!cap) throw new SetupError("Could not read MAX_RECALLED_ITEMS from itemRecall.ts");
+  return Number(cap);
+}
+
 /** Checks that every case and extra row names an item that exists; throws on the first that does not. */
 export function validateCases(doc) {
   if (!Array.isArray(doc?.cases) || !Array.isArray(doc?.items)) throw new SetupError("Cases file needs cases and items arrays");
@@ -42,8 +49,11 @@ const cosine = (a, b) => a.reduce((sum, x, i) => sum + x * b[i], 0);
 /**
  * Embeds every distinct query and part text once, then scores each case: an item's score is its
  * best part, a positive passes when its target clears the floor, a negative when no item does.
+ * Each case also counts the items its prompt section would list: those in its pool at or above the
+ * floor, best first, at most `cap`, with nothing under the floor falling back in. A negative fails
+ * when that section would not be empty.
  */
-export async function scoreCases(doc, embed, floor) {
+export async function scoreCases(doc, embed, floor, cap = 3) {
   validateCases(doc);
   const extra = doc.extra ?? [];
   const texts = [
@@ -65,7 +75,8 @@ export async function scoreCases(doc, embed, floor) {
     const ranked = pool.map((i) => ({ id: i.id, score: score(c.query, i.texts) })).sort((a, b) => b.score - a.score);
     const targetIndex = ranked.findIndex((r) => r.id === c.target);
     const distractor = ranked.find((r) => r.id !== c.target) ?? null;
-    const pass = c.kind === "positive" ? targetIndex >= 0 && ranked[targetIndex].score >= floor : !ranked.some((r) => r.score >= floor);
+    const sectionItems = Math.min(cap, ranked.filter((r) => r.score >= floor).length);
+    const pass = c.kind === "positive" ? targetIndex >= 0 && ranked[targetIndex].score >= floor : sectionItems === 0;
     return {
       id: c.id,
       query: c.query,
@@ -76,6 +87,7 @@ export async function scoreCases(doc, embed, floor) {
       rank: targetIndex >= 0 ? targetIndex + 1 : null,
       distractor: distractor?.id ?? null,
       distractorScore: distractor?.score ?? null,
+      sectionItems,
       pass,
     };
   });
@@ -90,6 +102,7 @@ export async function scoreCases(doc, embed, floor) {
 
 const fmt = (n) => (n === null ? "—" : n.toFixed(3));
 const cell = (s) => String(s).replaceAll("|", "\\|");
+const section = (n) => (n === 0 ? "none" : `${n} item${n === 1 ? "" : "s"}`);
 
 /** The report: one row per case, then the informational rows. */
 export function renderMarkdown(results, { model, date, floor }) {
@@ -102,8 +115,8 @@ export function renderMarkdown(results, { model, date, floor }) {
     "",
     `Result: ${results.pass ? "PASS" : "FAIL"} (${results.cases.filter((c) => c.pass).length}/${results.cases.length} cases pass)`,
     "",
-    "| Case | Query | Kind | Target | Target cosine | Rank | Best distractor | Distractor cosine | Result |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Case | Query | Kind | Target | Target cosine | Rank | Best distractor | Distractor cosine | Prompt section | Result |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...results.cases.map((c) =>
       [
         c.id,
@@ -114,6 +127,7 @@ export function renderMarkdown(results, { model, date, floor }) {
         c.rank ?? "—",
         c.distractor ?? "—",
         fmt(c.distractorScore),
+        section(c.sectionItems),
         c.pass ? "pass" : "FAIL",
       ].join(" | "),
     ).map((row) => `| ${row} |`),
@@ -155,6 +169,7 @@ export async function main({
   env = process.env,
   fetch: doFetch = fetch,
   configPath = fileURLToPath(new URL("apps/agent/src/semantic/config.ts", ROOT)),
+  itemRecallPath = fileURLToPath(new URL("apps/agent/src/semantic/itemRecall.ts", ROOT)),
   casesPath = fileURLToPath(new URL("scripts/semantic-eval-cases.json", ROOT)),
   outPath = fileURLToPath(new URL("docs/semantic-eval.md", ROOT)),
   date = new Date().toISOString(),
@@ -166,8 +181,9 @@ export async function main({
     const token = env.CLOUDFLARE_API_TOKEN;
     if (!accountId || !token) throw new SetupError("Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to run the eval");
     const { model, floor } = readModelAndFloor(readFileSync(configPath, "utf8"));
+    const cap = readSectionCap(readFileSync(itemRecallPath, "utf8"));
     const doc = JSON.parse(readFileSync(casesPath, "utf8"));
-    const results = await scoreCases(doc, restEmbedder({ accountId, token, model, fetch: doFetch }), floor);
+    const results = await scoreCases(doc, restEmbedder({ accountId, token, model, fetch: doFetch }), floor, cap);
     writeFileSync(outPath, renderMarkdown(results, { model, date, floor }));
     stdout.write(`${results.pass ? "PASS" : "FAIL"}: wrote ${outPath}\n`);
     return results.pass ? 0 : 1;
