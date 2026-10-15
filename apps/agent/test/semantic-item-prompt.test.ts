@@ -208,22 +208,37 @@ describe("items section in the system prompt", () => {
     });
   });
 
-  it("HUB-i: scheduled runs get the same section under the same rules", async () => {
+  it("CI-e: scheduled runs never ask for items, even when one matches", async () => {
     await inAgent(async (a) => {
-      const { s, ext, water, orchid, mist } = await setup(a);
-      const system = await scheduledSystem(s, ext, "any tasks about botany?");
-      const section = [
-        HEADER,
-        `- [note] Orchid care: Bright shade, soak weekly (id ${orchid.id})`,
-        `- [reminder] Mist the ferns (${mist.schedule_description}; id ${mist.id})`,
-        `- [task] Water the plants (id ${water.id})`,
-      ].join("\n");
-      expect(system.endsWith(`\n\n${section}\n\n${SCHEDULED_RUN_PROMPT}`)).toBe(true);
+      const { s, ext } = await setup(a);
+      let calls = 0;
+      const spyExt: RunnerExtensions = {
+        ...ext,
+        selectItems: (query) => {
+          calls++;
+          return ext.selectItems!(query);
+        },
+      };
+      const system = await scheduledSystem(s, spyExt, "any tasks about botany?");
+      expect(system).not.toContain(HEADER);
+      expect(system.endsWith(`\n\n${SCHEDULED_RUN_PROMPT}`)).toBe(true);
+      expect(calls).toBe(0);
 
+      // Even a prompt that is exactly an item title gets no section.
       const { selectItems: _selectItems, ...withoutItems } = ext;
-      const quiet = await scheduledSystem(s, ext, "gm");
-      expect(quiet).not.toContain(HEADER);
-      expect(quiet).toBe(await scheduledSystem(s, withoutItems, "gm"));
+      const exact = await scheduledSystem(s, spyExt, "Water the plants");
+      expect(exact).not.toContain(HEADER);
+      expect(exact).toBe(await scheduledSystem(s, withoutItems, "Water the plants"));
+      expect(calls).toBe(0);
+    });
+  });
+
+  it("CI-f: a chat turn with the same matching item gets the section", async () => {
+    await inAgent(async (a) => {
+      const { s, ext, water } = await setup(a);
+      const system = await chatSystem(s, ext, "any tasks about botany?");
+      expect(system).toContain(HEADER);
+      expect(system).toContain(`- [task] Water the plants (id ${water.id})`);
     });
   });
 
