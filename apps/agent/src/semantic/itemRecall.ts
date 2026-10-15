@@ -44,7 +44,8 @@ export function automationLine(automation: Automation): string {
  * Up to MAX_RECALLED_ITEMS task, note and automation lines for the owner message, best first,
  * scored with the vector memory recall already embedded for it this turn. Never embeds or
  * reserves: without that vector it returns nothing. Only hits the surface floors keep count;
- * done tasks, completed automations and items gone since indexing are skipped.
+ * done tasks, completed automations, failed one-shot automations and items gone since indexing
+ * are skipped. Nothing under the floors falls back in, so small talk gets no lines at all.
  */
 export function selectSemanticItems(ctx: SemanticContext, message: string): string[] {
   const vector = peekQueryVector(ctx, message);
@@ -89,5 +90,8 @@ function itemLine(ctx: SemanticContext, hit: ItemHit & { type: ItemType }, timez
     return note ? noteLine(note, hit.part) : null;
   }
   const automation = services.automations.get(hit.id);
-  return automation && automation.status !== "completed" ? automationLine(automation) : null;
+  if (!automation || automation.status === "completed") return null;
+  // A failed one-shot reminder will never fire again; a failed recurring one still will.
+  if (automation.status === "failed" && automation.schedule.type === "once") return null;
+  return automationLine(automation);
 }

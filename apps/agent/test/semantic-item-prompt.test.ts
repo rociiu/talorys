@@ -338,6 +338,53 @@ describe("items section in the system prompt", () => {
     });
   });
 
+  it("CI-l: done tasks and fired or failed one-shot reminders never appear in the section", async () => {
+    await inAgent(async (a) => {
+      const { s, sem, ext, water, orchid, mist } = await setup(a);
+      // Each outscores the open task on the query, so only the filters keep them out.
+      const done = s.tasks.complete(s.tasks.create({ title: "Orchid care checkup" }).id);
+      const once = (name: string, status: "completed" | "failed") => {
+        const created = s.automationsRepo.create({ name, kind: "reminder", message: name, schedule: { type: "once", at: "2026-10-01T09:00" }, enabled: true });
+        return s.automationsRepo.update(created.id, { status, enabled: false });
+      };
+      const fired = once("Orchid care spray", "completed");
+      const failed = once("Orchid care feed", "failed");
+      await runItemPass(sem, { maxEmbed: 500 });
+
+      const system = await chatSystem(s, ext, "any tasks about botany?");
+      const section = system.slice(system.indexOf(HEADER));
+      expect(section).toBe(
+        [
+          HEADER,
+          `- [note] Orchid care: Bright shade, soak weekly (id ${orchid.id})`,
+          `- [reminder] Mist the ferns (${mist.schedule_description}; id ${mist.id})`,
+          `- [task] Water the plants (id ${water.id})`,
+        ].join("\n"),
+      );
+      for (const id of [done.id, fired.id, failed.id]) expect(system).not.toContain(id);
+
+      // A failed recurring reminder fires again, so it stays.
+      s.automationsRepo.update(mist.id, { status: "failed" });
+      expect(await chatSystem(s, ext, "any tasks about botany?")).toContain(`id ${mist.id})`);
+    });
+  });
+
+  it("CI-m: \"gm\" and \"thx\" under the 0.55 floor add no section", async () => {
+    await inAgent(async (a) => {
+      const { s, sem, ext } = await setup(a);
+      // The closest item, "Buy milk and eggs", sits just under the floor; nothing tops the section up.
+      expect(sem.config.vectorFloor.absolute).toBe(0.55);
+      const { selectItems: _selectItems, ...withoutItems } = ext;
+      for (const message of ["gm", "thx"]) {
+        const system = await chatSystem(s, ext, message);
+        expect(system).not.toContain(HEADER);
+        expect(system).toBe(await chatSystem(s, withoutItems, message));
+        await ext.selectMemories(message);
+        expect(await ext.selectItems!(message)).toBeUndefined();
+      }
+    });
+  });
+
   it("CI-a: the item hook takes only the query and returns the finished section", () => {
     expectTypeOf<RunnerExtensions["selectItems"]>().toEqualTypeOf<((query: string) => Promise<string | undefined>) | undefined>();
   });
