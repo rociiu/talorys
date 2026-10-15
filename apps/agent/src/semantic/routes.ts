@@ -245,7 +245,7 @@ semanticRoutes.put("/semantic/config", async (c) => {
   return c.json({ config });
 });
 
-/** Counts for the Settings card. Never embeds and never creates tables. */
+/** Counts for the Settings card. Never embeds, never creates tables and never writes. */
 semanticRoutes.get("/semantic/status", async (c) => {
   const s = c.env.agent.services;
   const config = cachedSemanticConfig(s);
@@ -266,7 +266,7 @@ semanticRoutes.get("/semantic/status", async (c) => {
     cap: config?.maxEmbeddingsPerDay ?? DEFAULT_SEMANTIC_CONFIG.maxEmbeddingsPerDay,
     items: {
       vectors: items ? countItemVectors(s.db, current) : 0,
-      pending: enabled && items ? (await pendingItems(s.db, current, embedder?.dims)).pending.length : 0,
+      pending: enabled && items ? (await pendingItems(s.db, current, embedder?.dims, { readOnly: true })).pending.length : 0,
       by_type: items ? countIndexedItems(s.db, current, embedder?.dims ?? 0) : { task: 0, note: 0, automation: 0 },
       items_today: items ? itemUsageToday(s.db, UsageService.day()).requests : 0,
       items_cap: ITEM_EMBEDDINGS_PER_DAY,

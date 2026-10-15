@@ -246,13 +246,15 @@ const GROUP_ORDER = { task: 0, automation: 1, noteTitle: 2, noteBody: 3 } as con
  * set); a match records the new stamp. A note is re-chunked only when its updated_at differs from
  * the stored one (or `full` is set). Re-chunking deletes the parts past the note's new length and,
  * when nothing changed, records the new updated_at; `touched` counts those items and `hashed` the
- * texts hashed. Needs the schema.
+ * texts hashed. With `readOnly` nothing is written: the same parts are reported, `touched` still
+ * counts what a writing check would record, and a shrunk note keeps its extra parts until the next
+ * pass. Needs the schema.
  */
 export async function pendingItems(
   db: Database,
   model: string,
   dims = 0,
-  opts: { full?: boolean } = {},
+  opts: { full?: boolean; readOnly?: boolean } = {},
 ): Promise<{ pending: PendingItem[]; touched: number; hashed: number }> {
   const current = (m: ItemPartMeta) => m.model === model && (dims <= 0 || m.dims === dims);
   const ranked: (PendingItem & { group: number })[] = [];
@@ -271,7 +273,7 @@ export async function pendingItems(
     const item = { type, id, part: 0, text: text(), sourceUpdatedAt: stamp };
     if (await check(GROUP_ORDER[type], item, stored)) return;
     if (stored!.source_updated_at !== stamp) {
-      touchItemSource(db, type, id, stamp);
+      if (!opts.readOnly) touchItemSource(db, type, id, stamp);
       touched++;
     }
   };
@@ -308,9 +310,9 @@ export async function pendingItems(
       const item = { type: "note" as const, id: n.id, part, text, sourceUpdatedAt: n.updated_at };
       if (await check(part === 0 ? GROUP_ORDER.noteTitle : GROUP_ORDER.noteBody, item, byPart.get(part))) changed++;
     }
-    if (stored.some((p) => p.part >= parts.length)) deleteItemParts(db, "note", n.id, parts.length);
+    if (!opts.readOnly && stored.some((p) => p.part >= parts.length)) deleteItemParts(db, "note", n.id, parts.length);
     if (changed === 0 && stored.some((p) => p.source_updated_at !== n.updated_at)) {
-      touchItemSource(db, "note", n.id, n.updated_at);
+      if (!opts.readOnly) touchItemSource(db, "note", n.id, n.updated_at);
       touched++;
     }
   }
