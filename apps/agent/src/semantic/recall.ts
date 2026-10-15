@@ -49,6 +49,8 @@ export interface SemanticContext extends IndexerContext {
    * vector records a failed or capped embed under that cap.
    */
   queryVectors?: Map<string, QueryVectorEntry>;
+  /** The owner message (or scheduled prompt) of this turn, set when memory recall runs for it. */
+  turnQuery?: string;
   /** Keeps background work alive after the turn returns (the Durable Object's waitUntil). */
   waitUntil?: (work: Promise<unknown>) => void;
 }

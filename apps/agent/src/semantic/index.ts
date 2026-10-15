@@ -48,6 +48,23 @@ export function seedSemanticDefault(services: Services, env: Env): boolean {
 }
 
 /**
+ * The runner's memory hook. It records the message as the turn's query, so tools can also score
+ * with the vector recall embeds for it. Recall must never fail a turn; on any error the upstream
+ * keyword selection stands in.
+ */
+export function semanticMemorySelector(ctx: SemanticContext): RunnerExtensions["selectMemories"] {
+  return async (query) => {
+    ctx.turnQuery = query;
+    try {
+      return await selectSemanticMemories(ctx, query);
+    } catch (error) {
+      console.warn("Semantic recall failed; using keyword recall", error instanceof Error ? error.message : String(error));
+      return selectRelevantMemories(ctx.services.memories, query);
+    }
+  };
+}
+
+/**
  * The runner's item hook: recalled item lines that fit the memory budget. Never throws; on any
  * error the prompt simply has no items section.
  */
@@ -79,15 +96,7 @@ export function semanticExtensions(
     ensureSemanticSchema(services.db);
     const ctx = createSemanticContext(services, env, config, background);
     return {
-      // Recall must never fail a turn; on any error the upstream keyword selection stands in.
-      selectMemories: async (query) => {
-        try {
-          return await selectSemanticMemories(ctx, query);
-        } catch (error) {
-          console.warn("Semantic recall failed; using keyword recall", error instanceof Error ? error.message : String(error));
-          return selectRelevantMemories(services.memories, query);
-        }
-      },
+      selectMemories: semanticMemorySelector(ctx),
       selectItems: semanticItemSelector(ctx),
       tools: semanticTools(ctx),
     };

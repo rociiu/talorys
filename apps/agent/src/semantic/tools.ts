@@ -4,7 +4,7 @@ import type { ImmediateTool } from "../tools/registry";
 import { presentTask } from "../tools/tasks";
 import { localDayBounds } from "../services/time";
 import { startBackgroundIndex } from "./indexer";
-import { type SemanticContext, hybridSearch, savedAt } from "./recall";
+import { type SemanticContext, hybridSearch, peekQueryVector, savedAt } from "./recall";
 import {
   automationAdditions,
   automationKeywordHits,
@@ -31,6 +31,17 @@ export const SEARCH_DESCRIPTION =
 export const SEARCH_NOTES_DESCRIPTION = "Search the owner's notes by keywords and meaning. Returns titles and short excerpts.";
 export const SEARCH_MEMORIES_DESCRIPTION =
   "Only for facts you saved about the owner. Use `search` for anything they may have written down. Results marked historical are past facts that are no longer true; set include_history for questions about the past.";
+
+/**
+ * The vectors a tool scores meaning additions with: the tool query's, and the owner message's
+ * that memory recall embedded this turn, so a query the model shortened still finds what the
+ * owner asked about. Either may be missing; a text embedded for both is scored once.
+ */
+async function additionVectors(sem: SemanticContext, query: string): Promise<Float32Array[]> {
+  const tool = await prepareSurfaceSearch(sem, query);
+  const turn = sem.turnQuery ? peekQueryVector(sem, sem.turnQuery) : null;
+  return [...new Set([tool, turn])].filter((v): v is Float32Array => v !== null);
+}
 
 /** An upstream read or write tool; destructive tools are never wrapped (they run on owner approval). */
 function upstream(name: string): ImmediateTool {
@@ -70,7 +81,7 @@ function presentAutomation(a: Automation) {
 /**
  * Upstream `search` with its `memories` replaced by hybrid hits, up to three meaning additions
  * after the keyword tasks and notes, and an `automations` key: keyword hits, then additions,
- * five at most. Every lookup shares the turn's one query vector.
+ * five at most. Every lookup shares the same query and owner-message vectors.
  */
 function wrapSearch(sem: SemanticContext): ToolDefinition {
   const base = upstream("search");
@@ -88,18 +99,18 @@ function wrapSearch(sem: SemanticContext): ToolDefinition {
       const timezone = ctx.services.settings.get().timezone;
       const hits = await hybridSearch(sem, query, { limit: SEARCH_ALL_MEMORY_LIMIT });
       const memories = hits.map(({ memory: m }) => ({ id: m.id, content: m.content, saved: savedAt(m.updated_at, timezone) }));
-      const vector = await prepareSurfaceSearch(sem, query);
+      const vectors = await additionVectors(sem, query);
       const meaning = "meaning" as const;
       const tasks = [
         ...result.tasks,
-        ...taskAdditions(sem, vector, { keywordIds: result.tasks.map((t) => t.id) }).map((t) => ({ ...presentTask(t, ctx.timezone), match: meaning })),
+        ...taskAdditions(sem, vectors, { keywordIds: result.tasks.map((t) => t.id) }).map((t) => ({ ...presentTask(t, ctx.timezone), match: meaning })),
       ];
-      const notes = [...result.notes, ...noteAdditions(sem, vector, result.notes.map((n) => n.id), SEARCH_NOTE_EXCERPT_CHARS).map((n) => ({ ...n, match: meaning }))];
+      const notes = [...result.notes, ...noteAdditions(sem, vectors, result.notes.map((n) => n.id), SEARCH_NOTE_EXCERPT_CHARS).map((n) => ({ ...n, match: meaning }))];
       const keyword = automationKeywordHits(sem, query);
       const automations: (ReturnType<typeof presentAutomation> & { match?: "meaning" })[] = keyword
         .slice(0, SEARCH_AUTOMATION_LIMIT)
         .map(presentAutomation);
-      for (const a of automationAdditions(sem, vector, keyword.map((k) => k.id))) {
+      for (const a of automationAdditions(sem, vectors, keyword.map((k) => k.id))) {
         if (automations.length >= SEARCH_AUTOMATION_LIMIT) break;
         automations.push({ ...presentAutomation(a), match: meaning });
       }
@@ -138,8 +149,8 @@ function wrapListTasks(sem: SemanticContext): ToolDefinition {
       if (!i.query) return result;
       const slots = (i.limit ?? LIST_TASKS_DEFAULT_LIMIT) - result.tasks.length;
       if (slots <= 0) return result;
-      const vector = await prepareSurfaceSearch(sem, i.query);
-      if (!vector) return result;
+      const vectors = await additionVectors(sem, i.query);
+      if (vectors.length === 0) return result;
       // The view mapping is upstream's (tools/tasks.ts), without the keyword filter.
       const bounds = localDayBounds(ctx.timezone);
       const view = i.view ?? "open";
@@ -154,7 +165,7 @@ function wrapListTasks(sem: SemanticContext): ToolDefinition {
           })
           .map((t) => t.id),
       );
-      const added = taskAdditions(sem, vector, { keywordIds: result.tasks.map((t) => t.id), allowedIds, completedView: view === "completed" }).slice(0, slots);
+      const added = taskAdditions(sem, vectors, { keywordIds: result.tasks.map((t) => t.id), allowedIds, completedView: view === "completed" }).slice(0, slots);
       if (added.length === 0) return result;
       const tasks = [...result.tasks, ...added.map((t) => ({ ...presentTask(t, ctx.timezone), match: "meaning" as const }))];
       return { ...result, count: tasks.length, tasks };
@@ -171,8 +182,8 @@ function wrapSearchNotes(sem: SemanticContext): ToolDefinition {
     execute: async (raw: unknown, ctx: ToolContext) => {
       const { query } = raw as { query: string };
       const result = (await base.execute(raw, ctx)) as { results: { id: string }[] };
-      const vector = await prepareSurfaceSearch(sem, query);
-      const added = noteAdditions(sem, vector, result.results.map((n) => n.id), NOTE_EXCERPT_CHARS);
+      const vectors = await additionVectors(sem, query);
+      const added = noteAdditions(sem, vectors, result.results.map((n) => n.id), NOTE_EXCERPT_CHARS);
       if (added.length === 0) return result;
       return { ...result, results: [...result.results, ...added.map((n) => ({ ...n, match: "meaning" as const }))] };
     },

@@ -48,11 +48,11 @@ describe("semantic surface search", () => {
       expect(hits).toHaveLength(1);
       expect(hits[0]!.id).toBe(water.id);
       expect(hits[0]!.cosine).toBeCloseTo(0.62, 5);
-      expect(titles(taskAdditions(sem, botany, { keywordIds: [] }))).toEqual(["Water the plants"]);
+      expect(titles(taskAdditions(sem, [botany!], { keywordIds: [] }))).toEqual(["Water the plants"]);
 
       const hello = await prepareSurfaceSearch(sem, "hello");
       expect(scanItemVectors(sem, "task", hello!)).toEqual([]);
-      expect(taskAdditions(sem, hello, { keywordIds: [] })).toEqual([]);
+      expect(taskAdditions(sem, [hello!], { keywordIds: [] })).toEqual([]);
     });
   });
 
@@ -63,7 +63,7 @@ describe("semantic surface search", () => {
       s.notes.create({ title: "Budget draft", content: "" });
 
       const vector = await prepareSurfaceSearch(sem, "budget");
-      expect(titles(noteAdditions(sem, vector, [], 200))).toEqual(["Budget line A"]);
+      expect(titles(noteAdditions(sem, [vector!], [], 200))).toEqual(["Budget line A"]);
     });
   });
 
@@ -77,7 +77,7 @@ describe("semantic surface search", () => {
       s.notes.create({ title: "Budget recap", content: "Last quarter in numbers." });
 
       const vector = await prepareSurfaceSearch(sem, "budget");
-      const added = noteAdditions(sem, vector, [], 200);
+      const added = noteAdditions(sem, [vector!], [], 200);
       expect(titles(added)).toEqual(["Quarterly plan", "Budget memo", "Budget recap"]);
       expect(added[0]!.excerpt).toBe(paragraph("budget line a").slice(0, 200));
       expect(added[1]!.excerpt).toBe("Spending is on track.");
@@ -92,8 +92,8 @@ describe("semantic surface search", () => {
 
       const vector = await prepareSurfaceSearch(sem, "doc appt soon");
       expect(scanItemVectors(sem, "task", vector!)[0]!.cosine).toBeCloseTo(0.66, 5);
-      expect(taskAdditions(sem, vector, { keywordIds: [] })).toEqual([]);
-      expect(titles(taskAdditions(sem, vector, { keywordIds: [], completedView: true }))).toEqual(["Book a physical"]);
+      expect(taskAdditions(sem, [vector!], { keywordIds: [] })).toEqual([]);
+      expect(titles(taskAdditions(sem, [vector!], { keywordIds: [], completedView: true }))).toEqual(["Book a physical"]);
     });
   });
 
@@ -110,7 +110,7 @@ describe("semantic surface search", () => {
         expect.closeTo(0.63, 5),
         expect.closeTo(0.63, 5),
       ]);
-      expect(automationAdditions(sem, vector, []).map((x) => x.id)).toEqual([paused.id]);
+      expect(automationAdditions(sem, [vector!], []).map((x) => x.id)).toEqual([paused.id]);
     });
   });
 
@@ -124,7 +124,7 @@ describe("semantic surface search", () => {
 
       const vector = await queryVector(sem, "botany");
       expect(scanItemVectors(sem, "task", vector!)).toEqual([]);
-      expect(taskAdditions(sem, vector, { keywordIds: [] })).toEqual([]);
+      expect(taskAdditions(sem, [vector!], { keywordIds: [] })).toEqual([]);
     });
   });
 
@@ -141,7 +141,7 @@ describe("semantic surface search", () => {
     });
   });
 
-  it("SS-null: every additions function returns nothing without a query vector", async () => {
+  it("SS-null: every additions function returns nothing without query vectors", async () => {
     await inAgent(async (a) => {
       const { s, sem } = setup(a);
       s.tasks.create({ title: "Water the plants" });
@@ -149,10 +149,10 @@ describe("semantic surface search", () => {
       reminder(a, "Pay rent");
       await runItemPass(sem);
 
-      expect(taskAdditions(sem, null, { keywordIds: [] })).toEqual([]);
-      expect(taskAdditions(sem, null, { keywordIds: [], completedView: true })).toEqual([]);
-      expect(noteAdditions(sem, null, [], 200)).toEqual([]);
-      expect(automationAdditions(sem, null, [])).toEqual([]);
+      expect(taskAdditions(sem, [], { keywordIds: [] })).toEqual([]);
+      expect(taskAdditions(sem, [], { keywordIds: [], completedView: true })).toEqual([]);
+      expect(noteAdditions(sem, [], [], 200)).toEqual([]);
+      expect(automationAdditions(sem, [], [])).toEqual([]);
     });
   });
 });

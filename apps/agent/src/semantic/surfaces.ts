@@ -442,26 +442,32 @@ const ITEM_TABLES: Record<ItemType, string> = { task: "tal_tasks", note: "tal_no
 const compareAsc = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * Scores every cached part of one surface against the query and keeps each item's best part.
- * Items at or above the absolute floor and within `relative` of the surface's best item are
- * kept, best first (ties to the newer update, then the lower id); nothing below the floor is
- * ever kept, and the backstop is ignored. Rows whose item is gone (pending purge) are skipped.
+ * Scores every cached part of one surface against the query vectors and keeps each item's best
+ * part, a part scoring the highest cosine of any vector. Items at or above the absolute floor
+ * and within `relative` of the surface's best item are kept, best first (ties to the newer
+ * update, then the lower id); nothing below the floor is ever kept, and the backstop is ignored.
+ * Rows whose item is gone (pending purge) are skipped.
  */
-export function scanItemVectors(sem: SemanticContext, type: ItemType, vector: Float32Array): ItemHit[] {
+export function scanItemVectors(sem: SemanticContext, type: ItemType, vector: Float32Array | readonly Float32Array[]): ItemHit[] {
+  const vectors = vector instanceof Float32Array ? [vector] : vector;
+  const dims = vectors[0]?.length;
+  if (dims === undefined) return [];
   const { absolute, relative } = sem.config.vectorFloor;
   const model = sem.embedder?.model ?? sem.config.model;
-  const unit = normalize(vector);
+  const units = vectors.filter((v) => v.length === dims).map(normalize);
   const updated = new Map(
     sem.db.all<{ id: string; updated_at: string }>(`SELECT id, updated_at FROM ${ITEM_TABLES[type]}`).map((r) => [r.id, r.updated_at]),
   );
   const best: (ItemHit & { updated: string })[] = [];
-  for (const [id, parts] of cachedItemVectors(sem.db, type, model, vector.length)) {
+  for (const [id, parts] of cachedItemVectors(sem.db, type, model, dims)) {
     const updatedAt = updated.get(id);
     if (updatedAt === undefined) continue;
     let hit: ItemHit | null = null;
     for (const { part, vector: v } of parts) {
-      const cosine = dot(unit, v);
-      if (!hit || cosine > hit.cosine) hit = { id, cosine, part };
+      for (const unit of units) {
+        const cosine = dot(unit, v);
+        if (!hit || cosine > hit.cosine) hit = { id, cosine, part };
+      }
     }
     if (hit) best.push({ ...hit, updated: updatedAt });
   }
@@ -519,16 +525,16 @@ function additions<T>(hits: ItemHit[], keywordIds: string[], live: (id: string) 
 }
 
 /**
- * Tasks found by meaning beyond `keywordIds`. Done tasks are left out, except in the completed
+ * Tasks found by meaning (any of `vectors`) beyond `keywordIds`. Done tasks are left out, except in the completed
  * view, which allows only done tasks; `allowedIds` restricts the result to the listed view.
  */
 export function taskAdditions(
   sem: SemanticContext,
-  vector: Float32Array | null,
+  vectors: readonly Float32Array[],
   opts: { keywordIds: string[]; allowedIds?: ReadonlySet<string>; completedView?: boolean },
 ): Task[] {
-  if (!vector) return [];
-  const hits = scanItemVectors(sem, "task", vector);
+  if (vectors.length === 0) return [];
+  const hits = scanItemVectors(sem, "task", vectors);
   return additions(hits, opts.keywordIds, (id) => {
     if (opts.allowedIds && !opts.allowedIds.has(id)) return null;
     const task = sem.services.tasks.get(id);
@@ -538,17 +544,17 @@ export function taskAdditions(
 }
 
 /**
- * Notes found by meaning beyond `keywordIds`, one entry per note. The excerpt is the best
+ * Notes found by meaning (any of `vectors`) beyond `keywordIds`, one entry per note. The excerpt is the best
  * matching chunk of a split note, otherwise the start of the content as upstream shows it.
  */
 export function noteAdditions(
   sem: SemanticContext,
-  vector: Float32Array | null,
+  vectors: readonly Float32Array[],
   keywordIds: string[],
   excerptChars: number,
 ): { id: string; title: string; excerpt: string }[] {
-  if (!vector) return [];
-  const hits = scanItemVectors(sem, "note", vector);
+  if (vectors.length === 0) return [];
+  const hits = scanItemVectors(sem, "note", vectors);
   return additions(hits, keywordIds, (id) => sem.services.notes.get(id)).map(({ row: note, hit }) => {
     const chunk = hit.part > 0 && note.content.length > NOTE_SPLIT_CHARS ? noteParts(note)[hit.part]?.body : null;
     return { id: note.id, title: note.title, excerpt: (chunk ?? note.content).slice(0, excerptChars) };
@@ -570,10 +576,10 @@ export function automationKeywordHits(sem: SemanticContext, query: string): Auto
   });
 }
 
-/** Automations found by meaning beyond `keywordIds`; completed ones are left out. */
-export function automationAdditions(sem: SemanticContext, vector: Float32Array | null, keywordIds: string[]): Automation[] {
-  if (!vector) return [];
-  const hits = scanItemVectors(sem, "automation", vector);
+/** Automations found by meaning (any of `vectors`) beyond `keywordIds`; completed ones are left out. */
+export function automationAdditions(sem: SemanticContext, vectors: readonly Float32Array[], keywordIds: string[]): Automation[] {
+  if (vectors.length === 0) return [];
+  const hits = scanItemVectors(sem, "automation", vectors);
   return additions(hits, keywordIds, (id) => {
     const automation = sem.services.automations.get(id);
     return automation && automation.status !== "completed" ? automation : null;

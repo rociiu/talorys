@@ -98,6 +98,9 @@
     "trash day": {
       "garbage": 1
     },
+    "reminder about trash": {
+      "garbage": 1
+    },
     "put the bins out": {
       "garbage": 0.63
     },
@@ -291,6 +294,8 @@
     "dentist?": "dentist",
     "Botany101 reading": "",
     "Orchid care": "orchid care",
-    "Mist the ferns": "mist the ferns"
+    "Mist the ferns": "mist the ferns",
+    "trash": "",
+    "do i have a reminder about trash": "reminder about trash"
   }
 }
