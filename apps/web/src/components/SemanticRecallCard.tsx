@@ -33,6 +33,7 @@ interface ReindexReport {
 }
 
 const DEFAULT_CAP = 500;
+const DEFAULT_ITEM_CAP = 50;
 const EMBEDDERS: Record<SemanticStatus["embedder"], string> = { "workers-ai": "Workers AI", mock: "Mock (local dev)", none: "Not available" };
 
 function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
@@ -93,6 +94,7 @@ export function SemanticRecallCard() {
     if (validCap && cap !== savedCap) saveConfig.mutate({ maxEmbeddingsPerDay: cap });
   };
   const s = status.data;
+  const itemCap = s?.items?.items_cap ?? DEFAULT_ITEM_CAP;
   const stats: [string, string][] = s
     ? [
         ["Embedder", EMBEDDERS[s.embedder] ?? s.embedder],
@@ -110,8 +112,7 @@ export function SemanticRecallCard() {
       <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-fg-subtle">Semantic memory recall</h2>
       <Card>
         <div className="divide-y divide-border">
-          {/* At the default cap: "Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings, up to 500 per day. Off by default." */}
-          <Row label="Semantic memory recall" hint={`Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings, up to ${savedCap} per day. Off by default.`}>
+          <Row label="Semantic memory recall" hint={`Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings. Memories use up to ${savedCap} embeddings per day; tasks, notes and reminders have their own ${itemCap} per day. Off by default.`}>
             <div className="flex justify-end">
               <Switch
                 checked={enabled}

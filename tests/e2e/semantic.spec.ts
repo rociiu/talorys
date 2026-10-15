@@ -25,7 +25,7 @@ test.describe("Semantic recall", () => {
     await openAiSettings(page);
     const toggle = page.getByRole("switch", { name: "Semantic memory recall" });
     await expect(toggle).toHaveAttribute("aria-checked", "false");
-    await expect(page.getByText("Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings, up to 500 per day. Off by default.")).toBeVisible();
+    await expect(page.getByText("Finds memories, tasks, notes and reminders by meaning using Workers AI embeddings. Memories use up to 500 embeddings per day; tasks, notes and reminders have their own 50 per day. Off by default.")).toBeVisible();
     await expect(page.getByLabel("Semantic recall status")).toHaveCount(0);
 
     await toggle.click();
