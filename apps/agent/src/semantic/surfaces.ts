@@ -47,6 +47,17 @@ export function automationText(a: { kind: AutomationKind; name: string; message:
   return `${text}\nSchedule: ${a.schedule_description}`;
 }
 
+/**
+ * Version of the embedded text shape per type. Raising one makes every row of that type a
+ * change-check candidate once, so a new text shape is compared against the stored hashes.
+ */
+export const ITEM_TEXT_VERSIONS = { task: 1, automation: 1 } as const;
+
+/** The source stamp stored with a task or automation vector: text version plus the row's updated_at. */
+export function itemSourceStamp(type: keyof typeof ITEM_TEXT_VERSIONS, updatedAt: string): string {
+  return `v${ITEM_TEXT_VERSIONS[type]}:${updatedAt}`;
+}
+
 /** Greedily joins pieces with `sep` into chunks of at most NOTE_CHUNK_CHARS. */
 function pack(pieces: string[], sep: string, out: string[]): void {
   let current = "";
@@ -154,7 +165,7 @@ export interface PendingItem {
   part: number;
   text: string;
   hash: string;
-  /** The source row's updated_at, stored with the vector so an unchanged note is not re-chunked. */
+  /** Stored with the vector so an unchanged row is skipped: a note's updated_at, or `itemSourceStamp` for a task or automation. */
   sourceUpdatedAt: string;
 }
 
@@ -173,24 +184,39 @@ const GROUP_ORDER = { task: 0, automation: 1, noteTitle: 2, noteBody: 3 } as con
 
 /**
  * Item parts without a current vector for `model`: no row, a row from another model or (when
- * `dims` is known) another size, or one whose content hash no longer matches. Tasks and
- * automations are hashed every time; a note is re-chunked only when its updated_at differs from
+ * `dims` is known) another size, or one whose content hash no longer matches. A task or
+ * automation is hashed only when its stored stamp differs from `itemSourceStamp` (or `full` is
+ * set); a match records the new stamp. A note is re-chunked only when its updated_at differs from
  * the stored one (or `full` is set). Re-chunking deletes the parts past the note's new length and,
- * when nothing changed, records the new updated_at; `touched` counts those notes. Needs the schema.
+ * when nothing changed, records the new updated_at; `touched` counts those items and `hashed` the
+ * texts hashed. Needs the schema.
  */
 export async function pendingItems(
   db: Database,
   model: string,
   dims = 0,
   opts: { full?: boolean } = {},
-): Promise<{ pending: PendingItem[]; touched: number }> {
+): Promise<{ pending: PendingItem[]; touched: number; hashed: number }> {
   const current = (m: ItemPartMeta) => m.model === model && (dims <= 0 || m.dims === dims);
   const ranked: (PendingItem & { group: number })[] = [];
+  let hashed = 0;
+  let touched = 0;
   const check = async (group: number, item: Omit<PendingItem, "hash">, stored: ItemPartMeta | undefined): Promise<boolean> => {
     const hash = await contentHash(item.text);
+    hashed++;
     if (stored && current(stored) && stored.content_hash === hash) return false;
     ranked.push({ ...item, hash, group });
     return true;
+  };
+  // A task or automation whose stamp matches its current vector is skipped before building its text.
+  const checkStamped = async (type: "task" | "automation", id: string, stamp: string, stored: ItemPartMeta | undefined, text: () => string) => {
+    if (!opts.full && stored && current(stored) && stored.source_updated_at === stamp) return;
+    const item = { type, id, part: 0, text: text(), sourceUpdatedAt: stamp };
+    if (await check(GROUP_ORDER[type], item, stored)) return;
+    if (stored!.source_updated_at !== stamp) {
+      touchItemSource(db, type, id, stamp);
+      touched++;
+    }
   };
 
   const taskMeta = itemVectorMeta(db, "task");
@@ -198,8 +224,8 @@ export async function pendingItems(
     `SELECT id, title, description, updated_at FROM tal_tasks`,
   );
   for (const t of tasks) {
-    const item = { type: "task" as const, id: t.id, part: 0, text: taskText(t), sourceUpdatedAt: t.updated_at };
-    await check(GROUP_ORDER.task, item, taskMeta.get(t.id)?.find((p) => p.part === 0));
+    const stored = taskMeta.get(t.id)?.find((p) => p.part === 0);
+    await checkStamped("task", t.id, itemSourceStamp("task", t.updated_at), stored, () => taskText(t));
   }
 
   // The schedule description is derived from the stored spec exactly as AutomationRepository does.
@@ -208,12 +234,11 @@ export async function pendingItems(
     `SELECT id, kind, name, message, schedule, updated_at FROM tal_automations`,
   );
   for (const a of automations) {
-    const text = automationText({ ...a, schedule_description: describeSchedule(JSON.parse(a.schedule) as ScheduleSpec) });
-    const item = { type: "automation" as const, id: a.id, part: 0, text, sourceUpdatedAt: a.updated_at };
-    await check(GROUP_ORDER.automation, item, automationMeta.get(a.id)?.find((p) => p.part === 0));
+    const stored = automationMeta.get(a.id)?.find((p) => p.part === 0);
+    const text = () => automationText({ ...a, schedule_description: describeSchedule(JSON.parse(a.schedule) as ScheduleSpec) });
+    await checkStamped("automation", a.id, itemSourceStamp("automation", a.updated_at), stored, text);
   }
 
-  let touched = 0;
   const noteMeta = itemVectorMeta(db, "note");
   const notes = db.all<{ id: string; title: string; content: string; updated_at: string }>(`SELECT id, title, content, updated_at FROM tal_notes`);
   for (const n of notes) {
@@ -240,7 +265,7 @@ export async function pendingItems(
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) ||
       a.part - b.part,
   );
-  return { pending: ranked.map(({ group: _, ...item }) => item), touched };
+  return { pending: ranked.map(({ group: _, ...item }) => item), touched, hashed };
 }
 
 interface ItemPassOptions {

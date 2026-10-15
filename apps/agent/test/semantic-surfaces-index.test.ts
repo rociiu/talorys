@@ -78,7 +78,7 @@ describe("semantic item pass", () => {
     });
   });
 
-  it("EDIT-missed: a title edited straight in SQL is re-embedded on the next pass", async () => {
+  it("EDIT-missed: a title edited straight in SQL without updated_at is re-embedded by a full pass", async () => {
     await inAgent(async (a) => {
       const { ctx, embed, texts, s } = context(a);
       const task = s.tasks.create({ title: "Water the plants" });
@@ -87,7 +87,9 @@ describe("semantic item pass", () => {
       embed.mockClear();
 
       s.db.run(`UPDATE tal_tasks SET title = ? WHERE id = ?`, "Water the orchids", task.id);
-      expect(await runItemPass(ctx)).toEqual({ embedded: 1, pending: 0, purged: 0 });
+      // An unchanged updated_at keeps the row out of the change check until a full pass.
+      expect(await runItemPass(ctx)).toEqual({ embedded: 0, pending: 0, purged: 0 });
+      expect(await runItemPass(ctx, { full: true })).toEqual({ embedded: 1, pending: 0, purged: 0 });
       expect(texts()).toEqual([taskText({ title: "Water the orchids", description: "" })]);
     });
   });
