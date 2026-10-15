@@ -46,6 +46,16 @@ describe("authentication boundary", () => {
     }
   });
 
+  it("treats a malformed percent-encoded session cookie as signed out instead of failing", async () => {
+    const cookie = "__Host-talorys_session=%E0%A4%A";
+    expect((await client({ cookie }).call("/api/tasks")).status).toBe(401);
+    const session = await client({ cookie }).call("/api/auth/session");
+    expect(session.status).toBe(200);
+    expect(((await session.json()) as { authenticated: boolean }).authenticated).toBe(false);
+    const login = await client({ cookie }).call("/api/auth/login", { method: "POST", body: { password: password() } });
+    expect(login.status).toBe(200);
+  });
+
   it("issues hardened session cookies", async () => {
     const c = client();
     const res = await c.call("/api/auth/login", { method: "POST", body: { password: password() } });

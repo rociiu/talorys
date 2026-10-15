@@ -59,7 +59,14 @@ export function readSessionToken(c: Context<AppEnv>): string | null {
   const name = sessionCookieName(c);
   for (const part of header.split(";")) {
     const [k, ...rest] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(rest.join("="));
+    if (k === name) {
+      try {
+        return decodeURIComponent(rest.join("="));
+      } catch {
+        // Not something this app ever issued (it encodes the token), so treat it as no session.
+        return null;
+      }
+    }
   }
   return null;
 }
