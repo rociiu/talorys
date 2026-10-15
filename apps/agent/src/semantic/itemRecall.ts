@@ -1,4 +1,7 @@
 import type { Automation, Note, Task } from "@talorys/shared";
+import { estimateTokens } from "../ai/provider";
+import { memoryLine } from "../agent/prompt";
+import type { PromptMemory } from "../memory/service";
 import { presentTask } from "../tools/tasks";
 import type { ItemType } from "./itemStore";
 import { type SemanticContext, peekQueryVector } from "./recall";
@@ -57,6 +60,22 @@ export function selectSemanticItems(ctx: SemanticContext, message: string): stri
     if (line) lines.push(line);
   }
   return lines;
+}
+
+/**
+ * The leading item lines that fit in what `budget` leaves after the memory lines the prompt
+ * already lists, so item lines are dropped before any memory line.
+ */
+export function fitItemLines(lines: string[], memories: PromptMemory[], budget: number): string[] {
+  let used = memories.reduce((sum, m) => sum + estimateTokens(memoryLine(m)), 0);
+  const kept: string[] = [];
+  for (const line of lines) {
+    const cost = estimateTokens(line);
+    if (used + cost > budget) break;
+    used += cost;
+    kept.push(line);
+  }
+  return kept;
 }
 
 function itemLine(ctx: SemanticContext, hit: ItemHit & { type: ItemType }, timezone: string): string | null {

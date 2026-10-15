@@ -3,8 +3,9 @@ import type { Services } from "../services/container";
 import { selectRelevantMemories } from "../agent/memory";
 import { readSemanticConfig, writeSemanticConfig, type SemanticConfig } from "./config";
 import type { RunnerExtensions } from "./hooks";
+import { fitItemLines, selectSemanticItems } from "./itemRecall";
 import { ensureSemanticSchema } from "./migrations";
-import { createSemanticContext, selectSemanticMemories } from "./recall";
+import { type SemanticContext, createSemanticContext, selectSemanticMemories } from "./recall";
 import { semanticTools } from "./tools";
 
 export type { RunnerExtensions } from "./hooks";
@@ -47,6 +48,21 @@ export function seedSemanticDefault(services: Services, env: Env): boolean {
 }
 
 /**
+ * The runner's item hook: recalled item lines that fit the memory budget. Never throws; on any
+ * error the prompt simply has no items section.
+ */
+export function semanticItemSelector(ctx: SemanticContext): NonNullable<RunnerExtensions["selectItems"]> {
+  return async (query, memories, budget) => {
+    try {
+      return fitItemLines(selectSemanticItems(ctx, query), memories, budget);
+    } catch (error) {
+      console.warn("Semantic item recall failed", error instanceof Error ? error.message : String(error));
+      return [];
+    }
+  };
+}
+
+/**
  * Runner extensions for the semantic module, or undefined when the feature is off so
  * the runner keeps its upstream behaviour. Never throws: a failure here must not break chat.
  * `background` keeps work started by a turn alive after it returns.
@@ -72,6 +88,7 @@ export function semanticExtensions(
           return selectRelevantMemories(services.memories, query);
         }
       },
+      selectItems: semanticItemSelector(ctx),
       tools: semanticTools(ctx),
     };
   } catch (error) {

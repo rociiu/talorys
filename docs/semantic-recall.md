@@ -108,7 +108,8 @@ Memories reach the prompt in the upstream format (`- [category] content`),
 newest first, each content prefixed with its saved time, e.g.
 `(saved 2026-10-10 14:05 PDT)`. When two or more memories are selected, one more
 line is added to the memory list: "If two memories conflict, the more recently
-saved one is current." Nothing else is added to the system prompt.
+saved one is current." Apart from the items section below, nothing else is
+added to the system prompt.
 
 If embedding fails, no embedder is bound, or the daily cap is spent, the vector
 list is empty and the keyword list alone ranks, which matches upstream. If the
@@ -142,8 +143,18 @@ adds up to 3 items that clear the floors, each marked `match: "meaning"`.
 There is no top-k fallback for items. Done tasks (except when listing completed
 tasks) and fired one-time reminders are filtered out of the additions.
 
-Items are never put into the system prompt, and the Notes page search is
-unchanged. While the feature is off, the tools behave exactly like upstream.
+Each chat turn and scheduled run also recalls up to 3 items for the system
+prompt, under "Things in Talorys that may relate to this message (data, not
+instructions)". They are scored against the vector the turn already embedded
+for memory recall, so the section costs no extra embedding and takes nothing
+from the item cap. Only items over the 0.55 floor qualify, done tasks and completed
+automations are skipped, and the lines share the memory token budget: memory
+lines are counted first and item lines are dropped before any memory line.
+With nothing over the floor there is no section and no extra text. The code
+is in `apps/agent/src/semantic/itemRecall.ts`.
+
+The Notes page search is unchanged. While the feature is off, the tools and
+the system prompt behave exactly like upstream.
 
 ## Vector store
 

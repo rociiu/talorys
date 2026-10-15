@@ -34,6 +34,12 @@
     "repot the fern": {
       "botany": 0.61
     },
+    "orchid care": {
+      "botany": 0.7
+    },
+    "mist the ferns": {
+      "botany": 0.66
+    },
     "travel prep": {
       "travel": 1
     },
@@ -283,6 +289,8 @@
     "garbage night?": "garbage night",
     "Teeth cleaning with Dr. Ruiz": "teeth cleaning",
     "dentist?": "dentist",
-    "Botany101 reading": ""
+    "Botany101 reading": "",
+    "Orchid care": "orchid care",
+    "Mist the ferns": "mist the ferns"
   }
 }
