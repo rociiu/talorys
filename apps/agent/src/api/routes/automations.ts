@@ -16,6 +16,10 @@ automationRoutes.get("/automations", (c) => {
   });
 });
 
+automationRoutes.get("/automations/:id", (c) =>
+  c.json({ automation: c.env.agent.services.automationsRepo.require(c.req.param("id")) }),
+);
+
 automationRoutes.post("/automations", async (c) => {
   const input = await body(c, automationCreateSchema);
   return c.json({ automation: await c.env.agent.services.automations.create(input) }, 201);

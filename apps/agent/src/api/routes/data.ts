@@ -104,6 +104,9 @@ dataRoutes.get("/memories/reviews", (c) => {
   return c.json({ reviews });
 });
 
+// Registered after the named /memories/reviews route so that path is not taken as an id.
+dataRoutes.get("/memories/:id", (c) => c.json({ memory: c.env.agent.services.memories.require(c.req.param("id")) }));
+
 dataRoutes.post("/memories/reviews/:id", async (c) => {
   const { action } = await body(c, memoryReviewResolveSchema);
   return c.json(c.env.agent.services.memoryHistory.resolveReview(c.req.param("id"), action));
