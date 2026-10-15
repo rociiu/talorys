@@ -71,7 +71,7 @@ dataRoutes.get("/memories", (c) => {
 
 dataRoutes.post("/memories", async (c) => {
   const input = await body(c, memoryCreateSchema);
-  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: "manual" }, { signal: c.req.raw.signal });
+  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: c.get("remote") ? "remote" : "manual" }, { signal: c.req.raw.signal });
   return c.json({ memory: result.memory, superseded: result.superseded, reviews: result.reviews.length }, 201);
 });
 
