@@ -11,9 +11,9 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="nav">
+<header class="nav" id="top">
   <div class="wrap nav-inner">
-    <a class="brand" href="#"><span class="logo">T.</span>Talorys</a>
+    <a class="brand" href="#top"><span class="logo">T.</span>Talorys</a>
     <nav class="links">
       <a href="#features">Features</a>
       <a href="#demo">Demo</a>
@@ -87,10 +87,10 @@
       <h2>See Talorys in action</h2>
       <p class="sub">Chat, remember, organize and automate — all in one private workspace.</p>
       <div class="tabs" role="tablist">
-        <button role="tab" aria-selected="true" data-shot="chat">Chat</button>
-        <button role="tab" data-shot="tasks">Tasks</button>
-        <button role="tab" data-shot="memory">Memories</button>
-        <button role="tab" data-shot="automations">Automations</button>
+        <button type="button" role="tab" aria-selected="true" data-shot="chat">Chat</button>
+        <button type="button" role="tab" data-shot="tasks">Tasks</button>
+        <button type="button" role="tab" data-shot="memory">Memories</button>
+        <button type="button" role="tab" data-shot="automations">Automations</button>
       </div>
     </div>
     <div class="window">
@@ -164,7 +164,7 @@
 </main>
 
 <footer class="wrap footer">
-  <a class="brand" href="#"><span class="logo">T.</span>Talorys</a>
+  <a class="brand" href="#top"><span class="logo">T.</span>Talorys</a>
   <span class="tag">Your AI. Your Space. Your Rules.</span>
   <nav>
     <a href="https://github.com/rociiu/talorys">GitHub</a>
@@ -175,15 +175,26 @@
 </footer>
 
 <script>
-  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
-    const img = document.getElementById('demo-shot');
-    img.src = 'screenshots/' + b.dataset.shot + '.png';
-    img.alt = 'Talorys ' + b.textContent.toLowerCase() + ' screen';
-  }));
-  document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(b.previousElementSibling.textContent); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1500); } catch {}
-  }));
+  const tabs = document.querySelectorAll('.tabs button');
+  for (const b of tabs) {
+    b.addEventListener('click', () => {
+      for (const x of tabs) x.setAttribute('aria-selected', x === b);
+      const img = document.getElementById('demo-shot');
+      img.src = `screenshots/${b.dataset.shot}.png`;
+      img.alt = `Talorys ${b.textContent.toLowerCase()} screen`;
+    });
+  }
+  for (const b of document.querySelectorAll('.copy')) {
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.previousElementSibling.textContent);
+        b.textContent = 'Copied';
+        setTimeout(() => {
+          b.textContent = 'Copy';
+        }, 1500);
+      } catch {}
+    });
+  }
 </script>
 </body>
 </html>
