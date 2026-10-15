@@ -155,6 +155,13 @@ export function itemVectorMeta(db: Database, type: ItemType): Map<string, ItemPa
 /** Deletes parts whose task, note or automation no longer exists and returns how many rows went. */
 export function purgeOrphanItemVectors(db: Database): number {
   if (!hasTable(db)) return 0;
+  // A read first, so a pass with nothing orphaned writes nothing.
+  const orphaned = ITEM_TYPES.some(
+    (type) =>
+      db.one(`SELECT 1 FROM tal_semantic_item_vectors WHERE item_type = ? AND item_id NOT IN (SELECT id FROM ${SOURCE_TABLE[type]}) LIMIT 1`, type) !==
+      null,
+  );
+  if (!orphaned) return 0;
   let gone = 0;
   const touched: ItemType[] = [];
   db.transaction(() => {
