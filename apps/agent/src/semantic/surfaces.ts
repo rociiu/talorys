@@ -195,11 +195,52 @@ export interface ItemPassReport {
   error?: string;
 }
 
+const CHANGE_CHECK_SOURCES = {
+  task: { table: "tal_tasks", columns: "s.id, s.title, s.description, s.updated_at" },
+  automation: { table: "tal_automations", columns: "s.id, s.name, s.message, s.updated_at" },
+  note: { table: "tal_notes", columns: "s.id, s.title, s.content, s.updated_at" },
+} as const;
+
+/**
+ * The change check's candidates, filtered in SQL: rows never indexed, rows with a vector from
+ * another model or (when `dims` is known) another size, and rows whose `updated_at` stamp differs
+ * from the one stored at their last index. A task or automation compares its part 0 against
+ * `itemSourceStamp`; a note is a candidate when any of its parts is stale. Comparing for
+ * inequality rather than "newer" also catches an edit that lands on an equal or earlier
+ * timestamp. With `full`, or before the vector table exists, every row.
+ */
+export function changedItemRows<T>(db: Database, type: ItemType, model: string, dims = 0, full = false): T[] {
+  const { table, columns } = CHANGE_CHECK_SOURCES[type];
+  if (full || !tableExists(db, "tal_semantic_item_vectors")) return db.all<T>(`SELECT ${columns} FROM ${table} s`);
+  const knownDims = dims > 0 ? 1 : 0;
+  if (type === "note") {
+    return db.all<T>(
+      `SELECT ${columns} FROM ${table} s
+       WHERE NOT EXISTS (SELECT 1 FROM tal_semantic_item_vectors v WHERE v.item_type = 'note' AND v.item_id = s.id)
+          OR EXISTS (SELECT 1 FROM tal_semantic_item_vectors v WHERE v.item_type = 'note' AND v.item_id = s.id
+                     AND (v.model <> ? OR (? = 1 AND v.dims <> ?) OR v.source_updated_at <> s.updated_at))`,
+      model,
+      knownDims,
+      dims,
+    );
+  }
+  return db.all<T>(
+    `SELECT ${columns} FROM ${table} s
+     LEFT JOIN tal_semantic_item_vectors v ON v.item_type = ? AND v.item_id = s.id AND v.part = 0
+     WHERE v.item_id IS NULL OR v.model <> ? OR (? = 1 AND v.dims <> ?) OR v.source_updated_at <> ? || s.updated_at`,
+    type,
+    model,
+    knownDims,
+    dims,
+    itemSourceStamp(type, ""),
+  );
+}
+
 /** Pending parts are embedded tasks first, then automations, note titles and note bodies. */
 const GROUP_ORDER = { task: 0, automation: 1, noteTitle: 2, noteBody: 3 } as const;
 
 /**
- * Item parts without a current vector for `model`: no row, a row from another model or (when
+ * Item parts without a current vector for `model`, among the rows `changedItemRows` selects: no row, a row from another model or (when
  * `dims` is known) another size, or one whose content hash no longer matches. A task or
  * automation is hashed only when its stored stamp differs from `itemSourceStamp` (or `full` is
  * set); a match records the new stamp. A note is re-chunked only when its updated_at differs from
@@ -236,17 +277,19 @@ export async function pendingItems(
   };
 
   const taskMeta = itemVectorMeta(db, "task");
-  const tasks = db.all<{ id: string; title: string; description: string; updated_at: string }>(
-    `SELECT id, title, description, updated_at FROM tal_tasks`,
-  );
+  const tasks = changedItemRows<{ id: string; title: string; description: string; updated_at: string }>(db, "task", model, dims, opts.full);
   for (const t of tasks) {
     const stored = taskMeta.get(t.id)?.find((p) => p.part === 0);
     await checkStamped("task", t.id, itemSourceStamp("task", t.updated_at), stored, () => taskText(t));
   }
 
   const automationMeta = itemVectorMeta(db, "automation");
-  const automations = db.all<{ id: string; name: string; message: string; updated_at: string }>(
-    `SELECT id, name, message, updated_at FROM tal_automations`,
+  const automations = changedItemRows<{ id: string; name: string; message: string; updated_at: string }>(
+    db,
+    "automation",
+    model,
+    dims,
+    opts.full,
   );
   for (const a of automations) {
     const stored = automationMeta.get(a.id)?.find((p) => p.part === 0);
@@ -254,7 +297,7 @@ export async function pendingItems(
   }
 
   const noteMeta = itemVectorMeta(db, "note");
-  const notes = db.all<{ id: string; title: string; content: string; updated_at: string }>(`SELECT id, title, content, updated_at FROM tal_notes`);
+  const notes = changedItemRows<{ id: string; title: string; content: string; updated_at: string }>(db, "note", model, dims, opts.full);
   for (const n of notes) {
     const stored = noteMeta.get(n.id) ?? [];
     if (!opts.full && stored.length > 0 && stored.every((p) => current(p) && p.source_updated_at === n.updated_at)) continue;

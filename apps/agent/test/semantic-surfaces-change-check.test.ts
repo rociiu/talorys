@@ -5,7 +5,7 @@ import { DEFAULT_SEMANTIC_CONFIG, deleteSemanticConfig } from "../src/semantic/c
 import { MockEmbedder } from "../src/semantic/embeddings";
 import type { IndexerContext } from "../src/semantic/indexer";
 import { dropSemanticData } from "../src/semantic/migrations";
-import { itemSourceStamp, pendingItems, runItemPass } from "../src/semantic/surfaces";
+import { changedItemRows, itemSourceStamp, pendingItems, runItemPass } from "../src/semantic/surfaces";
 import type { TalorysAgent } from "../src/agent/talorys-agent";
 
 /** Clears items and semantic state, seeds `n` tasks and indexes them all. */
@@ -67,6 +67,60 @@ describe("item change check", () => {
       expect(hashed).toBe(1);
       expect(pending.map((p) => [p.id, p.sourceUpdatedAt])).toEqual([[ids[0], itemSourceStamp("task", "2099-03-03T00:00:00.000Z")]]);
       expect(embed).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("item change check in SQL", () => {
+  const ids = (rows: { id: string }[]) => rows.map((r) => r.id).sort();
+
+  it("fetches only tasks never indexed or whose updated_at differs from the stored stamp", async () => {
+    await inAgent(async (a) => {
+      const { s, ids: taskIds, ctx, embed, check } = await indexedTasks(a, 20);
+      expect(changedItemRows(s.db, "task", ctx.embedder!.model, ctx.embedder!.dims)).toEqual([]);
+
+      // A later stamp, an earlier one with the same precision, and a new task.
+      bump(a, taskIds[3]!, "2099-01-01T00:00:00.000Z");
+      bump(a, taskIds[7]!, "2000-01-01T00:00:00.000Z");
+      const fresh = s.tasks.create({ title: "Brand new task" }).id;
+      const changed = changedItemRows<{ id: string }>(s.db, "task", ctx.embedder!.model, ctx.embedder!.dims);
+      expect(ids(changed)).toEqual([taskIds[3]!, taskIds[7]!, fresh].sort());
+
+      // The check itself never reads every task row.
+      const all = vi.spyOn(s.db, "all");
+      const { pending, hashed } = await check();
+      expect(hashed).toBe(3);
+      expect(pending.map((p) => p.id)).toEqual([fresh]);
+      const reads = all.mock.calls.map(([sql]) => String(sql)).filter((sql) => /FROM tal_tasks/.test(sql));
+      expect(reads.length).toBeGreaterThan(0);
+      for (const sql of reads) expect(sql).toMatch(/WHERE/);
+      all.mockRestore();
+      expect(embed).not.toHaveBeenCalled();
+
+      // Another model or size makes every row a candidate; full returns all rows.
+      expect(changedItemRows(s.db, "task", "other-model", ctx.embedder!.dims)).toHaveLength(21);
+      expect(changedItemRows(s.db, "task", ctx.embedder!.model, ctx.embedder!.dims + 1)).toHaveLength(21);
+      expect(changedItemRows(s.db, "task", ctx.embedder!.model, ctx.embedder!.dims, true)).toHaveLength(21);
+    });
+  });
+
+  it("fetches a note until every part carries its updated_at, and an automation by its stamp", async () => {
+    await inAgent(async (a) => {
+      const { s, ctx } = await indexedTasks(a, 1);
+      const { model, dims } = ctx.embedder!;
+      const note = s.notes.create({ title: "Lease", content: "Pets allowed with a deposit." }).id;
+      const automation = s.automationsRepo.create({ name: "Bins", kind: "reminder", message: "Take the bins out", schedule: { type: "daily", time: "20:00" }, enabled: true }).id;
+      expect(ids(changedItemRows(s.db, "note", model, dims))).toEqual([note]);
+      expect(ids(changedItemRows(s.db, "automation", model, dims))).toEqual([automation]);
+
+      await runItemPass(ctx, { maxEmbed: 50 });
+      expect(changedItemRows(s.db, "note", model, dims)).toEqual([]);
+      expect(changedItemRows(s.db, "automation", model, dims)).toEqual([]);
+
+      s.db.run(`UPDATE tal_notes SET updated_at = '2099-04-04T00:00:00.000Z' WHERE id = ?`, note);
+      s.db.run(`UPDATE tal_automations SET updated_at = '2099-04-04T00:00:00.000Z' WHERE id = ?`, automation);
+      expect(ids(changedItemRows(s.db, "note", model, dims))).toEqual([note]);
+      expect(ids(changedItemRows(s.db, "automation", model, dims))).toEqual([automation]);
     });
   });
 });
