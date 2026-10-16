@@ -75,6 +75,10 @@ describe("wrangler output handling", () => {
     expect(sanitize('{"api_token": "abc 123 secret value"}')).not.toMatch(/abc|123|value/);
   });
 
+  it("keeps ordinary sentences that start with Bearer readable", () => {
+    expect(sanitize("Bearer authentication failed")).toBe("Bearer authentication failed");
+  });
+
   it("keeps ordinary error text readable", () => {
     expect(sanitize("The token has expired; log in again")).toBe("The token has expired; log in again");
   });

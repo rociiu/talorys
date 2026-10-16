@@ -26,7 +26,8 @@ export function sanitize(output: string, maxLines = 12): string {
     // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escape sequences
     .replace(/\u001b\[[0-9;]*m/g, "")
     .replace(SECRETISH, "$1: [redacted]")
-    .replace(/\bbearer\s+[\w.~+/-]{8,}=*/gi, "Bearer [redacted]")
+    // Only token-like values (a digit or ./~+-= punctuation, or 20+ characters), so "Bearer authentication failed" stays readable.
+    .replace(/\bbearer\s+([\w.~+/-]{8,}=*)/gi, (m, v: string) => (/[\d.~+/=-]/.test(v) || v.length >= 20 ? "Bearer [redacted]" : m))
     .split("\n")
     .map((l) => l.trimEnd())
     .filter((l) => l.trim() && !/^\s*(?:▲|⛅|🪵)/u.test(l) && !l.includes("Proxy environment variables detected"))
