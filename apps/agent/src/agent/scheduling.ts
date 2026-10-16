@@ -1,4 +1,4 @@
-import { type Automation, type AutomationKind, type ScheduleSpec, computeNextRun, scheduleSpecSchema } from "@talorys/shared";
+import { type Automation, type AutomationKind, type AutomationRun, type ScheduleSpec, computeNextRun, scheduleSpecSchema } from "@talorys/shared";
 import type { AutomationRepository } from "../db/repositories/automations";
 import type { SettingsService } from "../services/settings";
 import type { ActivityLog } from "../services/usage";
@@ -149,6 +149,42 @@ export class AutomationService {
     const after = new Date(Math.max(Date.now(), slot.getTime()));
     const rearmed = await this.arm(updated, after);
     if (lastError && rearmed.enabled) this.repo.update(automation.id, { status: "failed" });
+  }
+
+  /**
+   * Runs an automation immediately, outside its schedule. The next scheduled
+   * run is left untouched.
+   */
+  async runNow(id: string, execute: AutomationExecutor): Promise<AutomationRun> {
+    const automation = this.repo.require(id);
+    if (automation.status === "running" || this.repo.hasActiveRun(id)) {
+      throw new ValidationError("This automation is already running.");
+    }
+    const run = this.repo.startRun(automation);
+    let lastResult: string | null = null;
+    let lastError: string | null = null;
+    try {
+      const outcome = await execute(automation);
+      lastResult = outcome.result.slice(0, 2000);
+      this.repo.finishRun(run.id, outcome.status, lastResult, null);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      this.repo.finishRun(run.id, "error", null, lastError);
+      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
+    }
+    this.repo.pruneRuns();
+    const current = this.repo.get(id);
+    if (current) {
+      this.repo.update(id, {
+        last_run: new Date().toISOString(),
+        last_result: lastResult,
+        last_error: lastError,
+        run_count: current.run_count + 1,
+        // A successful manual run clears a previous failure badge.
+        ...(!lastError && current.status === "failed" && current.enabled ? { status: "scheduled" as const } : {}),
+      });
+    }
+    return this.repo.runs({ automationId: id, limit: 1 })[0] ?? run;
   }
 
   /**

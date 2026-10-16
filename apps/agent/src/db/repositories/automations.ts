@@ -92,14 +92,21 @@ export class AutomationRepository {
     );
   }
 
-  runs(opts: { limit?: number; status?: string } = {}): AutomationRun[] {
-    if (opts.status) {
-      return this.db.all<AutomationRun>(
-        `SELECT * FROM tal_automation_runs WHERE status = ? ORDER BY started_at DESC LIMIT ?`,
-        opts.status, opts.limit ?? 50,
-      );
-    }
-    return this.db.all<AutomationRun>(`SELECT * FROM tal_automation_runs ORDER BY started_at DESC LIMIT ?`, opts.limit ?? 50);
+  /** Newest first. `before` pages backwards by `started_at`. */
+  runs(opts: { limit?: number; status?: string; automationId?: string; before?: string } = {}): AutomationRun[] {
+    const where: string[] = [];
+    const args: unknown[] = [];
+    if (opts.status) { where.push("status = ?"); args.push(opts.status); }
+    if (opts.automationId) { where.push("automation_id = ?"); args.push(opts.automationId); }
+    if (opts.before) { where.push("started_at < ?"); args.push(opts.before); }
+    return this.db.all<AutomationRun>(
+      `SELECT * FROM tal_automation_runs ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY started_at DESC LIMIT ?`,
+      ...args, opts.limit ?? 50,
+    );
+  }
+
+  hasActiveRun(automationId: string): boolean {
+    return !!this.db.one(`SELECT 1 FROM tal_automation_runs WHERE automation_id = ? AND status = 'running' LIMIT 1`, automationId);
   }
 
   /** Keeps the run history bounded. */

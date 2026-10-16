@@ -118,6 +118,13 @@ export class TalorysAgent extends Agent<Env, AgentState> {
     this.refreshUnread();
   }
 
+  /** "Run now" from the UI: executes immediately without touching the schedule. */
+  async runAutomationNow(id: string) {
+    const run = await this.services.automations.runNow(id, (a) => this.executeAutomation(a));
+    this.refreshUnread();
+    return run;
+  }
+
   private async executeAutomation(a: Automation): Promise<{ status: "success" | "skipped"; result: string }> {
     const s = this.services;
     const settings = s.settings.get();
@@ -156,7 +163,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
           throw error;
         }
         s.notifications.create({ title: a.name, body: text, automation_id: a.id });
-        return { status: "success", result: text.slice(0, 300) };
+        return { status: "success", result: text };
       }
     }
   }

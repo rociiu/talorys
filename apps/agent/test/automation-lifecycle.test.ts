@@ -74,3 +74,30 @@ describe("automation completion respects concurrent owner changes", () => {
     });
   });
 });
+
+describe("run now and run history", () => {
+  it("runs immediately without moving the next scheduled run, and pages history per automation", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Manual", kind: "reminder", message: "Stretch",
+        schedule: { type: "daily", time: "09:00" }, enabled: true });
+      const other = await s.automations.create({ name: "Other", kind: "reminder", message: "Water",
+        schedule: { type: "daily", time: "10:00" }, enabled: true });
+      const first = await agent.runAutomationNow(a.id);
+      expect(first).toMatchObject({ automation_id: a.id, status: "success", result: "Reminder delivered" });
+      await expect(s.automations.runNow(a.id, async () => { throw new Error("boom"); })).resolves.toMatchObject({ status: "error", error: "boom" });
+      await agent.runAutomationNow(other.id);
+
+      const current = s.automations.get(a.id)!;
+      expect(current).toMatchObject({ run_count: 2, last_error: "boom", schedule_id: a.schedule_id, next_run: a.next_run });
+
+      const mine = s.automationsRepo.runs({ automationId: a.id });
+      expect(mine.map((r) => r.status)).toEqual(["error", "success"]);
+      expect(s.automationsRepo.runs({ automationId: a.id, status: "error" })).toHaveLength(1);
+      expect(s.automationsRepo.runs({ automationId: a.id, before: mine[0]!.started_at }).map((r) => r.id)).not.toContain(mine[0]!.id);
+
+      await s.automations.delete(a.id);
+      await s.automations.delete(other.id);
+    });
+  });
+});

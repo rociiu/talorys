@@ -29,6 +29,26 @@ automationRoutes.get("/automations/:id", (c) =>
   c.json({ automation: c.env.agent.services.automationsRepo.require(c.req.param("id")) }),
 );
 
+automationRoutes.get("/automations/:id/runs", (c) => {
+  const s = c.env.agent.services;
+  const id = c.req.param("id");
+  s.automationsRepo.require(id);
+  const q = query(c, z.object({
+    status: z.enum(["success", "error", "skipped", "running"]).optional(),
+    before: z.string().max(40).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+  }));
+  const limit = q.limit ?? 25;
+  const runs = s.automationsRepo.runs({ automationId: id, status: q.status, before: q.before, limit: limit + 1 });
+  return c.json({ runs: runs.slice(0, limit), has_more: runs.length > limit });
+});
+
+automationRoutes.post("/automations/:id/run", async (c) => {
+  const id = c.req.param("id");
+  denyRemoteAgentPrompt(c, c.env.agent.services.automationsRepo.require(id).kind);
+  return c.json({ run: await c.env.agent.runAutomationNow(id) });
+});
+
 automationRoutes.post("/automations", async (c) => {
   const input = await body(c, automationCreateSchema);
   denyRemoteAgentPrompt(c, input.kind);

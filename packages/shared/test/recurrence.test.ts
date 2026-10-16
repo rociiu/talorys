@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeNextRun, describeSchedule, scheduleSpecSchema, zonedTimeToUtc, getZonedParts, isValidCalendarDate } from "../src/recurrence";
+import { computeNextRun, describeSchedule, upcomingRuns, scheduleSpecSchema, zonedTimeToUtc, getZonedParts, isValidCalendarDate } from "../src/recurrence";
 
 const NY = "America/New_York";
 
@@ -63,7 +63,7 @@ describe("computeNextRun", () => {
     expect(scheduleSpecSchema.safeParse({ type: "once", at: "2026-02-31T09:00" }).success).toBe(false);
     expect(scheduleSpecSchema.safeParse({ type: "once", at: "2026-02-29T09:00" }).success).toBe(false);
     expect(scheduleSpecSchema.safeParse({ type: "once", at: "2028-02-29T09:00" }).success).toBe(true);
-    expect(describeSchedule({ type: "weekly", days: [1, 3], time: "09:00" })).toBe("Every Monday, Wednesday at 09:00");
+    expect(describeSchedule({ type: "weekly", days: [1, 3], time: "09:00" })).toBe("Every Monday and Wednesday at 09:00");
   });
 });
 
@@ -106,11 +106,35 @@ describe("isValidCalendarDate", () => {
 
 describe("describeSchedule", () => {
   it("lists each weekday once, in week order, even when the rule repeats a day", () => {
-    expect(describeSchedule({ type: "weekly", days: [3, 1, 1], time: "09:00" })).toBe("Every Monday, Wednesday at 09:00");
+    expect(describeSchedule({ type: "weekly", days: [3, 1, 1], time: "09:00" })).toBe("Every Monday and Wednesday at 09:00");
   });
 
   it("does not call a repeated weekday 'every day'", () => {
     expect(describeSchedule({ type: "weekly", days: [1, 1, 1, 1, 1, 1, 1], time: "09:00" })).toBe("Every Monday at 09:00");
     expect(describeSchedule({ type: "weekly", days: [0, 1, 2, 3, 4, 5, 6], time: "09:00" })).toBe("Every day at 09:00");
+  });
+
+  it("names common day sets and reads naturally", () => {
+    expect(describeSchedule({ type: "weekly", days: [5, 1, 3], time: "08:30" })).toBe("Every Monday, Wednesday and Friday at 08:30");
+    expect(describeSchedule({ type: "weekly", days: [1, 2, 3, 4, 5], time: "09:00" })).toBe("Every weekday at 09:00");
+    expect(describeSchedule({ type: "weekly", days: [6, 0], time: "10:00" })).toBe("Every weekend day at 10:00");
+    expect(describeSchedule({ type: "monthly", day: 1, time: "09:00" })).toBe("Monthly on the 1st at 09:00");
+    expect(describeSchedule({ type: "monthly", day: 22, time: "09:00" })).toBe("Monthly on the 22nd at 09:00");
+    expect(describeSchedule({ type: "monthly", day: 13, time: "09:00" })).toBe("Monthly on the 13th at 09:00");
+    expect(describeSchedule({ type: "interval", minutes: 60 })).toBe("Every hour");
+    expect(describeSchedule({ type: "interval", minutes: 180 })).toBe("Every 3 hours");
+    expect(describeSchedule({ type: "interval", minutes: 90 })).toBe("Every 1 h 30 min");
+    expect(describeSchedule({ type: "interval", minutes: 2880 })).toBe("Every 2 days");
+  });
+});
+
+describe("upcomingRuns", () => {
+  it("lists consecutive occurrences and stops when a one-off is done", () => {
+    const after = new Date("2026-03-02T00:00:00Z"); // Monday
+    const runs = upcomingRuns({ type: "weekly", days: [1, 3], time: "09:00" }, "UTC", after, 3);
+    expect(runs.map((d) => d.toISOString())).toEqual([
+      "2026-03-02T09:00:00.000Z", "2026-03-04T09:00:00.000Z", "2026-03-09T09:00:00.000Z",
+    ]);
+    expect(upcomingRuns({ type: "once", at: "2026-03-05T10:00" }, "UTC", after, 3)).toHaveLength(1);
   });
 });

@@ -15,7 +15,7 @@ import type {
   Task,
   UsageReport,
 } from "@talorys/shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { errorMessage, useToast } from "./toast";
 
@@ -125,6 +125,22 @@ export function useAutomations() {
     queryKey: keys.automations,
     queryFn: () => api<{ automations: Automation[]; runs: AutomationRun[]; failed_runs: AutomationRun[]; timezone: string }>("/automations"),
     refetchInterval: 60_000,
+  });
+}
+
+/** One automation's run history, newest first, paged with "Load more". */
+export function useAutomationRuns(id: string | null, status?: AutomationRun["status"]) {
+  return useInfiniteQuery({
+    queryKey: [...keys.automations, id, "runs", status ?? "all"],
+    enabled: !!id,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: "25" });
+      if (status) params.set("status", status);
+      if (pageParam) params.set("before", pageParam);
+      return api<{ runs: AutomationRun[]; has_more: boolean }>(`/automations/${id}/runs?${params}`);
+    },
+    getNextPageParam: (last) => (last.has_more ? last.runs[last.runs.length - 1]?.started_at : undefined),
   });
 }
 

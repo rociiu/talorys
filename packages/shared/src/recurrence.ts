@@ -186,7 +186,37 @@ export function computeNextRun(spec: ScheduleSpec, timeZone: string, after: Date
   return null;
 }
 
+/** The next `count` runs strictly after `after` (fewer when the schedule ends). */
+export function upcomingRuns(spec: ScheduleSpec, timeZone: string, after: Date, count: number): Date[] {
+  const runs: Date[] = [];
+  let cursor = after;
+  while (runs.length < count) {
+    const next = computeNextRun(spec, timeZone, cursor);
+    if (!next) break;
+    runs.push(next);
+    cursor = next;
+  }
+  return runs;
+}
+
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function joinList(items: string[]): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+function ordinal(n: number): string {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
+  return `${n}${suffix}`;
+}
+
+function describeInterval(minutes: number): string {
+  if (minutes % 1440 === 0) return minutes === 1440 ? "Every day" : `Every ${minutes / 1440} days`;
+  if (minutes % 60 === 0) return minutes === 60 ? "Every hour" : `Every ${minutes / 60} hours`;
+  if (minutes > 60) return `Every ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  return `Every ${minutes} minutes`;
+}
 
 export function describeSchedule(spec: ScheduleSpec): string {
   switch (spec.type) {
@@ -196,12 +226,15 @@ export function describeSchedule(spec: ScheduleSpec): string {
       return `Every day at ${spec.time}`;
     case "weekly": {
       const days = [...new Set(spec.days)].sort((a, b) => a - b);
+      const key = days.join("");
       if (days.length === 7) return `Every day at ${spec.time}`;
-      return `Every ${days.map((d) => DAY_NAMES[d]).join(", ")} at ${spec.time}`;
+      if (key === "12345") return `Every weekday at ${spec.time}`;
+      if (key === "06") return `Every weekend day at ${spec.time}`;
+      return `Every ${joinList(days.map((d) => DAY_NAMES[d]!))} at ${spec.time}`;
     }
     case "monthly":
-      return `Monthly on day ${spec.day} at ${spec.time}`;
+      return `Monthly on the ${ordinal(spec.day)} at ${spec.time}`;
     case "interval":
-      return spec.minutes % 60 === 0 ? `Every ${spec.minutes / 60} hour(s)` : `Every ${spec.minutes} minutes`;
+      return describeInterval(spec.minutes);
   }
 }
