@@ -5,6 +5,7 @@ import { Badge, Button, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, L
 import { keys, useApiMutation, useProjects, useTasks, useTimezone } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, formatDue, toLocalInput } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 type Tab = "today" | "upcoming" | "completed";
 
@@ -34,6 +35,7 @@ const PRIORITY_TONE: Record<TaskPriority, "neutral" | "accent" | "warning" | "da
 };
 
 export default function TasksPage() {
+  const i18n = useI18n();
   const tz = useTimezone();
   const { data: tasks, isLoading, error, refetch } = useTasks();
   const projects = useProjects();
@@ -144,7 +146,7 @@ export default function TasksPage() {
                       <span className={cn("inline-flex items-center gap-1", overdue && "font-medium text-danger")}>
                         <CalendarDays className="h-3 w-3" />
                         {overdue ? "Overdue · " : ""}
-                        {formatDue(t.due_at, tz)}
+                        {formatDue(t.due_at, tz, i18n.locale)}
                       </span>
                     )}
                     {projectName(t.project_id) && <span>{projectName(t.project_id)}</span>}

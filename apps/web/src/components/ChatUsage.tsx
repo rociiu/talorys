@@ -3,10 +3,12 @@ import { Gauge, X } from "lucide-react";
 import { Link } from "react-router";
 import { useUsage } from "../hooks/queries";
 import { cn } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 import { Button, Spinner } from "./ui";
 import { UsageBreakdown } from "./UsageBreakdown";
 
 export function ChatUsage() {
+  const { locale } = useI18n();
   const [open, setOpen] = useState(false);
   const usage = useUsage(open ? 15_000 : 60_000);
   const root = useRef<HTMLDivElement>(null);
@@ -69,19 +71,19 @@ export function ChatUsage() {
               <p>Usage could not be loaded.</p>
               <Button variant="outline" size="sm" onClick={() => void usage.refetch()}>Try again</Button>
             </div> : data && <>
-              <div className="flex justify-between gap-3 text-fg"><span>Chat-model requests</span><span className="tabular-nums">{used.toLocaleString()} / {limit.toLocaleString()}</span></div>
+              <div className="flex justify-between gap-3 text-fg"><span>Chat-model requests</span><span className="tabular-nums">{used.toLocaleString(locale)} / {limit.toLocaleString(locale)}</span></div>
               <div role="progressbar" aria-label="Daily AI requests used" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(percent)}
                 aria-valuetext={`${used} of ${limit} requests used`} className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div className={cn("h-full rounded-full transition-all", percent >= 100 ? "bg-danger" : nearLimit ? "bg-warning" : "bg-accent")} style={{ width: `${percent}%` }} />
               </div>
               <p className={cn("mt-2 text-xs", nearLimit ? "text-warning" : "text-fg-muted")}>
-                {used >= limit ? "Daily request limit reached" : `${Math.max(0, limit - used).toLocaleString()} requests remaining`}
+                {used >= limit ? "Daily request limit reached" : `${Math.max(0, limit - used).toLocaleString(locale)} requests remaining`}
               </p>
               <div className="my-4 space-y-2">
                 <UsageBreakdown counters={data.today} compact />
                 <dl className="space-y-2 text-xs text-fg-muted">
-                  <div className="flex justify-between gap-3"><dt>Tool calls</dt><dd className="tabular-nums text-fg">{data.today.tool_calls.toLocaleString()}</dd></div>
-                  <div className="flex justify-between gap-3"><dt>Scheduled AI runs</dt><dd className="tabular-nums text-fg">{data.today.scheduled_ai_runs.toLocaleString()} / {data.limits.maxScheduledAiRunsPerDay.toLocaleString()}</dd></div>
+                  <div className="flex justify-between gap-3"><dt>Tool calls</dt><dd className="tabular-nums text-fg">{data.today.tool_calls.toLocaleString(locale)}</dd></div>
+                  <div className="flex justify-between gap-3"><dt>Scheduled AI runs</dt><dd className="tabular-nums text-fg">{data.today.scheduled_ai_runs.toLocaleString(locale)} / {data.limits.maxScheduledAiRunsPerDay.toLocaleString(locale)}</dd></div>
                 </dl>
               </div>
               <p className="border-t border-border pt-3 text-xs text-fg-subtle">Estimates, not a bill. Resets at 00:00 UTC.</p>

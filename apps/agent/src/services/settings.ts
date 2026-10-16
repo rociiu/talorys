@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: Settings = {
   agentName: "Talorys",
   timezone: "UTC",
   theme: "system",
+  language: "system",
   model: DEFAULT_MODEL,
   temperature: 0.4,
   limits: { ...DEFAULT_LIMITS },

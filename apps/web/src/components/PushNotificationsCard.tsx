@@ -7,6 +7,7 @@ import { useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
 import { currentSubscription, disablePush, enablePush, pushBlocker, thisDeviceId } from "../lib/push";
 import { relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 const KEY = ["push"] as const;
 
@@ -78,6 +79,7 @@ function usePushMutations() {
 }
 
 function PushControls({ status: s }: { status: PushStatus }) {
+  const i18n = useI18n();
   const { subscribed, toggle, remove, test } = usePushMutations();
   const blocker = pushBlocker();
   const current = thisDeviceId();
@@ -92,7 +94,7 @@ function PushControls({ status: s }: { status: PushStatus }) {
         />
       </Row>
       {s.devices.map((d) => (
-        <Row key={d.id} label={d.label} hint={`${d.service} · added ${relativeTime(d.created_at)}${d.failures ? ` · ${d.failures} failed send(s)` : ""}`}>
+        <Row key={d.id} label={d.label} hint={`${d.service} · added ${relativeTime(d.created_at, i18n)}${d.failures ? ` · ${d.failures} failed send(s)` : ""}`}>
           <div className="flex items-center gap-2">
             {d.id === current && <Badge tone="accent">This device</Badge>}
             <Button variant="ghost" aria-label={`Remove ${d.label}`} onClick={() => remove.mutate(d.id)} disabled={remove.isPending}>

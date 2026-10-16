@@ -57,6 +57,34 @@ embeddings.
 2. Register them in `apps/agent/src/tools/index.ts`.
 3. Add tests in `apps/agent/test/`.
 
+### UI text and languages
+
+UI text lives in `apps/web/src/lib/i18n/en.ts`. Components read it through
+`useI18n()`: `t("key")` for plain strings and attributes, `rich("key", {...})`
+when a parameter is an element such as `<code>`. Placeholders are written as
+`{name}` and their names are type-checked against the English text. A plural
+message is an object keyed by `Intl.PluralRules` categories (`one`, `few`,
+`many`, `other`, ...) and takes `{count}`.
+
+Pass `locale` from `useI18n()` to `formatDateTime`, `relativeTime`,
+`toLocaleString` and other display formatters. With the default "Browser
+default" language it is the browser's locale, so nothing changes for owners who
+never pick a language.
+
+To add a language:
+
+1. Add its code to `LANGUAGES` in `packages/shared/src/constants.ts`.
+2. Create `apps/web/src/lib/i18n/<code>.ts` exporting an object that
+   `satisfies Translation`. Keys missing from it fall back to English; keys
+   that don't exist in English are a type error.
+3. Register it in `translations` in `apps/web/src/lib/i18n/core.ts` and add its
+   name, in that language, to `LANGUAGE_NAMES` in `apps/web/src/lib/i18n/index.tsx`.
+
+Text generated on the server stays in English for now: reminder, digest and
+push notifications, and API error messages. The agent's system prompt and tool
+descriptions are not translated; the model answers in the language the owner
+writes in.
+
 ### Adding a migration
 
 Append to `MIGRATIONS` in `apps/agent/src/db/migrations.ts` with the next

@@ -5,6 +5,7 @@ import { Badge, Button, Card, ConfirmDialog, Dialog, EmptyState, ErrorNotice, In
 import { keys, useApiMutation, useAutomations } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, formatDateTime, relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 const KIND_META: Record<AutomationKind, { label: string; icon: typeof Bell; hint: string }> = {
   reminder: { label: "Reminder", icon: Bell, hint: "Shows your message in the notification center. No AI used." },
@@ -15,6 +16,7 @@ const KIND_META: Record<AutomationKind, { label: string; icon: typeof Bell; hint
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function AutomationsPage() {
+  const i18n = useI18n();
   const { data, isLoading, error, refetch } = useAutomations();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Automation | null>(null);
@@ -60,8 +62,8 @@ export default function AutomationsPage() {
           </div>
           <p className="mt-0.5 text-sm text-fg-muted">{a.schedule_description}</p>
           <p className="mt-0.5 text-xs text-fg-subtle">
-            {a.next_run && a.enabled ? `Next: ${formatDateTime(a.next_run, tz)}` : a.status === "completed" ? "Finished" : a.enabled ? "Not scheduled" : "Paused"}
-            {a.last_run && ` · Last run ${relativeTime(a.last_run)}`}
+            {a.next_run && a.enabled ? `Next: ${formatDateTime(a.next_run, tz, i18n.locale)}` : a.status === "completed" ? "Finished" : a.enabled ? "Not scheduled" : "Paused"}
+            {a.last_run && ` · Last run ${relativeTime(a.last_run, i18n)}`}
             {a.run_count > 0 && ` · ${a.run_count} run${a.run_count === 1 ? "" : "s"}`}
           </p>
           {a.last_error && <p className="mt-1 text-xs text-danger">{a.last_error}</p>}
@@ -117,7 +119,7 @@ export default function AutomationsPage() {
                   <div key={a.id} className="min-w-44 rounded-xl border border-border bg-surface px-4 py-3">
                     <AlarmClock className="h-4 w-4 text-accent" />
                     <p className="mt-2 truncate text-sm font-medium">{a.name}</p>
-                    <p className="text-xs text-fg-subtle">{relativeTime(a.next_run)}</p>
+                    <p className="text-xs text-fg-subtle">{relativeTime(a.next_run, i18n)}</p>
                   </div>
                 ))}
               </div>
@@ -156,7 +158,7 @@ export default function AutomationsPage() {
                       </div>
                       <div className="shrink-0 text-right">
                         <Badge tone={r.status === "success" ? "success" : r.status === "error" ? "danger" : "neutral"}>{r.status}</Badge>
-                        <p className="mt-0.5 text-xs text-fg-subtle">{relativeTime(r.started_at)}</p>
+                        <p className="mt-0.5 text-xs text-fg-subtle">{relativeTime(r.started_at, i18n)}</p>
                       </div>
                     </li>
                   ))}
@@ -172,7 +174,7 @@ export default function AutomationsPage() {
                   {data.failed_runs.map((r) => (
                     <li key={r.id} className="px-4 py-2.5 text-sm">
                       <p className="font-medium">
-                        {r.automation_name} <span className="font-normal text-fg-subtle">· {formatDateTime(r.started_at, tz)}</span>
+                        {r.automation_name} <span className="font-normal text-fg-subtle">· {formatDateTime(r.started_at, tz, i18n.locale)}</span>
                       </p>
                       <p className="text-xs text-danger">{r.error}</p>
                     </li>

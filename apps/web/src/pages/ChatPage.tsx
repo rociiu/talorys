@@ -27,6 +27,7 @@ import { Logo } from "../components/Logo";
 import { keys, useApiMutation, useConversation, useConversations, useSettings } from "../hooks/queries";
 import { api, ApiError, streamChat } from "../lib/api";
 import { cn, copyText, relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 interface StreamState {
   conversationId: string | null;
@@ -263,6 +264,7 @@ function ChatHeader({
 }
 
 function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void }) {
+  const i18n = useI18n();
   const recent = useConversations();
   const navigate = useNavigate();
   const greeting = (() => {
@@ -299,7 +301,7 @@ function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void
                   className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-left text-sm text-fg-muted hover:bg-muted hover:text-fg"
                 >
                   <span className="truncate">{c.title}</span>
-                  <span className="shrink-0 text-xs text-fg-subtle">{relativeTime(c.updated_at)}</span>
+                  <span className="shrink-0 text-xs text-fg-subtle">{relativeTime(c.updated_at, i18n)}</span>
                 </button>
               </li>
             ))}
@@ -311,6 +313,7 @@ function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void
 }
 
 function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavigate: () => void }) {
+  const i18n = useI18n();
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   useEffect(() => {
@@ -377,7 +380,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
                   )}
                 >
                   <span className="truncate text-sm">{c.title}</span>
-                  <span className="text-xs text-fg-subtle">{relativeTime(c.updated_at)}</span>
+                  <span className="text-xs text-fg-subtle">{relativeTime(c.updated_at, i18n)}</span>
                 </button>
                 <button type="button"
                   onClick={() => setMenu(menu === c.id ? null : c.id)}

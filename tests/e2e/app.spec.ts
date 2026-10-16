@@ -266,6 +266,20 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByRole("link", { name: "Download backup" })).toHaveAttribute("href", "/api/export");
   });
 
+  test("the language setting is saved with the account and sets <html lang>", async ({ page }) => {
+    await login(page);
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const language = page.getByRole("combobox", { name: "Language" });
+    await expect(language).toHaveValue("system");
+    await expect(language.getByRole("option", { name: "Browser default (English)" })).toHaveCount(1);
+    await language.selectOption("en");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await page.reload();
+    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+    await page.getByRole("combobox", { name: "Language" }).selectOption("system");
+    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("system");
+  });
+
   test("lock signs out", async ({ page }) => {
     await login(page);
     await page.getByRole("button", { name: "Lock" }).click();
