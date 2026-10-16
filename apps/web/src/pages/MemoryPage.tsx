@@ -6,6 +6,7 @@ import { type MemoryStatusFilter, useApiMutation, useMemories, useMemoryHistory,
 import { useToast } from "../hooks/toast";
 import { api } from "../lib/api";
 import { cn, relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 const CATEGORY_LABELS: Record<MemoryCategory, string> = {
   preference: "Preferences",
@@ -42,6 +43,7 @@ const sourceLabel = (m: Memory) =>
   m.source === "agent" ? "Learned in chat" : m.source === "import" ? "Imported" : m.source === "remote" ? "Added by access token" : "Added manually";
 
 export default function MemoryPage() {
+  const i18n = useI18n();
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [filter, setFilter] = useState<MemoryStatusFilter>("all");
@@ -168,7 +170,7 @@ export default function MemoryPage() {
                         {m.status === "uncertain" && <Badge tone="warning" className="ml-2 align-middle">Unsure</Badge>}
                       </p>
                       <p className="mt-0.5 text-xs text-fg-subtle">
-                        {sourceLabel(m)} · {relativeTime(m.updated_at)}
+                        {sourceLabel(m)} · {relativeTime(m.updated_at, i18n)}
                         {m.valid_from && ` · since ${m.valid_from}`}
                         {m.valid_until && ` · until ${m.valid_until}`}
                         {m.superseded_by && (
@@ -278,6 +280,7 @@ function ReviewPanel({ reviews }: { reviews: MemoryReview[] }) {
 }
 
 function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: () => void }) {
+  const i18n = useI18n();
   const { data, isLoading } = useMemoryHistory(memory?.id ?? null);
   const current = data ? (data.next.at(-1) ?? data.memory) : null;
   const earlier = data ? [...data.previous, ...(data.next.length ? [data.memory, ...data.next.slice(0, -1)] : [])].reverse() : [];
@@ -293,7 +296,7 @@ function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
             <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{current.status === "historical" ? "Latest" : "Current"}</p>
             <p className="mt-1 leading-6">“{current.content}”</p>
             <p className="text-xs text-fg-subtle">
-              Saved {relativeTime(current.created_at)}
+              Saved {relativeTime(current.created_at, i18n)}
               {current.valid_from && ` · since ${current.valid_from}`}
             </p>
           </div>
@@ -305,7 +308,7 @@ function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
                   <li key={m.id} className="text-fg-muted">
                     “{m.content}”
                     <span className="block text-xs text-fg-subtle">
-                      Saved {relativeTime(m.created_at)}
+                      Saved {relativeTime(m.created_at, i18n)}
                       {m.valid_until && ` · until ${m.valid_until}`}
                     </span>
                   </li>

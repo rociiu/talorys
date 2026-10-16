@@ -4,12 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router";
 import "./styles/index.css";
 import { initTheme } from "./lib/theme";
+import { initLanguage } from "./lib/i18n";
 import { App } from "./App";
 import { SessionProvider } from "./hooks/session";
 import { ToastProvider } from "./hooks/toast";
 import { ApiError } from "./lib/api";
 
 initTheme();
+initLanguage();
 
 const queryClient = new QueryClient({
   defaultOptions: {

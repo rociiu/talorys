@@ -1,10 +1,12 @@
+import type { I18n } from "./i18n";
+
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
-const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
-export function relativeTime(iso: string | null | undefined): string {
+export function relativeTime(iso: string | null | undefined, { locale, t }: Pick<I18n, "locale" | "t">): string {
   if (!iso) return "";
   const diff = Date.parse(iso) - Date.now();
   const abs = Math.abs(diff);
@@ -16,17 +18,22 @@ export function relativeTime(iso: string | null | undefined): string {
     ["hour", 3600_000],
     ["minute", 60_000],
   ];
+  let rtf = relativeFormats.get(locale);
+  if (!rtf) {
+    rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    relativeFormats.set(locale, rtf);
+  }
   for (const [unit, ms] of units) {
     if (abs >= ms) return rtf.format(Math.round(diff / ms), unit);
   }
-  return diff < 0 ? "just now" : "in a moment";
+  return diff < 0 ? t("time.justNow") : t("time.inAMoment");
 }
 
 /** Formats an instant in the owner's timezone. */
-export function formatDateTime(iso: string | null | undefined, timeZone: string, opts: { dateOnly?: boolean } = {}): string {
+export function formatDateTime(iso: string | null | undefined, timeZone: string, locale: string, opts: { dateOnly?: boolean } = {}): string {
   if (!iso) return "";
   const d = new Date(iso);
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     timeZone,
     month: "short",
     day: "numeric",
@@ -36,10 +43,10 @@ export function formatDateTime(iso: string | null | undefined, timeZone: string,
 }
 
 /** Due dates stored as 23:59 local mean "by end of day" and are shown without a time. */
-export function formatDue(iso: string | null, timeZone: string): string {
+export function formatDue(iso: string | null, timeZone: string, locale: string): string {
   if (!iso) return "";
   const parts = new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
-  return formatDateTime(iso, timeZone, { dateOnly: parts === "23:59" });
+  return formatDateTime(iso, timeZone, locale, { dateOnly: parts === "23:59" });
 }
 
 /** "YYYY-MM-DDTHH:MM" for <input type="datetime-local"> in the owner's timezone. */

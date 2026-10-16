@@ -6,6 +6,7 @@ import { keys, useApiMutation, useRemoteStatus, useRemoteTokens } from "../hooks
 import { useToast } from "../hooks/toast";
 import { api } from "../lib/api";
 import { relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 const DESCRIPTION =
   "Create personal access tokens so scripts and other apps can use your Talorys data over HTTPS.";
@@ -32,6 +33,7 @@ function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; ch
 
 /** Settings card for personal access tokens: the on/off switch, a generate form, the once-only plaintext and the token list. */
 export function RemoteAccessCard() {
+  const i18n = useI18n();
   const toast = useToast();
   const status = useRemoteStatus();
   const tokens = useRemoteTokens();
@@ -172,7 +174,7 @@ export function RemoteAccessCard() {
                   <Row
                     key={t.id}
                     label={t.name}
-                    hint={`${REMOTE_TOKEN_PREFIX}…${t.hint} · created ${relativeTime(t.created_at)} · last used ${t.last_used_at ? relativeTime(t.last_used_at) : "Never"}`}
+                    hint={`${REMOTE_TOKEN_PREFIX}…${t.hint} · created ${relativeTime(t.created_at, i18n)} · last used ${t.last_used_at ? relativeTime(t.last_used_at, i18n) : "Never"}`}
                   >
                     <div className="flex items-center gap-2">
                       <Badge tone={t.scope === "write" ? "warning" : "neutral"}>{t.scope}</Badge>

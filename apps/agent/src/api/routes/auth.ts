@@ -32,6 +32,7 @@ authRoutes.get("/session", (c) => {
     configured: s.auth.isConfigured(),
     agent_name: authenticated ? settings.agentName : undefined,
     theme: authenticated ? settings.theme : undefined,
+    language: authenticated ? settings.language : undefined,
   });
 });
 

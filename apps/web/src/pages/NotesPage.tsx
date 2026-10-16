@@ -9,8 +9,10 @@ import { Badge, Button, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, S
 import { keys, useApiMutation, useNotes, useProjects } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, relativeTime } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 export default function NotesPage() {
+  const i18n = useI18n();
   const { noteId } = useParams();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
@@ -83,7 +85,7 @@ export default function NotesPage() {
                       )}
                     </div>
                     <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-fg-subtle">
-                      {relativeTime(n.updated_at)}
+                      {relativeTime(n.updated_at, i18n)}
                       {n.content ? ` · ${n.content.replace(/[#*_`>\-[\]]/g, "").slice(0, 120)}` : ""}
                     </p>
                   </button>
@@ -307,12 +309,13 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
 }
 
 function NoteMeta({ content, updatedAt }: { content: string; updatedAt: string }) {
+  const i18n = useI18n();
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const tasks = taskStats(content);
   const pct = tasks.total ? Math.round((tasks.done / tasks.total) * 100) : 0;
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-subtle">
-      <span>Edited {relativeTime(updatedAt)}</span>
+      <span>Edited {relativeTime(updatedAt, i18n)}</span>
       <span>{words} {words === 1 ? "word" : "words"} · {Math.max(1, Math.round(words / 230))} min read</span>
       {tasks.total > 0 && (
         <span className="flex items-center gap-2">

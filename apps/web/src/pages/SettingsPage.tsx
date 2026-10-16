@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { checkPasswordStrength, GITHUB_URL, LIMIT_CEILINGS, type Limits, type MemoryHistorySettings, type Settings, TALORYS_VERSION } from "@talorys/shared";
+import { checkPasswordStrength, GITHUB_URL, LANGUAGES, LIMIT_CEILINGS, type Limits, type MemoryHistorySettings, type Settings, TALORYS_VERSION } from "@talorys/shared";
 import { Download, ExternalLink, LogOut, Monitor, Moon, Sun, Upload } from "lucide-react";
 import { Badge, Button, Card, ConfirmDialog, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch } from "../components/ui";
 import { SemanticRecallCard } from "../components/SemanticRecallCard";
@@ -14,6 +14,7 @@ import { useToast, errorMessage } from "../hooks/toast";
 import { api, ApiError } from "../lib/api";
 import { applyTheme } from "../lib/theme";
 import { cn, relativeTime } from "../lib/utils";
+import { applyLanguage, browserLanguage, LANGUAGE_NAMES, useI18n } from "../lib/i18n";
 
 const TABS = ["General", "AI", "Privacy", "Security", "About"] as const;
 type Tab = (typeof TABS)[number];
@@ -102,6 +103,7 @@ function useSaveSettings() {
 
 function GeneralTab({ settings }: { settings: Settings }) {
   const save = useSaveSettings();
+  const { t } = useI18n();
   const [name, setName] = useState(settings.agentName);
   const zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [settings.timezone];
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -137,6 +139,24 @@ function GeneralTab({ settings }: { settings: Settings }) {
           {(zones.includes(settings.timezone) ? zones : [settings.timezone, ...zones]).map((z) => (
             <option key={z} value={z}>
               {z}
+            </option>
+          ))}
+        </Select>
+      </Row>
+      <Row label={t("settings.language")} hint={t("settings.languageHint")}>
+        <Select
+          value={settings.language}
+          onChange={(e) => {
+            const value = e.target.value as Settings["language"];
+            applyLanguage(value);
+            save.mutate({ language: value });
+          }}
+          aria-label={t("settings.language")}
+        >
+          <option value="system">{t("settings.languageSystem", { language: LANGUAGE_NAMES[browserLanguage()] })}</option>
+          {LANGUAGES.map((language) => (
+            <option key={language} value={language} lang={language}>
+              {LANGUAGE_NAMES[language]}
             </option>
           ))}
         </Select>
@@ -181,6 +201,7 @@ const LIMIT_FIELDS: { key: keyof Limits; label: string; hint: string }[] = [
 ];
 
 function AiTab({ settings }: { settings: Settings }) {
+  const i18n = useI18n();
   const save = useSaveSettings();
   const usage = useUsage();
   const [model, setModel] = useState(settings.model);
@@ -262,7 +283,7 @@ function AiTab({ settings }: { settings: Settings }) {
             <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
               {[
                 ["Chat-model requests today", `${usage.data.today.ai_requests} / ${usage.data.limits.maxAiRequestsPerDay}`],
-                ["AI errors today", usage.data.today.ai_errors.toLocaleString()],
+                ["AI errors today", usage.data.today.ai_errors.toLocaleString(i18n.locale)],
                 ["Tool calls today", String(usage.data.today.tool_calls)],
                 ["Scheduled AI runs", `${usage.data.today.scheduled_ai_runs} / ${usage.data.limits.maxScheduledAiRunsPerDay}`],
               ].map(([label, value]) => (
@@ -280,7 +301,7 @@ function AiTab({ settings }: { settings: Settings }) {
               <div className="bg-surface px-5 py-4">
                 <h3 className="mb-3 text-sm font-medium">Last 7 days</h3>
                 <p className="mb-3 text-xs tabular-nums text-fg-muted">
-                  {usage.data.last_7_days.ai_requests.toLocaleString()} chat-model requests · {usage.data.last_7_days.ai_errors.toLocaleString()} errors · {usage.data.last_7_days.tool_calls.toLocaleString()} tool calls · {usage.data.last_7_days.scheduled_ai_runs.toLocaleString()} scheduled AI runs
+                  {usage.data.last_7_days.ai_requests.toLocaleString(i18n.locale)} chat-model requests · {usage.data.last_7_days.ai_errors.toLocaleString(i18n.locale)} errors · {usage.data.last_7_days.tool_calls.toLocaleString(i18n.locale)} tool calls · {usage.data.last_7_days.scheduled_ai_runs.toLocaleString(i18n.locale)} scheduled AI runs
                 </p>
                 <UsageBreakdown counters={usage.data.last_7_days} />
               </div>
@@ -410,6 +431,7 @@ function PrivacyTab() {
 }
 
 function SecurityTab() {
+  const i18n = useI18n();
   const { logout } = useSession();
   const sessions = useSessions();
   const [current, setCurrent] = useState("");
@@ -483,7 +505,7 @@ function SecurityTab() {
                   {describeAgent(s.user_agent)} {s.current && <Badge tone="accent">This device</Badge>}
                 </p>
                 <p className="text-xs text-fg-subtle">
-                  Signed in {relativeTime(s.created_at)} · active {relativeTime(s.last_seen_at)}
+                  Signed in {relativeTime(s.created_at, i18n)} · active {relativeTime(s.last_seen_at, i18n)}
                 </p>
               </div>
               {!s.current && (

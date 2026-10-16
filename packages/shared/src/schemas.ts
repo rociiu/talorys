@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BACKUP_FORMAT, LIMIT_CEILINGS } from "./constants";
+import { BACKUP_FORMAT, LANGUAGES, LIMIT_CEILINGS } from "./constants";
 import { isValidTimeZone, scheduleSpecSchema } from "./recurrence";
 
 // ---------- Primitives ----------
@@ -319,6 +319,8 @@ export const settingsSchema = z.object({
   agentName: shortText(60),
   timezone: z.string().refine(isValidTimeZone, "Unknown IANA timezone"),
   theme: z.enum(["system", "light", "dark"]),
+  /** UI language. "system" follows the browser and falls back to English. */
+  language: z.enum(["system", ...LANGUAGES]),
   model: z.string().regex(/^@(cf|hf)\/[\w.\-/]+$/, "Must be a Workers AI model id"),
   temperature: z.number().min(0).max(1.5),
   limits: limitsSchema,

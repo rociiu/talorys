@@ -20,6 +20,10 @@ export const CSRF_HEADER = "x-talorys-request";
 
 export const GITHUB_URL = "https://github.com/rociiu/talorys";
 
+/** Languages the web UI ships messages for. English is the default and the fallback for missing keys. */
+export const LANGUAGES = ["en"] as const;
+export type Language = (typeof LANGUAGES)[number];
+
 export const DEFAULT_LIMITS = {
   maxOutputTokens: 1024,
   maxToolCalls: 6,
