@@ -103,8 +103,10 @@ Auth ordering: if `Authorization` is present, it must be a valid Bearer token. A
 | Limit | Value |
 | --- | --- |
 | Max tokens per install | **20** (`MAX_REMOTE_TOKENS`). Create returns **403** at the cap. |
-| Soft per-token requests | **120** per **60s** window (in-memory; resets if the Durable Object restarts). |
-| Failed Bearer attempts | **10** per client in **15 minutes**, then **429** even with a correct token. Separate from browser login lockout. |
+| Soft per-token requests | **120** per **60s** window. Counted in Durable Object memory, so the window resets when the DO restarts (cold start / eviction) as well as when the minute elapses. |
+| Failed Bearer attempts | **10** per client IP in **15 minutes**, then **429** even with a correct token. The client key is `CF-Connecting-IP` (IPv6 grouped by **/64**), so another host on the same /64 or NAT can lock out a legitimate token for up to 15 minutes. Separate from browser login lockout. |
+
+Write mutations are attributed in the activity log in a **coalesced** way: at most one `remote.request` row per token per 15-minute window; full write volume is kept in a per-token daily counter so a busy automation cannot flush owner history out of the 1000-row activity log.
 
 ## Credential lifecycle
 
