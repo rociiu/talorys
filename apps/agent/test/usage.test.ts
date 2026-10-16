@@ -118,6 +118,7 @@ describe("local model consumption", () => {
       db.run("DROP TABLE IF EXISTS tal_remote_auth_failures");
       db.run("DROP TABLE IF EXISTS tal_remote_tokens");
       db.run("DROP TABLE IF EXISTS tal_remote_auth_failure_days");
+      db.run("DROP TABLE IF EXISTS tal_remote_write_days");
       db.run("UPDATE tal_schema SET version = 6 WHERE id = 1");
       migrate(db);
       migrate(db);

@@ -27,6 +27,10 @@ export const REMOTE_RATE_WINDOW_MS = 60_000;
 export const REMOTE_REQUESTS_PER_WINDOW = 120;
 /** Daily auth failure counts are kept this many days. */
 const AUTH_FAILURE_DAYS_KEPT = 30;
+/** Daily remote-write counts are kept this many days. */
+const WRITE_DAYS_KEPT = 30;
+/** At most one remote.request activity row per token in this window (mirrors auth-failure coalesce). */
+export const REMOTE_WRITE_ACTIVITY_WINDOW_MS = REMOTE_AUTH_WINDOW_MS;
 
 function utcDay(date = new Date()): string {
   return date.toISOString().slice(0, 10);
@@ -49,6 +53,8 @@ export interface RemoteCaller {
  */
 export class RemoteTokenService {
   private readonly windows = new Map<string, { start: number; count: number }>();
+  /** tokenId → start of the current write-activity coalesce window. */
+  private readonly writeActivityWindows = new Map<string, number>();
 
   constructor(
     private readonly db: Database,
@@ -186,6 +192,48 @@ export class RemoteTokenService {
     this.db.run(`DELETE FROM tal_remote_auth_failure_days WHERE day < ?`, utcDay(new Date(Date.now() - AUTH_FAILURE_DAYS_KEPT * 86400_000)));
   }
 
+  /**
+   * Counts one remote write toward the daily per-token counter. True when this token should
+   * also get a coalesced `remote.request` activity row (first write in the coalesce window).
+   */
+  recordWrite(tokenId: string): boolean {
+    this.countWrite(tokenId);
+    const nowMs = Date.now();
+    const start = this.writeActivityWindows.get(tokenId);
+    if (start !== undefined && nowMs - start < REMOTE_WRITE_ACTIVITY_WINDOW_MS) return false;
+    this.writeActivityWindows.set(tokenId, nowMs);
+    return true;
+  }
+
+  /** Remote writes today (UTC) for one token, or across all tokens when omitted. */
+  writesToday(tokenId?: string): number {
+    if (tokenId) {
+      return this.db.one<{ writes: number }>(
+        `SELECT writes FROM tal_remote_write_days WHERE day = ? AND token_id = ?`,
+        utcDay(),
+        tokenId,
+      )?.writes ?? 0;
+    }
+    return this.db.one<{ writes: number }>(
+      `SELECT coalesce(sum(writes), 0) AS writes FROM tal_remote_write_days WHERE day = ?`,
+      utcDay(),
+    )?.writes ?? 0;
+  }
+
+  private countWrite(tokenId: string): void {
+    const day = utcDay();
+    this.db.run(
+      `INSERT INTO tal_remote_write_days (day, token_id, writes) VALUES (?, ?, 1)
+       ON CONFLICT(day, token_id) DO UPDATE SET writes = writes + 1`,
+      day,
+      tokenId,
+    );
+    this.db.run(
+      `DELETE FROM tal_remote_write_days WHERE day < ?`,
+      utcDay(new Date(Date.now() - WRITE_DAYS_KEPT * 86400_000)),
+    );
+  }
+
   /** Counts one request against the token's window; throws RATE_LIMITED past the limit. */
   assertWithinRate(tokenId: string): void {
     const nowMs = Date.now();
@@ -204,11 +252,13 @@ export class RemoteTokenService {
   /** Deletes the token, destroying the credential. */
   revoke(id: string): boolean {
     this.windows.delete(id);
+    this.writeActivityWindows.delete(id);
     return this.db.run(`DELETE FROM tal_remote_tokens WHERE id = ?`, id).changes > 0;
   }
 
   revokeAll(): number {
     this.windows.clear();
+    this.writeActivityWindows.clear();
     return this.db.run(`DELETE FROM tal_remote_tokens`).changes;
   }
 }

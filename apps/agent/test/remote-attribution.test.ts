@@ -21,7 +21,7 @@ beforeEach(async () => {
 });
 
 describe("remote activity attribution", () => {
-  it("activity attribution: writes name the token, method, path, status and resource id, never content", async () => {
+  it("activity attribution: the first write in a window names token, method, path, status and id; volume is counted", async () => {
     const { token, id: tokenId } = await writeToken("attribution-bot");
     const b = bearer(token);
     const title = "Secret task title 7f3a";
@@ -35,22 +35,24 @@ describe("remote activity attribution", () => {
 
     const entries = await activity("remote.request");
     const prefix = `attribution-bot (${tokenId.slice(0, 8)})`;
-    const created = entries.find((e) => e.summary.includes(task.id));
-    expect(created?.summary).toBe(`${prefix} POST /api/tasks → 201 ${task.id}`);
-    const patched = entries.find((e) => e.summary.includes(`PATCH /api/notes/${note.id}`));
-    expect(patched?.summary).toBe(`${prefix} PATCH /api/notes/${note.id} → 200 ${note.id}`);
-    expect(entries.some((e) => e.summary === `${prefix} POST /api/projects → 403`)).toBe(true);
+    // Coalesced: only the first write in the window reaches the activity log.
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.summary).toBe(`${prefix} POST /api/tasks → 201 ${task.id}`);
     expect(entries.some((e) => e.summary.includes(" GET "))).toBe(false);
     for (const e of entries) {
       expect(e.summary).not.toContain(title);
       expect(e.summary).not.toContain(content);
       expect(e.summary).not.toContain(token);
     }
+    // POST task + PATCH note + POST projects = 3 counted writes (GET is not a write).
+    const writes = await inAgent((agent) => agent.services.remote.writesToday(tokenId));
+    expect(writes).toBe(3);
 
-    // A handler error still produces an entry with its status.
+    // Further writes in the same window only bump the counter.
     const missing = "0f8fad5b-d9cb-469f-a165-70867728950e";
     expect((await b.call(`/api/tasks/${missing}`, { method: "PATCH", body: { title: "x" } })).status).toBe(404);
-    expect((await activity("remote.request")).some((e) => e.summary === `${prefix} PATCH /api/tasks/${missing} → 404 ${missing}`)).toBe(true);
+    expect(await activity("remote.request")).toHaveLength(1);
+    expect(await inAgent((agent) => agent.services.remote.writesToday(tokenId))).toBe(4);
   });
 
   it("auth failed: a rejected token writes remote.auth_failed with the client, not the token", async () => {

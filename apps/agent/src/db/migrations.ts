@@ -315,6 +315,19 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    version: 10,
+    name: "daily remote write counter",
+    statements: [
+      // Per-token per day, so a busy write token never grows the activity log unbounded.
+      `CREATE TABLE tal_remote_write_days (
+        day TEXT NOT NULL,
+        token_id TEXT NOT NULL,
+        writes INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, token_id)
+      )`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

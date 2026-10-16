@@ -27,10 +27,13 @@ async function createdId(res: Response): Promise<string | null> {
 }
 
 /**
- * One `remote.request` activity entry for a write: token name and id prefix, method, path,
+ * One coalesced `remote.request` activity entry for a write (at most one per token per window),
+ * plus always a daily counter bump. Summary carries token name and id prefix, method, path,
  * status and the resource id. Never bodies, query strings or the token itself.
  */
 async function recordRequest(c: Context<AppEnv>, caller: RemoteCaller, status: number): Promise<void> {
+  const log = c.env.agent.services.remote.recordWrite(caller.id);
+  if (!log) return;
   const { pathname } = new URL(c.req.url);
   const last = pathname.split("/").pop() ?? "";
   const id = c.req.method === "POST" && status === 201 ? await createdId(c.res) : REMOTE_ID_PATTERN.test(last) ? last : null;
