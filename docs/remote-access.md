@@ -57,6 +57,10 @@ No `x-talorys-request` CSRF header. No cookies required. JSON request and respon
 
 Auth ordering: if `Authorization` is present, it must be a valid Bearer token. An invalid or revoked token is **401** and never falls through to a session cookie.
 
+## Note filters
+
+`GET /api/notes?q=tomato&project_id=<project-id>` searches only notes assigned to that project. Omitting `project_id` searches across projects, including unassigned notes.
+
 ## Dates
 
 - Task `due_at`: ISO-8601 with offset (or as the tasks API already accepts).

@@ -7,7 +7,7 @@ export class NoteRepository {
   constructor(private readonly db: Database) {}
 
   list(opts: { q?: string; project_id?: string; limit?: number } = {}): Note[] {
-    if (opts.q) return this.search(opts.q, opts.limit ?? 50);
+    if (opts.q) return this.search(opts.q, opts.limit ?? 50, opts.project_id);
     const params: unknown[] = [];
     let where = "";
     if (opts.project_id) {
@@ -17,19 +17,21 @@ export class NoteRepository {
     return this.db.all<Note>(`SELECT * FROM tal_notes ${where} ORDER BY updated_at DESC LIMIT ?`, ...params, opts.limit ?? 500);
   }
 
-  search(q: string, limit = 20): Note[] {
+  search(q: string, limit = 20, projectId?: string): Note[] {
+    const projectParams = projectId ? [projectId] : [];
     const match = ftsQuery(q);
     if (match) {
       return this.db.all<Note>(
         `SELECT n.* FROM tal_notes_fts f JOIN tal_notes n ON n.rowid = f.rowid
-         WHERE tal_notes_fts MATCH ? ORDER BY bm25(tal_notes_fts, 2.0, 1.0) LIMIT ?`,
+         WHERE tal_notes_fts MATCH ?${projectId ? " AND n.project_id = ?" : ""} ORDER BY bm25(tal_notes_fts, 2.0, 1.0) LIMIT ?`,
         match,
+        ...projectParams,
         limit,
       );
     }
     return this.db.all<Note>(
-      `SELECT * FROM tal_notes WHERE title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\' ORDER BY updated_at DESC LIMIT ?`,
-      likePattern(q), likePattern(q), limit,
+      `SELECT * FROM tal_notes WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')${projectId ? " AND project_id = ?" : ""} ORDER BY updated_at DESC LIMIT ?`,
+      likePattern(q), likePattern(q), ...projectParams, limit,
     );
   }
 
