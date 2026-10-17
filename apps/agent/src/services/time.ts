@@ -18,7 +18,9 @@ export function parseLocalDateTime(value: string, timeZone: string): string | nu
     const date = zonedTimeToUtc(Number(y), Number(mo), Number(d), hasTime ? Number(h) : 23, hasTime ? Number(mi) : 59, timeZone);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(trimmed)) {
+  const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/);
+  if (iso) {
+    if (!isValidCalendarDate(Number(iso[1]), Number(iso[2]), Number(iso[3]))) return null;
     const t = Date.parse(trimmed);
     return Number.isNaN(t) ? null : new Date(t).toISOString();
   }
