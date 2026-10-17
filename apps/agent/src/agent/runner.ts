@@ -3,6 +3,7 @@ import type { Services } from "../services/container";
 import { type AIProvider, classifyAiError, estimateTokens, type ProviderTool, usageOfFailure } from "../ai/provider";
 import { AppError, NotFoundError } from "../api/errors";
 import { ALL_TOOLS, ToolExecutor, type ToolDefinition } from "../tools";
+import { clip } from "../services/text";
 import { buildSystemPrompt } from "./prompt";
 import { SUMMARIZE_THRESHOLD, buildContextWindow, memoryTokenBudget, selectRelevantMemories, summarizationPrompt } from "./memory";
 import type { RunnerExtensions } from "../semantic/hooks";
@@ -17,7 +18,7 @@ export interface TurnInput {
 export function titleFromMessage(message: string): string {
   const clean = message.replace(/\s+/g, " ").trim();
   if (clean.length <= 60) return clean;
-  const cut = clean.slice(0, 60);
+  const cut = clip(clean, 60);
   const lastSpace = cut.lastIndexOf(" ");
   return `${lastSpace > 30 ? cut.slice(0, lastSpace) : cut}…`;
 }

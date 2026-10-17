@@ -1,6 +1,7 @@
 import { scheduleSpecSchema } from "@talorys/shared";
 import { z } from "zod";
 import { defineTool, quoteTitle, ToolError } from "./registry";
+import { clip } from "../services/text";
 import { formatLocal, toLocalMinute } from "../services/time";
 
 export const reminderTools = [
@@ -21,7 +22,7 @@ export const reminderTools = [
       if (!at && i.in_minutes) at = toLocalMinute(new Date(Date.now() + i.in_minutes * 60_000 + 59_000), ctx.timezone);
       if (!at) throw new ToolError("Provide 'at' or 'in_minutes'.");
       const a = await ctx.services.automations.create({
-        name: i.message.slice(0, 120),
+        name: clip(i.message, 120),
         kind: "reminder",
         message: i.message,
         schedule: { type: "once", at },
