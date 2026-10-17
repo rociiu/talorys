@@ -17,14 +17,27 @@ export type WriterHandle = {
 };
 
 const TASK_RE = /^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\](\s|$)/;
+const FENCE_RE = /^\s*(```|~~~)/;
 const LIST_RE = /^(\s*)([-*+]|(\d+)([.)]))(\s+)(\[[ xX]\]\s+)?/;
+
+/** For each line, whether it sits inside (or on the edge of) a fenced code block, which has no todos. */
+function fencedLines(lines: string[]): boolean[] {
+  let open = false;
+  return lines.map((line) => {
+    if (FENCE_RE.test(line)) {
+      open = !open;
+      return true;
+    }
+    return open;
+  });
+}
 
 /** Flip the checkbox on a given 0-based line. Exported for the preview renderer. */
 export function toggleTaskLine(text: string, line: number): string {
   const lines = text.split("\n");
   const cur = lines[line] ?? "";
   const m = TASK_RE.exec(cur);
-  if (!m) return text;
+  if (!m || fencedLines(lines)[line]) return text;
   const idx = (m[1] ?? "").length + 1;
   lines[line] = cur.slice(0, idx) + (m[2] === " " ? "x" : " ") + cur.slice(idx + 1);
   return lines.join("\n");
@@ -33,8 +46,10 @@ export function toggleTaskLine(text: string, line: number): string {
 export function taskStats(text: string): { done: number; total: number } {
   let done = 0;
   let total = 0;
-  for (const line of text.split("\n")) {
-    const m = TASK_RE.exec(line);
+  const lines = text.split("\n");
+  const fenced = fencedLines(lines);
+  for (const [i, line] of lines.entries()) {
+    const m = fenced[i] ? null : TASK_RE.exec(line);
     if (m) {
       total++;
       if (m[2] !== " ") done++;
