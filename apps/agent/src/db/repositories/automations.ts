@@ -105,8 +105,17 @@ export class AutomationRepository {
     );
   }
 
-  hasActiveRun(automationId: string): boolean {
-    return !!this.db.one(`SELECT 1 FROM tal_automation_runs WHERE automation_id = ? AND status = 'running' LIMIT 1`, automationId);
+  getRun(id: string): AutomationRun | null {
+    return this.db.one<AutomationRun>(`SELECT * FROM tal_automation_runs WHERE id = ?`, id) ?? null;
+  }
+
+  /** Marks runs cut off by a restart as failed, except those still executing. */
+  closeInterruptedRuns(activeAutomationIds: string[] = []): number {
+    const runs = this.db.all<{ id: string; automation_id: string }>(
+      `SELECT id, automation_id FROM tal_automation_runs WHERE status = 'running'`,
+    ).filter((r) => !activeAutomationIds.includes(r.automation_id));
+    for (const r of runs) this.finishRun(r.id, "error", null, "Interrupted before it finished.");
+    return runs.length;
   }
 
   /** Keeps the run history bounded. */

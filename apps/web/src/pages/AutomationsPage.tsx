@@ -192,7 +192,7 @@ export default function AutomationsPage() {
       )}
 
       <AutomationForm key={editing?.id ?? "new"} open={creating || !!editing} onClose={() => (editing ? setEditing(null) : setCreating(false))} tz={tz} automation={editing} />
-      <RunHistoryDialog automation={history} tz={tz} onClose={() => setHistory(null)} />
+      <RunHistoryDialog key={history?.id ?? "none"} automation={history} tz={tz} onClose={() => setHistory(null)} />
       <ConfirmDialog
         open={!!deleting}
         title="Delete schedule?"
@@ -518,7 +518,7 @@ function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onCl
           </div>
         )}
         <p className="rounded-lg bg-subtle px-3 py-2 text-xs text-fg-muted">
-          <span className="font-medium text-fg">{describeSchedule(schedule)}</span> · {tz}
+          <span className="font-medium text-fg">{type === "weekly" && !days.length ? "No days selected" : describeSchedule(schedule)}</span> · {tz}
           {preview.error ? (
             <span className="mt-1 block text-danger">{preview.error}</span>
           ) : (

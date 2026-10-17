@@ -101,3 +101,47 @@ describe("run now and run history", () => {
     });
   });
 });
+
+describe("run now concurrency and recovery", () => {
+  it("skips a scheduled occurrence while a manual run is in progress and keeps the schedule", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Overlap", kind: "agent_prompt", message: "Summarize",
+        schedule: { type: "interval", minutes: 15 }, enabled: true });
+      const entered = deferred<void>();
+      const finish = deferred<void>();
+      let calls = 0;
+      const manual = s.automations.runNow(a.id, async () => {
+        calls++; entered.resolve(); await finish.promise;
+        return { status: "success", result: "Manual output" };
+      });
+      await entered.promise;
+      await s.automations.fire(a.id, a.schedule_id!, async () => {
+        calls++; return { status: "success", result: "Scheduled output" };
+      });
+      finish.resolve();
+      const run = await manual;
+      expect(calls).toBe(1);
+      expect(run).toMatchObject({ status: "success", result: "Manual output" });
+      const current = s.automations.get(a.id)!;
+      expect(current.enabled).toBe(true);
+      expect(current.schedule_id).toBeTruthy();
+      expect(current.schedule_id).not.toBe(a.schedule_id);
+      expect(s.automationsRepo.runs({ automationId: a.id }).map((r) => r.status).sort()).toEqual(["skipped", "success"]);
+      await s.automations.delete(a.id);
+    });
+  });
+
+  it("closes runs interrupted by a restart so run now works again", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Interrupted", kind: "reminder", message: "Stretch",
+        schedule: { type: "daily", time: "09:00" }, enabled: true });
+      const orphan = s.automationsRepo.startRun(a);
+      await s.automations.reconcile();
+      expect(s.automationsRepo.getRun(orphan.id)).toMatchObject({ status: "error", error: "Interrupted before it finished." });
+      await expect(agent.runAutomationNow(a.id)).resolves.toMatchObject({ status: "success" });
+      await s.automations.delete(a.id);
+    });
+  });
+});

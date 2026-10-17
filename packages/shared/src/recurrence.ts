@@ -40,7 +40,7 @@ export const scheduleSpecSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("daily"), time: hhmm }),
   z.object({
     type: z.literal("weekly"),
-    days: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    days: z.array(z.number().int().min(0).max(6)).min(1, "Choose at least one day.").max(7),
     time: hhmm,
   }),
   z.object({ type: z.literal("monthly"), day: z.number().int().min(1).max(31), time: hhmm }),

@@ -22,6 +22,9 @@ export type AutomationExecutor = (automation: Automation) => Promise<{ status: "
 const MAX_CATCH_UP_MS = 24 * 3600_000;
 
 export class AutomationService {
+  /** Automations executing in this instance; a run row left "running" without one was interrupted. */
+  private readonly inFlight = new Set<string>();
+
   constructor(
     private readonly repo: AutomationRepository,
     private readonly settings: SettingsService,
@@ -117,19 +120,18 @@ export class AutomationService {
   async fire(automationId: string, scheduleId: string, execute: AutomationExecutor): Promise<void> {
     const automation = this.repo.get(automationId);
     if (!automation?.enabled || automation.schedule_id !== scheduleId || automation.status === "running") return;
+    if (this.inFlight.has(automation.id)) {
+      // A manual run is in progress: skip this occurrence rather than running twice.
+      const run = this.repo.startRun(automation);
+      this.repo.finishRun(run.id, "skipped", "Skipped because a manual run was in progress.", null);
+      const slot = automation.next_run ? new Date(automation.next_run) : new Date();
+      const rearmed = await this.arm(this.repo.update(automation.id, { schedule_id: null }), new Date(Math.max(Date.now(), slot.getTime())));
+      if (automation.status === "failed" && rearmed.enabled) this.repo.update(automation.id, { status: "failed" });
+      return;
+    }
     const run = this.repo.startRun(automation);
     this.repo.update(automation.id, { status: "running" });
-    let lastResult: string | null = null;
-    let lastError: string | null = null;
-    try {
-      const outcome = await execute(automation);
-      lastResult = outcome.result.slice(0, 2000);
-      this.repo.finishRun(run.id, outcome.status, lastResult, null);
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-      this.repo.finishRun(run.id, "error", null, lastError);
-      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
-    }
+    const { lastResult, lastError } = await this.execute(automation, run.id, execute);
     const current = this.repo.get(automation.id);
     this.repo.pruneRuns();
     // The owner can pause, delete or reschedule while the executor awaits AI.
@@ -157,21 +159,11 @@ export class AutomationService {
    */
   async runNow(id: string, execute: AutomationExecutor): Promise<AutomationRun> {
     const automation = this.repo.require(id);
-    if (automation.status === "running" || this.repo.hasActiveRun(id)) {
+    if (automation.status === "running" || this.inFlight.has(id)) {
       throw new ValidationError("This automation is already running.");
     }
     const run = this.repo.startRun(automation);
-    let lastResult: string | null = null;
-    let lastError: string | null = null;
-    try {
-      const outcome = await execute(automation);
-      lastResult = outcome.result.slice(0, 2000);
-      this.repo.finishRun(run.id, outcome.status, lastResult, null);
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-      this.repo.finishRun(run.id, "error", null, lastError);
-      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
-    }
+    const { lastResult, lastError } = await this.execute(automation, run.id, execute);
     this.repo.pruneRuns();
     const current = this.repo.get(id);
     if (current) {
@@ -184,7 +176,29 @@ export class AutomationService {
         ...(!lastError && current.status === "failed" && current.enabled ? { status: "scheduled" as const } : {}),
       });
     }
-    return this.repo.runs({ automationId: id, limit: 1 })[0] ?? run;
+    return this.repo.getRun(run.id) ?? run;
+  }
+
+  /** Executes once and records the outcome on the run row. */
+  private async execute(
+    automation: Automation,
+    runId: string,
+    execute: AutomationExecutor,
+  ): Promise<{ lastResult: string | null; lastError: string | null }> {
+    this.inFlight.add(automation.id);
+    try {
+      const outcome = await execute(automation);
+      const lastResult = outcome.result.slice(0, 2000);
+      this.repo.finishRun(runId, outcome.status, lastResult, null);
+      return { lastResult, lastError: null };
+    } catch (error) {
+      const lastError = error instanceof Error ? error.message : String(error);
+      this.repo.finishRun(runId, "error", null, lastError);
+      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
+      return { lastResult: null, lastError };
+    } finally {
+      this.inFlight.delete(automation.id);
+    }
   }
 
   /**
@@ -193,6 +207,7 @@ export class AutomationService {
    */
   async reconcile(): Promise<{ repaired: number }> {
     let repaired = 0;
+    this.repo.closeInterruptedRuns([...this.inFlight]);
     for (const a of this.repo.list()) {
       if (!a.enabled) continue;
       const alive = a.schedule_id ? await this.scheduler.exists(a.schedule_id) : false;
