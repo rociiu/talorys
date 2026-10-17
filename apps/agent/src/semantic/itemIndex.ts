@@ -302,7 +302,6 @@ async function itemPassOnce({ db, config, embedder }: IndexerContext, maxEmbed: 
     report.pending = pending.length;
     if (!embedder) return { ...report, skipped: "no-embedder" };
     if (pending.length === 0) return report;
-    if (config.maxEmbeddingsPerDay === 0) return { ...report, capped: true };
     const candidates = pending.slice(0, Math.max(0, maxEmbed));
     if (candidates.length === 0) return report;
     // Reserved before the call (which counts even if it fails), so concurrent passes cannot overrun the item cap.

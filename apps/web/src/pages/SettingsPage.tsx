@@ -6,6 +6,7 @@ import { Download, ExternalLink, LogOut, Monitor, Moon, Sun, Upload } from "luci
 import { Badge, Button, Card, ConfirmDialog, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch } from "../components/ui";
 import { SemanticRecallCard } from "../components/SemanticRecallCard";
 import { PushNotificationsCard } from "../components/PushNotificationsCard";
+import { RemoteAccessCard } from "../components/RemoteAccessCard";
 import { UsageBreakdown, UsagePricingNote } from "../components/UsageBreakdown";
 import { keys, useApiMutation, useSessions, useSettings, useSystemInfo, useUpdateStatus, useUsage } from "../hooks/queries";
 import { useSession } from "../hooks/session";
@@ -506,6 +507,7 @@ function SecurityTab() {
         Forgot your password? On your computer, run <code className="rounded bg-muted px-1">npx create-talorys@latest reset-password</code> in your Talorys
         directory. This signs out every device.
       </p>
+      <RemoteAccessCard />
     </>
   );
 }

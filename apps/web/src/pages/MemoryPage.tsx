@@ -38,7 +38,8 @@ function writeMessage(r: WriteResponse): string {
   return parts.join(" · ");
 }
 
-const sourceLabel = (m: Memory) => (m.source === "agent" ? "Learned in chat" : m.source === "import" ? "Imported" : "Added manually");
+const sourceLabel = (m: Memory) =>
+  m.source === "agent" ? "Learned in chat" : m.source === "import" ? "Imported" : m.source === "remote" ? "Added by access token" : "Added manually";
 
 export default function MemoryPage() {
   const [q, setQ] = useState("");

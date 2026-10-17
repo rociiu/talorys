@@ -71,7 +71,7 @@ dataRoutes.get("/memories", (c) => {
 
 dataRoutes.post("/memories", async (c) => {
   const input = await body(c, memoryCreateSchema);
-  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: "manual" }, { signal: c.req.raw.signal });
+  const result = await c.env.agent.services.memoryHistory.create({ ...input, source: c.get("remote") ? "remote" : "manual" }, { signal: c.req.raw.signal });
   return c.json({ memory: result.memory, superseded: result.superseded, reviews: result.reviews.length }, 201);
 });
 
@@ -103,6 +103,9 @@ dataRoutes.get("/memories/reviews", (c) => {
   });
   return c.json({ reviews });
 });
+
+// Registered after the named /memories/reviews route so that path is not taken as an id.
+dataRoutes.get("/memories/:id", (c) => c.json({ memory: c.env.agent.services.memories.require(c.req.param("id")) }));
 
 dataRoutes.post("/memories/reviews/:id", async (c) => {
   const { action } = await body(c, memoryReviewResolveSchema);

@@ -35,6 +35,8 @@ function allowedOrigins(c: Context<AppEnv>): Set<string> {
  *  3. Origin / Sec-Fetch-Site verification.
  */
 export const csrfProtection: MiddlewareHandler<AppEnv> = async (c, next) => {
+  // Set only after `remoteAuth` validated a token; a header alone never skips this check.
+  if (c.get("remote")) return next();
   if (SAFE_METHODS.has(c.req.method)) return next();
   if (c.req.header(CSRF_HEADER) !== "1") {
     throw new AppError("FORBIDDEN", "Missing CSRF header.");
@@ -59,7 +61,14 @@ export function readSessionToken(c: Context<AppEnv>): string | null {
   const name = sessionCookieName(c);
   for (const part of header.split(";")) {
     const [k, ...rest] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(rest.join("="));
+    if (k === name) {
+      try {
+        return decodeURIComponent(rest.join("="));
+      } catch {
+        // Not something this app ever issued (it encodes the token), so treat it as no session.
+        return null;
+      }
+    }
   }
   return null;
 }
@@ -78,6 +87,10 @@ export function sessionCookie(c: Context<AppEnv>, token: string, expires: Date |
 }
 
 export const requireSession: MiddlewareHandler<AppEnv> = async (c, next) => {
+  if (c.get("remote")) {
+    c.set("sessionId", null);
+    return next();
+  }
   const route = `${c.req.method} ${new URL(c.req.url).pathname.replace(/\/$/, "")}`;
   const token = readSessionToken(c);
   const sessionId = token ? await c.env.agent.services.auth.validate(token) : null;

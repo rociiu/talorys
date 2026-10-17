@@ -132,10 +132,15 @@ export class TaskRepository {
     this.db.run(`DELETE FROM tal_tasks WHERE id = ?`, id);
   }
 
-  /** Finds a task by exact id or a case-insensitive title match (used by tools). */
+  /**
+   * Finds a task by exact id or a case-insensitive title match (used by tools). A title equal to the
+   * reference wins over longer titles that merely contain it ("Call Sam" vs "Call Sam about lunch").
+   */
   resolve(ref: string): Task | null {
     const byId = this.get(ref);
     if (byId) return byId;
+    const exact = this.db.all<Task>(`SELECT * FROM tal_tasks WHERE lower(trim(title)) = lower(?) LIMIT 2`, ref.trim());
+    if (exact.length === 1) return exact[0]!;
     const matches = this.db.all<Task>(
       `SELECT * FROM tal_tasks WHERE title LIKE ? ESCAPE '\\' ORDER BY status = 'done', updated_at DESC LIMIT 2`,
       likePattern(ref),

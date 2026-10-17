@@ -116,8 +116,6 @@ async function embedQuery(ctx: SemanticContext, query: string, cap: QueryCap): P
   const day = UsageService.day();
   // Reserved before the call (which counts even if it fails), so concurrent turns cannot overrun the cap.
   if (cap === "item") {
-    // A zero memory cap switches item embedding off too, the same as the item pass.
-    if (config.maxEmbeddingsPerDay === 0) return null;
     if (reserveItemEmbedding(db, day, [conservativeEmbeddingTokens(query)], itemCaps(config)) === 0) return null;
   } else if (!reserveEmbedding(db, day, config.maxEmbeddingsPerDay, estimateTokens(query))) return null;
   try {

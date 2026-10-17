@@ -9,12 +9,13 @@ import type {
   Note,
   Notification,
   Project,
+  RemoteTokenInfo,
   SessionInfo,
   Settings,
   Task,
   UsageReport,
 } from "@talorys/shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { errorMessage, useToast } from "./toast";
 
@@ -34,6 +35,8 @@ export const keys = {
   sessions: ["sessions"] as const,
   system: ["system"] as const,
   update: ["system", "update"] as const,
+  remoteStatus: ["remote", "status"] as const,
+  remoteTokens: ["remote", "tokens"] as const,
 };
 
 export function useSettings() {
@@ -125,6 +128,22 @@ export function useAutomations() {
   });
 }
 
+/** One automation's run history, newest first, paged with "Load more". */
+export function useAutomationRuns(id: string | null, status?: AutomationRun["status"]) {
+  return useInfiniteQuery({
+    queryKey: [...keys.automations, id, "runs", status ?? "all"],
+    enabled: !!id,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: "25" });
+      if (status) params.set("status", status);
+      if (pageParam) params.set("before", pageParam);
+      return api<{ runs: AutomationRun[]; has_more: boolean }>(`/automations/${id}/runs?${params}`);
+    },
+    getNextPageParam: (last) => (last.has_more ? last.runs[last.runs.length - 1]?.started_at : undefined),
+  });
+}
+
 export function useNotifications() {
   return useQuery({
     queryKey: keys.notifications,
@@ -161,6 +180,14 @@ export interface UpdateStatus {
 /** Whether a newer release is published. The server caches the lookup for a day. */
 export function useUpdateStatus() {
   return useQuery({ queryKey: keys.update, queryFn: () => api<UpdateStatus>("/system/update"), staleTime: 60 * 60_000, retry: false });
+}
+
+export function useRemoteStatus() {
+  return useQuery({ queryKey: keys.remoteStatus, queryFn: () => api<{ enabled: boolean; max_tokens: number }>("/remote/status") });
+}
+
+export function useRemoteTokens() {
+  return useQuery({ queryKey: keys.remoteTokens, queryFn: () => api<{ tokens: RemoteTokenInfo[] }>("/remote/tokens").then((r) => r.tokens) });
 }
 
 /**

@@ -13,6 +13,7 @@ import { AutomationService, type Scheduler } from "../agent/scheduling";
 import { MemoryHistoryService, type MemoryHistoryHooks } from "../memory";
 import { PushSubscriptionRepository } from "../push/repository";
 import { PushService } from "../push/service";
+import { RemoteTokenService } from "../remote/tokens";
 
 /** All data services for the single owner, bound to one Durable Object's storage. */
 export interface Services {
@@ -32,6 +33,7 @@ export interface Services {
   automations: AutomationService;
   memoryHistory: MemoryHistoryService;
   push: PushService;
+  remote: RemoteTokenService;
 }
 
 /** `background` keeps work alive after the request or alarm that started it (the Durable Object's waitUntil). */
@@ -74,5 +76,6 @@ export function createServices(
     automations: new AutomationService(automationsRepo, settings, activity, scheduler),
     memoryHistory: new MemoryHistoryService(db, memories, settings, usage, activity, memoryHooks),
     push,
+    remote: new RemoteTokenService(db, settings, env.SESSION_SECRET),
   };
 }

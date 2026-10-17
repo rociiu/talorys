@@ -363,9 +363,9 @@ function ProjectsDialog({ open, onClose }: { open: boolean; onClose: () => void 
         ) : (
           <ul className="divide-y divide-border">
             {projects.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 py-2">
-                <span className="min-w-0 flex-1 truncate text-sm">{p.name}</span>
-                <Select value={p.status} onChange={(e) => update.mutate({ id: p.id, status: e.target.value as Project["status"] })} className="h-8 w-32 text-xs" aria-label={`Status of ${p.name}`}>
+              <li key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2 sm:grid-cols-[minmax(0,1fr)_8rem_auto]">
+                <span className="col-span-2 min-w-0 text-sm [overflow-wrap:anywhere] sm:col-span-1">{p.name}</span>
+                <Select value={p.status} onChange={(e) => update.mutate({ id: p.id, status: e.target.value as Project["status"] })} className="text-xs" aria-label={`Status of ${p.name}`}>
                   <option value="active">Active</option>
                   <option value="paused">Paused</option>
                   <option value="completed">Completed</option>

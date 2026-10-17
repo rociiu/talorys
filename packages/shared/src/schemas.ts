@@ -41,7 +41,7 @@ export interface Memory {
   id: string;
   content: string;
   category: MemoryCategory;
-  source: "manual" | "agent" | "import";
+  source: "manual" | "agent" | "import" | "remote";
   /** Lifecycle: current fact, past fact kept as history, or flagged as possibly outdated. */
   status: MemoryStatus;
   /** The newer memory that replaced this one, if any. */

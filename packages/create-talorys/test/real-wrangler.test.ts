@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { exec } from "../src/exec";
 import { scaffoldProject, templatesDir } from "../src/scaffold";
 import { resolveWranglerBin } from "../src/wrangler";
@@ -15,15 +15,19 @@ const hasTemplates = existsSync(join(templatesDir(), "version.json"));
  * Requires built templates (`npm run build -w create-talorys`).
  */
 describe.skipIf(!hasTemplates)("generated project with real Wrangler (offline)", () => {
-  const dir = mkdtempSync(join(tmpdir(), "talorys-real-"));
-  scaffoldProject({
-    dir,
-    workerName: "talorys-abcd1234-agent",
-    pagesProjectName: "talorys-abcd1234-web",
-    installationId: "abcd1234",
-    version: "0.1.0",
-    timezone: "Asia/Shanghai",
-    agentName: "Talorys",
+  let dir: string;
+  // Vitest still runs a skipped suite's body to collect its tests, so scaffolding waits for beforeAll.
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), "talorys-real-"));
+    scaffoldProject({
+      dir,
+      workerName: "talorys-abcd1234-agent",
+      pagesProjectName: "talorys-abcd1234-web",
+      installationId: "abcd1234",
+      version: "0.1.0",
+      timezone: "Asia/Shanghai",
+      agentName: "Talorys",
+    });
   });
   const wrangler = (args: string[], cwd: string) =>
     exec(process.execPath, [resolveWranglerBin(), ...args], { cwd, env: { WRANGLER_SEND_METRICS: "false" }, timeoutMs: 180_000 });

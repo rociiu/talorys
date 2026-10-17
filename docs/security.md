@@ -138,6 +138,20 @@ exists. The request carries no user data; npm only sees the Worker's IP. The
 browser never contacts npm (`connect-src 'self'` is unchanged). Turn it off
 under Settings → About → Check for updates.
 
+## Remote access
+
+Optional machine-client access with named personal access tokens (`tal_…`).
+
+- Tokens are stored as **HMAC(SESSION_SECRET, token)** only; plaintext is returned **once** at creation and cannot be recovered from the database.
+- Scopes: `read` (GET allowlist) or `write` (owner-level replace + delete on the allowlist). Max **20** tokens.
+- **Revoke** / **Revoke all** destroy hashes immediately. Turning Remote access **off** suspends tokens (Bearer 401) without deleting them; turning it back on restores them.
+- CORS stays closed. Server-side clients only.
+- Token rows are excluded from backups; a restore never enables Remote access or resurrects tokens.
+- **Auth ordering:** a present `Authorization` header must validate as Bearer. Only a **validated** token skips CSRF/session checks. Invalid Bearer never falls back to a cookie.
+- Failed-Bearer throttling is keyed by client IP (`CF-Connecting-IP`; IPv6 by /64) and is separate from browser login lockout. Soft per-token rate limits (in-memory; reset on Durable Object restart) return **429** with `Retry-After`.
+- Mutations are attributed in the activity log by token name/id prefix (no bodies or credentials), coalesced to at most one `remote.request` row per token per 15-minute window; write volume is also counted per token per day. Memories created via Bearer use source `remote`.
+- Bearer cannot create or change `agent_prompt` automations (403); see [Remote access](remote-access.md).
+
 ## Reporting
 
 Please report vulnerabilities privately via GitHub Security Advisories.

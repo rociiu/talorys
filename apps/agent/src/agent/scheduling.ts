@@ -1,4 +1,4 @@
-import { type Automation, type AutomationKind, type ScheduleSpec, computeNextRun, scheduleSpecSchema } from "@talorys/shared";
+import { type Automation, type AutomationKind, type AutomationRun, type ScheduleSpec, computeNextRun, scheduleSpecSchema } from "@talorys/shared";
 import type { AutomationRepository } from "../db/repositories/automations";
 import type { SettingsService } from "../services/settings";
 import type { ActivityLog } from "../services/usage";
@@ -22,6 +22,9 @@ export type AutomationExecutor = (automation: Automation) => Promise<{ status: "
 const MAX_CATCH_UP_MS = 24 * 3600_000;
 
 export class AutomationService {
+  /** Automations executing in this instance; a run row left "running" without one was interrupted. */
+  private readonly inFlight = new Set<string>();
+
   constructor(
     private readonly repo: AutomationRepository,
     private readonly settings: SettingsService,
@@ -58,7 +61,14 @@ export class AutomationService {
     patch: { name?: string; message?: string; schedule?: ScheduleSpec; enabled?: boolean },
   ): Promise<Automation> {
     const existing = this.repo.require(id);
+    if (patch.message !== undefined && (existing.kind === "reminder" || existing.kind === "agent_prompt") && !patch.message.trim()) {
+      throw new ValidationError(existing.kind === "reminder" ? "A reminder needs a message." : "An AI automation needs a prompt.");
+    }
     const timingChanged = patch.schedule !== undefined || (patch.enabled !== undefined && patch.enabled !== existing.enabled);
+    if (patch.schedule !== undefined && (patch.enabled ?? existing.enabled)) {
+      const schedule = scheduleSpecSchema.parse(patch.schedule);
+      if (!computeNextRun(schedule, this.tz(), new Date())) throw new ValidationError("That time is in the past. Choose a future time.");
+    }
     let next = this.repo.update(id, {
       name: patch.name,
       message: patch.message,
@@ -117,19 +127,18 @@ export class AutomationService {
   async fire(automationId: string, scheduleId: string, execute: AutomationExecutor): Promise<void> {
     const automation = this.repo.get(automationId);
     if (!automation?.enabled || automation.schedule_id !== scheduleId || automation.status === "running") return;
+    if (this.inFlight.has(automation.id)) {
+      // A manual run is in progress: skip this occurrence rather than running twice.
+      const run = this.repo.startRun(automation);
+      this.repo.finishRun(run.id, "skipped", "Skipped because a manual run was in progress.", null);
+      const slot = automation.next_run ? new Date(automation.next_run) : new Date();
+      const rearmed = await this.arm(this.repo.update(automation.id, { schedule_id: null }), new Date(Math.max(Date.now(), slot.getTime())));
+      if (automation.status === "failed" && rearmed.enabled) this.repo.update(automation.id, { status: "failed" });
+      return;
+    }
     const run = this.repo.startRun(automation);
     this.repo.update(automation.id, { status: "running" });
-    let lastResult: string | null = null;
-    let lastError: string | null = null;
-    try {
-      const outcome = await execute(automation);
-      lastResult = outcome.result.slice(0, 2000);
-      this.repo.finishRun(run.id, outcome.status, lastResult, null);
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-      this.repo.finishRun(run.id, "error", null, lastError);
-      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
-    }
+    const { lastResult, lastError } = await this.execute(automation, run.id, execute);
     const current = this.repo.get(automation.id);
     this.repo.pruneRuns();
     // The owner can pause, delete or reschedule while the executor awaits AI.
@@ -152,11 +161,60 @@ export class AutomationService {
   }
 
   /**
+   * Runs an automation immediately, outside its schedule. The next scheduled
+   * run is left untouched.
+   */
+  async runNow(id: string, execute: AutomationExecutor): Promise<AutomationRun> {
+    const automation = this.repo.require(id);
+    if (automation.status === "running" || this.inFlight.has(id)) {
+      throw new ValidationError("This automation is already running.");
+    }
+    const run = this.repo.startRun(automation);
+    const { lastResult, lastError } = await this.execute(automation, run.id, execute);
+    this.repo.pruneRuns();
+    const current = this.repo.get(id);
+    if (current) {
+      this.repo.update(id, {
+        last_run: new Date().toISOString(),
+        last_result: lastResult,
+        last_error: lastError,
+        run_count: current.run_count + 1,
+        // A successful manual run clears a previous failure badge.
+        ...(!lastError && current.status === "failed" && current.enabled ? { status: "scheduled" as const } : {}),
+      });
+    }
+    return this.repo.getRun(run.id) ?? run;
+  }
+
+  /** Executes once and records the outcome on the run row. */
+  private async execute(
+    automation: Automation,
+    runId: string,
+    execute: AutomationExecutor,
+  ): Promise<{ lastResult: string | null; lastError: string | null }> {
+    this.inFlight.add(automation.id);
+    try {
+      const outcome = await execute(automation);
+      const lastResult = outcome.result.slice(0, 2000);
+      this.repo.finishRun(runId, outcome.status, lastResult, null);
+      return { lastResult, lastError: null };
+    } catch (error) {
+      const lastError = error instanceof Error ? error.message : String(error);
+      this.repo.finishRun(runId, "error", null, lastError);
+      this.activity.record("automation.failed", `Automation “${automation.name}” failed: ${lastError}`);
+      return { lastResult: null, lastError };
+    } finally {
+      this.inFlight.delete(automation.id);
+    }
+  }
+
+  /**
    * Makes sure every enabled automation has a live SDK schedule. Recovers from
    * interrupted runs and lost schedules; a recently missed run executes once.
    */
   async reconcile(): Promise<{ repaired: number }> {
     let repaired = 0;
+    this.repo.closeInterruptedRuns([...this.inFlight]);
     for (const a of this.repo.list()) {
       if (!a.enabled) continue;
       const alive = a.schedule_id ? await this.scheduler.exists(a.schedule_id) : false;

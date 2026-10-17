@@ -86,3 +86,27 @@ export async function proposeAction(s: Services, name: string, input: unknown): 
   await executor.execute(name, input, "call-1");
   return executor.approvalFor("call-1")!.id;
 }
+
+/** A machine client: sends only `Authorization: Bearer`, no cookie, CSRF header or Origin. */
+export function bearer(token: string, opts: { ip?: string } = {}): Client {
+  const ip = opts.ip ?? freshIp();
+  const c: Client = {
+    cookie: null,
+    ip,
+    async call(path, init = {}) {
+      const headers: Record<string, string> = {
+        authorization: `Bearer ${token}`,
+        "cf-connecting-ip": ip,
+        ...(init.body !== undefined ? { "content-type": "application/json" } : {}),
+        ...init.headers,
+      };
+      return (exports as unknown as { default: Fetcher }).default.fetch(
+        new Request(`${BASE}${path}`, { method: init.method ?? "GET", headers, body: init.body !== undefined ? JSON.stringify(init.body) : undefined }),
+      );
+    },
+    async json(path, init) {
+      return (await (await c.call(path, init)).json()) as any;
+    },
+  };
+  return c;
+}
