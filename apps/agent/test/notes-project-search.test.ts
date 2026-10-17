@@ -17,7 +17,8 @@ describe("project-filtered note search", () => {
     }
     const q = kind === "FTS" ? term : "%";
     const filtered = (await c.json(`/api/notes?${new URLSearchParams({ q, project_id: garden.id })}`)).notes;
-    expect(filtered.map((note: { id: string }) => note.id)).toEqual([ids[0]]);
+    const actual = filtered.map((note: { id: string }) => note.id);
+    expect(actual, JSON.stringify({ query: q, project: garden.id, expected: [ids[0]], actual })).toEqual([ids[0]]);
     expect((await c.json(`/api/notes?${new URLSearchParams({ q })}`)).notes.map((note: { id: string }) => note.id))
       .toEqual(expect.arrayContaining(ids));
     expect((await c.json(`/api/notes?${new URLSearchParams({ q, project_id: crypto.randomUUID() })}`)).notes).toEqual([]);
