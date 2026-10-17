@@ -37,4 +37,7 @@ Re-running is idempotent: existing resources are reconciled, existing passwords
 are kept, and data is never deleted. The local `talorys.json` manifest contains
 no secrets.
 
+Installer error details mask Authorization headers and token/key values, including
+quoted values with escaped quotes.
+
 MIT licensed.

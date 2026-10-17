@@ -5,7 +5,7 @@ import { DO_MIGRATIONS, generateAgentConfig, generateInstallationId, generatePag
 import { CliError, sanitize, explainWranglerFailure } from "../src/errors";
 import { checkNodeVersion, MIN_NODE } from "../src/requirements";
 import { writeManifest, type Manifest } from "../src/manifest";
-import { parseJsonOutput } from "../src/wrangler";
+import { parseJsonOutput, Wrangler } from "../src/wrangler";
 import { runChecks } from "../src/verify";
 import { fakeSite, makeSandbox } from "./helpers";
 
@@ -73,6 +73,27 @@ describe("wrangler output handling", () => {
     expect(sanitize("Authorization: Bearer abc123token")).not.toMatch(/abc123token/);
     expect(sanitize("request failed with Bearer abc123token.xyz")).not.toMatch(/abc123token/);
     expect(sanitize('{"api_token": "abc 123 secret value"}')).not.toMatch(/abc|123|value/);
+  });
+
+  it.each([
+    ["Authorization: Basic Zml4dHVyZTpjcmVkZW50aWFs", "Authorization: [redacted]"],
+    ["Authorization: Token abcdef123456", "Authorization: [redacted]"],
+    ['Authorization: Digest username="fixture", realm="example", response="0123456789abcdef"', "Authorization: [redacted]"],
+    [String.raw`{"api_token":"abc\"def ghi"}`, '{"api_token": [redacted]}'],
+    [String.raw`password='abc\'def ghi'`, "password: [redacted]"],
+    ["x-auth-key: 0123456789abcdef", "x-auth-key: [redacted]"],
+    ['{"api_token":"fixture value"}', '{"api_token": [redacted]}'],
+    ["Authorization: Bearer abc123token", "Authorization: [redacted]"],
+  ])("redacts the complete credential in %s through deployment error details", async (input, expected) => {
+    expect(sanitize(input)).toBe(expected);
+    expect(explainWranglerFailure("Deploy", input).details).toBe(expected);
+    const wrangler = new Wrangler(async () => ({ code: 1, stdout: "", stderr: input }), "/controlled/wrangler.mjs");
+    await expect(wrangler.deployWorker("/controlled/wrangler.jsonc")).rejects.toMatchObject({ details: expected });
+  });
+
+  it("keeps later diagnostic lines after an Authorization header", () => {
+    expect(sanitize('Authorization: Digest username="fixture", response="abcdef"\nError: permission denied'))
+      .toBe("Authorization: [redacted]\nError: permission denied");
   });
 
   it("keeps ordinary sentences that start with Bearer readable", () => {

@@ -17,15 +17,17 @@ export class CancelledError extends Error {
   }
 }
 
-// The value may follow a "Bearer" scheme word and, in JSON, be quoted (and contain spaces).
-const SECRETISH = /(token|secret|password|authorization|bearer|api[_-]?key)(["']?)\s*[:=]\s*(?:bearer\s+)?(?:"[^"\n]*"|'[^'\n]*'|\S+)/gi;
+// Quoted values may contain spaces and escaped delimiters.
+const SECRETISH = /(token|secret|password|authorization|bearer|api[_-]?key|auth[_-]?key)(["']?)\s*[:=]\s*(?:(?:bearer|basic|token|digest)\s+)?(?:"(?:[^"\\\r\n]|\\.)*"|'(?:[^'\\\r\n]|\\.)*'|\S+)/gi;
 
 /** Removes ANSI codes and anything that looks like a credential from tool output. */
 export function sanitize(output: string, maxLines = 12): string {
   return output
     // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escape sequences
     .replace(/\u001b\[[0-9;]*m/g, "")
-    .replace(SECRETISH, "$1: [redacted]")
+    // Authorization headers, especially Digest, can contain several parameters.
+    .replace(/(\bauthorization\s*:)[^\r\n]*/gi, "$1 [redacted]")
+    .replace(SECRETISH, "$1$2: [redacted]")
     // Only token-like values (a digit or ./~+-= punctuation, or 20+ characters), so "Bearer authentication failed" stays readable.
     .replace(/\bbearer\s+([\w.~+/-]{8,}=*)/gi, (m, v: string) => (/[\d.~+/=-]/.test(v) || v.length >= 20 ? "Bearer [redacted]" : m))
     .split("\n")
