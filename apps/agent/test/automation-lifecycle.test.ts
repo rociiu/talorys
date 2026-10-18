@@ -150,6 +150,19 @@ describe("rescheduling an automation to a time that has passed", () => {
   });
 });
 
+describe("re-enabling an automation whose one-time run has passed", () => {
+  it("is rejected instead of silently completing it, and leaves it paused", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Stale", kind: "reminder", message: "Hi", schedule: { type: "daily", time: "09:00" }, enabled: true });
+      await s.automations.update(a.id, { enabled: false, schedule: { type: "once", at: "2000-01-01T09:00" } });
+      await expect(s.automations.update(a.id, { enabled: true })).rejects.toThrow("in the past");
+      expect(s.automations.get(a.id)).toMatchObject({ enabled: false, status: "paused", schedule_id: null });
+      await s.automations.delete(a.id);
+    });
+  });
+});
+
 describe("run now concurrency and recovery", () => {
   it("skips a scheduled occurrence while a manual run is in progress and keeps the schedule", async () => {
     await inAgent(async (agent) => {
