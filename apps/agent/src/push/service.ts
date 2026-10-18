@@ -1,4 +1,5 @@
 import { MAX_PUSH_DEVICES, type Notification, type PushStatus } from "@talorys/shared";
+import { clip } from "../services/text";
 import { encryptPayload } from "./ece";
 import { fromB64url } from "./encoding";
 import type { PushSubscriptionRepository, PushSubscriptionRow } from "./repository";
@@ -27,8 +28,8 @@ const SEND_TIMEOUT_MS = 10_000;
 /** Short plain text for the system notification; the full Markdown stays in the app. */
 export function toPushMessage(n: Pick<Notification, "id" | "title" | "body">): PushMessage {
   const plain = (text: string) => text.replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
-  const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
-  return { title: clip(plain(n.title), 100), body: clip(plain(n.body), 240), id: n.id, url: "/" };
+  const shorten = (text: string, max: number) => (text.length > max ? `${clip(text, max - 1)}…` : text);
+  return { title: shorten(plain(n.title), 100), body: shorten(plain(n.body), 240), id: n.id, url: "/" };
 }
 
 /**

@@ -9,6 +9,7 @@ describe("semantic recall Settings hint", () => {
     const hint = card.split("\n").find((line) => line.includes('label="Semantic memory recall" hint='));
     expect(hint).toBeDefined();
     expect(card).toContain("s?.items?.items_cap ?? DEFAULT_ITEM_CAP");
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: matching the JSX source text literally
     expect(hint).toContain("Memories use up to ${savedCap} embeddings per day; tasks, notes and reminders have their own ${itemCap} per day.");
     expect(card).not.toContain("{/* At the default cap");
   });

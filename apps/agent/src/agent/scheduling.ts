@@ -65,8 +65,10 @@ export class AutomationService {
       throw new ValidationError(existing.kind === "reminder" ? "A reminder needs a message." : "An AI automation needs a prompt.");
     }
     const timingChanged = patch.schedule !== undefined || (patch.enabled !== undefined && patch.enabled !== existing.enabled);
-    if (patch.schedule !== undefined && (patch.enabled ?? existing.enabled)) {
-      const schedule = scheduleSpecSchema.parse(patch.schedule);
+    // Rescheduling an enabled automation, or turning a paused one back on, needs a run still ahead.
+    const resuming = patch.enabled === true && !existing.enabled;
+    if ((patch.schedule !== undefined && (patch.enabled ?? existing.enabled)) || resuming) {
+      const schedule = scheduleSpecSchema.parse(patch.schedule ?? existing.schedule);
       if (!computeNextRun(schedule, this.tz(), new Date())) throw new ValidationError("That time is in the past. Choose a future time.");
     }
     let next = this.repo.update(id, {

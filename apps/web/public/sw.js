@@ -58,10 +58,20 @@ self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(
     (async () => {
       const sub = event.newSubscription ?? (await self.registration.pushManager.subscribe(options));
+      const headers = { "content-type": "application/json", "x-talorys-request": "1" };
+      // Free the old endpoint's device slot first, so the new one is not refused at the device limit.
+      if (event.oldSubscription?.endpoint) {
+        await fetch("/api/push/unsubscribe", {
+          method: "POST",
+          credentials: "same-origin",
+          headers,
+          body: JSON.stringify({ endpoint: event.oldSubscription.endpoint }),
+        }).catch(() => {});
+      }
       await fetch("/api/push/subscriptions", {
         method: "POST",
         credentials: "same-origin",
-        headers: { "content-type": "application/json", "x-talorys-request": "1" },
+        headers,
         body: JSON.stringify(sub.toJSON()),
       });
     })(),

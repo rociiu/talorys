@@ -102,4 +102,13 @@ describe("push delivery", () => {
     expect(m.body).toHaveLength(240);
     expect(m.body.endsWith("…")).toBe(true);
   });
+
+  it("never cuts an emoji in half at the title or body limit", () => {
+    const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/;
+    const m = toPushMessage({ id: "x", title: `${"a".repeat(98)}😀tail`, body: `${"b".repeat(238)}😀tail` });
+    expect(m.title).not.toMatch(lone);
+    expect(m.body).not.toMatch(lone);
+    expect(m.title.endsWith("…")).toBe(true);
+    expect(m.body.endsWith("…")).toBe(true);
+  });
 });
