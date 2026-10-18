@@ -233,7 +233,8 @@ export function describeSchedule(spec: ScheduleSpec): string {
       return `Every ${joinList(days.map((d) => DAY_NAMES[d]!))} at ${spec.time}`;
     }
     case "monthly":
-      return `Monthly on the ${ordinal(spec.day)} at ${spec.time}`;
+      // Days past 28 run on the last day of months that are too short (see computeNextRun).
+      return `Monthly on the ${ordinal(spec.day)} at ${spec.time}${spec.day > 28 ? ", or the last day of shorter months" : ""}`;
     case "interval":
       return describeInterval(spec.minutes);
   }

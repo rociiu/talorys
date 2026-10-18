@@ -114,6 +114,12 @@ describe("describeSchedule", () => {
     expect(describeSchedule({ type: "weekly", days: [0, 1, 2, 3, 4, 5, 6], time: "09:00" })).toBe("Every day at 09:00");
   });
 
+  it("says when a monthly day falls back to the last day of shorter months", () => {
+    expect(describeSchedule({ type: "monthly", day: 28, time: "09:00" })).toBe("Monthly on the 28th at 09:00");
+    expect(describeSchedule({ type: "monthly", day: 29, time: "09:00" })).toBe("Monthly on the 29th at 09:00, or the last day of shorter months");
+    expect(describeSchedule({ type: "monthly", day: 31, time: "09:00" })).toBe("Monthly on the 31st at 09:00, or the last day of shorter months");
+  });
+
   it("names common day sets and reads naturally", () => {
     expect(describeSchedule({ type: "weekly", days: [5, 1, 3], time: "08:30" })).toBe("Every Monday, Wednesday and Friday at 08:30");
     expect(describeSchedule({ type: "weekly", days: [1, 2, 3, 4, 5], time: "09:00" })).toBe("Every weekday at 09:00");
