@@ -1,6 +1,6 @@
 {
   "name": "create-talorys",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Deploy Talorys — your personal AI agent — into your own Cloudflare account with one command.",
   "license": "MIT",
   "type": "module",
