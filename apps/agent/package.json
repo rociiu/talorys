@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.2.0",
+    "@modelcontextprotocol/client": "^2.3.0",
     "@modelcontextprotocol/sdk": "^1.31.0",
     "@talorys/shared": "*",
     "agents": "^0.28.0",
