@@ -5,7 +5,7 @@ import { Badge, Button, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, L
 import { keys, useApiMutation, useProjects, useTasks, useTimezone } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, formatDue, toLocalInput } from "../lib/utils";
-import { useI18n } from "../lib/i18n";
+import { type MessageKey, useI18n } from "../lib/i18n";
 
 type Tab = "today" | "upcoming" | "completed";
 
@@ -34,8 +34,22 @@ const PRIORITY_TONE: Record<TaskPriority, "neutral" | "accent" | "warning" | "da
   urgent: "danger",
 };
 
+const PRIORITY_KEYS = {
+  low: "tasks.priorityLow",
+  medium: "tasks.priorityMedium",
+  high: "tasks.priorityHigh",
+  urgent: "tasks.priorityUrgent",
+} as const satisfies Record<TaskPriority, MessageKey>;
+
+const TAB_KEYS = {
+  today: "tasks.tabToday",
+  upcoming: "tasks.tabUpcoming",
+  completed: "tasks.tabCompleted",
+} as const satisfies Record<Tab, MessageKey>;
+
 export default function TasksPage() {
   const i18n = useI18n();
+  const { t } = i18n;
   const tz = useTimezone();
   const { data: tasks, isLoading, error, refetch } = useTasks();
   const projects = useProjects();
@@ -74,22 +88,22 @@ export default function TasksPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-      <PageHeader title="Tasks" description="Works with or without AI. Talorys can also manage these from chat." />
+      <PageHeader title={t("tasks.title")} description={t("tasks.description")} />
 
       <div role="tablist" className="mb-5 flex gap-1 rounded-lg bg-muted p-1">
-        {(["today", "upcoming", "completed"] as Tab[]).map((t) => (
+        {(["today", "upcoming", "completed"] as Tab[]).map((name) => (
           <button type="button"
-            key={t}
+            key={name}
             role="tab"
-            aria-selected={tab === t}
-            onClick={() => setTab(t)}
+            aria-selected={tab === name}
+            onClick={() => setTab(name)}
             className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors",
-              tab === t ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              tab === name ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
-            {t}
-            <span className="ml-1.5 text-xs text-fg-subtle">{sections[t].length}</span>
+            {t(TAB_KEYS[name])}
+            <span className="ml-1.5 text-xs text-fg-subtle">{sections[name].length}</span>
           </button>
         ))}
       </div>
@@ -99,13 +113,13 @@ export default function TasksPage() {
           <Input
             value={quick}
             onChange={(e) => setQuick(e.target.value)}
-            placeholder={tab === "today" ? "Add a task for today" : "Add a task"}
+            placeholder={tab === "today" ? t("tasks.addForToday") : t("tasks.addOne")}
             maxLength={300}
-            aria-label="New task title"
+            aria-label={t("tasks.newTitle")}
           />
-          <Button type="submit" loading={create.isPending} disabled={!quick.trim()} aria-label="Add task">
+          <Button type="submit" loading={create.isPending} disabled={!quick.trim()} aria-label={t("tasks.addTask")}>
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add</span>
+            <span className="hidden sm:inline">{t("tasks.add")}</span>
           </Button>
         </form>
       )}
@@ -117,46 +131,46 @@ export default function TasksPage() {
           <Spinner />
         </div>
       ) : list.length === 0 ? (
-        <EmptyState icon={<CheckCircle2 className="h-9 w-9" />} title={tab === "completed" ? "Nothing completed yet" : "All clear"}>
-          {tab === "today" ? "Nothing due today. Enjoy the calm, or plan ahead." : tab === "upcoming" ? "No upcoming tasks." : "Completed tasks will appear here."}
+        <EmptyState icon={<CheckCircle2 className="h-9 w-9" />} title={tab === "completed" ? t("tasks.emptyCompletedTitle") : t("tasks.emptyTitle")}>
+          {tab === "today" ? t("tasks.emptyToday") : tab === "upcoming" ? t("tasks.emptyUpcoming") : t("tasks.emptyCompleted")}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
-          {list.map((t) => {
-            const overdue = t.status !== "done" && t.due_at && t.due_at < nowIso;
+          {list.map((task) => {
+            const overdue = task.status !== "done" && task.due_at && task.due_at < nowIso;
+            const due = task.due_at ? formatDue(task.due_at, tz, i18n.locale) : "";
             return (
-              <li key={t.id} className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-subtle">
+              <li key={task.id} className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-subtle">
                 <button type="button"
-                  onClick={() => toggle.mutate(t)}
+                  onClick={() => toggle.mutate(task)}
                   className="mt-0.5 text-fg-subtle transition-colors hover:text-accent"
-                  aria-label={t.status === "done" ? `Mark “${t.title}” as not done` : `Complete “${t.title}”`}
+                  aria-label={task.status === "done" ? t("tasks.markNotDone", { title: task.title }) : t("tasks.complete", { title: task.title })}
                 >
-                  {t.status === "done" ? (
+                  {task.status === "done" ? (
                     <CheckCircle2 className="h-5 w-5 text-accent" />
-                  ) : t.status === "in_progress" ? (
+                  ) : task.status === "in_progress" ? (
                     <CircleDot className="h-5 w-5" />
                   ) : (
                     <Circle className="h-5 w-5" />
                   )}
                 </button>
-                <button type="button" onClick={() => setEditing(t)} className="min-w-0 flex-1 text-left">
-                  <p className={cn("text-[15px] leading-6", t.status === "done" && "text-fg-subtle line-through")}>{t.title}</p>
+                <button type="button" onClick={() => setEditing(task)} className="min-w-0 flex-1 text-left">
+                  <p className={cn("text-[15px] leading-6", task.status === "done" && "text-fg-subtle line-through")}>{task.title}</p>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-subtle">
-                    {t.due_at && (
+                    {task.due_at && (
                       <span className={cn("inline-flex items-center gap-1", overdue && "font-medium text-danger")}>
                         <CalendarDays className="h-3 w-3" />
-                        {overdue ? "Overdue · " : ""}
-                        {formatDue(t.due_at, tz, i18n.locale)}
+                        {overdue ? t("tasks.overdue", { due }) : due}
                       </span>
                     )}
-                    {projectName(t.project_id) && <span>{projectName(t.project_id)}</span>}
-                    {t.description && <span className="max-w-[16rem] truncate">{t.description}</span>}
+                    {projectName(task.project_id) && <span>{projectName(task.project_id)}</span>}
+                    {task.description && <span className="max-w-[16rem] truncate">{task.description}</span>}
                   </div>
                 </button>
-                {(t.priority === "high" || t.priority === "urgent") && t.status !== "done" && (
-                  <Badge tone={PRIORITY_TONE[t.priority]} className="mt-0.5 capitalize">
+                {(task.priority === "high" || task.priority === "urgent") && task.status !== "done" && (
+                  <Badge tone={PRIORITY_TONE[task.priority]} className="mt-0.5">
                     <Flag className="mr-1 h-3 w-3" />
-                    {t.priority}
+                    {t(PRIORITY_KEYS[task.priority])}
                   </Badge>
                 )}
               </li>
@@ -171,6 +185,7 @@ export default function TasksPage() {
 }
 
 function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => void; tz: string }) {
+  const { t } = useI18n();
   const projects = useProjects();
   const [form, setForm] = useState({ title: "", description: "", priority: "medium" as TaskPriority, status: "todo" as Task["status"], due: "", project_id: "" });
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -203,11 +218,11 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
           project_id: form.project_id || null,
         },
       }),
-    { invalidate: [keys.tasks], success: "Task saved", onSuccess: close },
+    { invalidate: [keys.tasks], success: t("tasks.saved"), onSuccess: close },
   );
   const remove = useApiMutation(() => api(`/tasks/${task!.id}`, { method: "DELETE" }), {
     invalidate: [keys.tasks],
-    success: "Task deleted",
+    success: t("tasks.deleted"),
     onSuccess: () => {
       setConfirmDelete(false);
       close();
@@ -219,18 +234,18 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
       <Dialog
         open={!!task && !confirmDelete}
         onClose={close}
-        title="Edit task"
+        title={t("tasks.edit")}
         footer={
           <div className="flex w-full justify-between">
             <Button variant="ghost" className="text-danger" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash2 className="h-4 w-4" /> {t("tasks.delete")}
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={close}>
-                Cancel
+                {t("tasks.cancel")}
               </Button>
               <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!form.title.trim()}>
-                Save
+                {t("tasks.save")}
               </Button>
             </div>
           </div>
@@ -238,28 +253,28 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
       >
         <div className="space-y-4">
           <div>
-            <Label htmlFor="task-title">Title</Label>
+            <Label htmlFor="task-title">{t("tasks.fieldTitle")}</Label>
             <Input id="task-title" value={form.title} maxLength={300} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
           <div>
-            <Label htmlFor="task-desc">Notes</Label>
+            <Label htmlFor="task-desc">{t("tasks.fieldNotes")}</Label>
             <Textarea id="task-desc" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="task-status">Status</Label>
+              <Label htmlFor="task-status">{t("tasks.fieldStatus")}</Label>
               <Select id="task-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Task["status"] })}>
-                <option value="todo">To do</option>
-                <option value="in_progress">In progress</option>
-                <option value="done">Done</option>
+                <option value="todo">{t("tasks.statusTodo")}</option>
+                <option value="in_progress">{t("tasks.statusInProgress")}</option>
+                <option value="done">{t("tasks.statusDone")}</option>
               </Select>
             </div>
             <div>
-              <Label htmlFor="task-priority">Priority</Label>
+              <Label htmlFor="task-priority">{t("tasks.fieldPriority")}</Label>
               <Select id="task-priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as TaskPriority })}>
                 {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p} className="capitalize">
-                    {p}
+                  <option key={p} value={p}>
+                    {t(PRIORITY_KEYS[p])}
                   </option>
                 ))}
               </Select>
@@ -268,16 +283,16 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="task-due" hint={tz}>
-                Due
+                {t("tasks.fieldDue")}
               </Label>
               <Input id="task-due" type="datetime-local" value={form.due} onChange={(e) => setForm({ ...form, due: e.target.value })} />
             </div>
             <div>
-              <Label htmlFor="task-project" hint="Optional">
-                Project
+              <Label htmlFor="task-project" hint={t("tasks.optional")}>
+                {t("tasks.fieldProject")}
               </Label>
               <Select id="task-project" value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
-                <option value="">None</option>
+                <option value="">{t("tasks.noProject")}</option>
                 {projects.data?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -290,8 +305,8 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
       </Dialog>
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete task?"
-        message={`“${task?.title}” will be permanently deleted.`}
+        title={t("tasks.deleteTitle")}
+        message={t("tasks.deleteMessage", { title: task?.title ?? "" })}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => remove.mutate(undefined)}
         loading={remove.isPending}
