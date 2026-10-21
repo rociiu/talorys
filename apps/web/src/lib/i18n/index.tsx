@@ -6,7 +6,7 @@ export type { MessageKey } from "./core";
 export type LanguagePreference = "system" | Language;
 
 /** Each language's name in that language, as shown in the language picker. */
-export const LANGUAGE_NAMES: Record<Language, string> = { en: "English" };
+export const LANGUAGE_NAMES: Record<Language, string> = { en: "English", ko: "한국어" };
 
 export interface I18n {
   /** What the owner picked in Settings. */
