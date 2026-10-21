@@ -6,24 +6,24 @@ import { type MemoryStatusFilter, useApiMutation, useMemories, useMemoryHistory,
 import { useToast } from "../hooks/toast";
 import { api } from "../lib/api";
 import { cn, relativeTime } from "../lib/utils";
-import { useI18n } from "../lib/i18n";
+import { type I18n, type MessageKey, useI18n } from "../lib/i18n";
 
-const CATEGORY_LABELS: Record<MemoryCategory, string> = {
-  preference: "Preferences",
-  fact: "Facts",
-  goal: "Goals",
-  project: "Projects",
-  habit: "Habits",
-  person: "People",
-  other: "Other",
-};
+const CATEGORY_KEYS = {
+  preference: "memory.categoryPreference",
+  fact: "memory.categoryFact",
+  goal: "memory.categoryGoal",
+  project: "memory.categoryProject",
+  habit: "memory.categoryHabit",
+  person: "memory.categoryPerson",
+  other: "memory.categoryOther",
+} as const satisfies Record<MemoryCategory, MessageKey>;
 
-const FILTERS: { value: MemoryStatusFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Current" },
-  { value: "historical", label: "Historical" },
-  { value: "review", label: "Needs review" },
-];
+const FILTERS = [
+  { value: "all", label: "memory.filterAll" },
+  { value: "active", label: "memory.filterActive" },
+  { value: "historical", label: "memory.filterHistorical" },
+  { value: "review", label: "memory.filterReview" },
+] as const satisfies readonly { value: MemoryStatusFilter; label: MessageKey }[];
 
 interface WriteResponse {
   memory: Memory;
@@ -32,18 +32,19 @@ interface WriteResponse {
 }
 
 /** Explains what Smart Memory did with a save, in plain words. */
-function writeMessage(r: WriteResponse): string {
-  const parts = ["Memory saved"];
-  if (r.superseded?.length) parts.push(`${r.superseded.length === 1 ? "the older version was" : `${r.superseded.length} older versions were`} kept as history`);
-  if (r.reviews) parts.push("it may conflict with an older memory — review it below");
+function writeMessage(t: I18n["t"], r: WriteResponse): string {
+  const parts = [t("memory.saved")];
+  if (r.superseded?.length) parts.push(t("memory.olderKept", { count: r.superseded.length }));
+  if (r.reviews) parts.push(t("memory.mayConflict"));
   return parts.join(" · ");
 }
 
-const sourceLabel = (m: Memory) =>
-  m.source === "agent" ? "Learned in chat" : m.source === "import" ? "Imported" : m.source === "remote" ? "Added by access token" : "Added manually";
+const sourceLabel = (t: I18n["t"], m: Memory) =>
+  m.source === "agent" ? t("memory.sourceAgent") : m.source === "import" ? t("memory.sourceImport") : m.source === "remote" ? t("memory.sourceRemote") : t("memory.sourceManual");
 
 export default function MemoryPage() {
   const i18n = useI18n();
+  const { t } = i18n;
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [filter, setFilter] = useState<MemoryStatusFilter>("all");
@@ -70,14 +71,14 @@ export default function MemoryPage() {
 
   const remove = useApiMutation((id: string) => api(`/memories/${id}`, { method: "DELETE" }), {
     invalidate: [["memories"]],
-    success: "Memory deleted",
+    success: t("memory.deleted"),
     onSuccess: () => setDeleting(null),
   });
   const setStatus = useApiMutation(
     ({ id, status }: { id: string; status: Memory["status"] }) => api(`/memories/${id}/status`, { method: "POST", body: { status } }),
     {
       invalidate: [["memories"]],
-      success: "Memory updated",
+      success: t("memory.updated"),
     },
   );
 
@@ -87,21 +88,20 @@ export default function MemoryPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
       <PageHeader
-        title="Memory"
+        title={t("memory.title")}
         description={
           <>
-            What Talorys knows about you. Only the most relevant current memories are shared with the AI in each conversation; past facts are used only
-            when you ask about the past.
-            {data ? ` ${data.total} saved.` : ""}
+            {t("memory.description")}
+            {data ? ` ${t("memory.savedCount", { count: data.total })}` : ""}
           </>
         }
         actions={
           <Button onClick={() => setEditing("new")}>
-            <Plus className="h-4 w-4" /> Add memory
+            <Plus className="h-4 w-4" /> {t("memory.add")}
           </Button>
         }
       />
-      <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-muted p-1" role="tablist" aria-label="Memory status">
+      <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-muted p-1" role="tablist" aria-label={t("memory.statusTabs")}>
         {FILTERS.map((f) => {
           const count = f.value === "active" ? counts?.active : f.value === "historical" ? counts?.historical : f.value === "review" ? counts?.review : undefined;
           return (
@@ -116,7 +116,7 @@ export default function MemoryPage() {
                 filter === f.value ? "bg-surface shadow-sm" : "text-fg-muted hover:text-fg",
               )}
             >
-              {f.label}
+              {t(f.label)}
               {count ? <span className="ml-1 text-fg-subtle">{count}</span> : null}
             </button>
           );
@@ -124,7 +124,7 @@ export default function MemoryPage() {
       </div>
       <div className="relative mb-6">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search memories" className="pl-9" aria-label="Search memories" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("memory.search")} className="pl-9" aria-label={t("memory.search")} />
       </div>
 
       {(filter === "review" || filter === "all") && reviewList.length > 0 && <ReviewPanel reviews={reviewList} />}
@@ -139,18 +139,18 @@ export default function MemoryPage() {
         filter === "review" && reviewList.length > 0 ? null : (
           <EmptyState
             icon={<Brain className="h-9 w-9" />}
-            title={debounced ? "No matching memories" : filter === "all" ? "Nothing remembered yet" : "Nothing here"}
-            action={!debounced && filter === "all" && <Button variant="outline" onClick={() => setEditing("new")}>Add your first memory</Button>}
+            title={debounced ? t("memory.emptyNoMatch") : filter === "all" ? t("memory.emptyNothingYet") : t("memory.emptyNothingHere")}
+            action={!debounced && filter === "all" && <Button variant="outline" onClick={() => setEditing("new")}>{t("memory.addFirst")}</Button>}
           >
             {debounced
-              ? "Try a different search."
+              ? t("memory.emptyTryDifferent")
               : filter === "historical"
-                ? "When a fact changes, the old version is kept here."
+                ? t("memory.emptyHistorical")
                 : filter === "review"
-                  ? "No possible conflicts right now."
+                  ? t("memory.emptyReview")
                   : filter === "active"
-                    ? "No current memories."
-                    : 'Tell Talorys things like "Remember that I prefer morning meetings", or add them here.'}
+                    ? t("memory.emptyActive")
+                    : t("memory.emptyAll")}
           </EmptyState>
         )
       ) : (
@@ -158,7 +158,7 @@ export default function MemoryPage() {
           {grouped.map(([category, items]) => (
             <section key={category}>
               <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">
-                {CATEGORY_LABELS[category]} <span className="ml-1 normal-case tracking-normal">· {items.length}</span>
+                {t(CATEGORY_KEYS[category])} <span className="ml-1 normal-case tracking-normal">· {items.length}</span>
               </h2>
               <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
                 {items.map((m) => (
@@ -166,45 +166,45 @@ export default function MemoryPage() {
                     <div className="min-w-0 flex-1">
                       <p className={cn("text-[15px] leading-6", m.status === "historical" && "text-fg-muted")}>
                         {m.content}
-                        {m.status === "historical" && <Badge className="ml-2 align-middle">Past</Badge>}
-                        {m.status === "uncertain" && <Badge tone="warning" className="ml-2 align-middle">Unsure</Badge>}
+                        {m.status === "historical" && <Badge className="ml-2 align-middle">{t("memory.past")}</Badge>}
+                        {m.status === "uncertain" && <Badge tone="warning" className="ml-2 align-middle">{t("memory.unsure")}</Badge>}
                       </p>
                       <p className="mt-0.5 text-xs text-fg-subtle">
-                        {sourceLabel(m)} · {relativeTime(m.updated_at, i18n)}
-                        {m.valid_from && ` · since ${m.valid_from}`}
-                        {m.valid_until && ` · until ${m.valid_until}`}
+                        {sourceLabel(t, m)} · {relativeTime(m.updated_at, i18n)}
+                        {m.valid_from && ` · ${t("memory.since", { date: m.valid_from })}`}
+                        {m.valid_until && ` · ${t("memory.until", { date: m.valid_until })}`}
                         {m.superseded_by && (
                           <>
                             {" · "}
                             <button type="button" className="text-accent hover:underline" onClick={() => setHistoryOf(m)}>
-                              Replaced by a newer memory
+                              {t("memory.replacedByNewer")}
                             </button>
                           </>
                         )}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
-                      <Button variant="ghost" size="icon" onClick={() => setHistoryOf(m)} aria-label="Memory history" title="History">
+                      <Button variant="ghost" size="icon" onClick={() => setHistoryOf(m)} aria-label={t("memory.history")} title={t("memory.historyShort")}>
                         <Clock className="h-4 w-4" />
                       </Button>
                       {m.status !== "historical" && (
-                        <Button variant="ghost" size="icon" onClick={() => setCorrecting(m)} aria-label="Update this fact" title="This changed — save a new version">
+                        <Button variant="ghost" size="icon" onClick={() => setCorrecting(m)} aria-label={t("memory.updateFact")} title={t("memory.updateFactHint")}>
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       )}
                       {m.status === "historical" ? (
-                        <Button variant="ghost" size="icon" onClick={() => setStatus.mutate({ id: m.id, status: "active" })} aria-label="Restore as current" title="Restore as current">
+                        <Button variant="ghost" size="icon" onClick={() => setStatus.mutate({ id: m.id, status: "active" })} aria-label={t("memory.restore")} title={t("memory.restore")}>
                           <ArchiveRestore className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="icon" onClick={() => setStatus.mutate({ id: m.id, status: "historical" })} aria-label="Mark as past" title="No longer true — keep as history">
+                        <Button variant="ghost" size="icon" onClick={() => setStatus.mutate({ id: m.id, status: "historical" })} aria-label={t("memory.markPast")} title={t("memory.markPastHint")}>
                           <Archive className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(m)} aria-label="Edit memory" title="Edit">
+                      <Button variant="ghost" size="icon" onClick={() => setEditing(m)} aria-label={t("memory.edit")} title={t("memory.editShort")}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label="Delete memory" title="Delete">
+                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label={t("memory.delete")} title={t("memory.deleteShort")}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -221,13 +221,9 @@ export default function MemoryPage() {
       <HistoryDialog memory={historyOf} onClose={() => setHistoryOf(null)} />
       <ConfirmDialog
         open={!!deleting}
-        title="Forget this memory?"
-        message={
-          <>
-            Talorys will permanently delete: “{deleting?.content}”. To keep it as a past fact instead, use “Mark as past”.
-          </>
-        }
-        confirmLabel="Forget"
+        title={t("memory.forgetTitle")}
+        message={t("memory.forgetMessage", { content: deleting?.content ?? "" })}
+        confirmLabel={t("memory.forget")}
         onCancel={() => setDeleting(null)}
         onConfirm={() => deleting && remove.mutate(deleting.id)}
         loading={remove.isPending}
@@ -237,40 +233,41 @@ export default function MemoryPage() {
 }
 
 function ReviewPanel({ reviews }: { reviews: MemoryReview[] }) {
+  const { t } = useI18n();
   const resolve = useApiMutation(
     ({ id, action }: { id: string; action: MemoryReviewAction }) => api(`/memories/reviews/${id}`, { method: "POST", body: { action } }),
-    { invalidate: [["memories"]], success: "Done" },
+    { invalidate: [["memories"]], success: t("memory.done") },
   );
   return (
-    <section className="mb-8 space-y-2" aria-label="Possible conflicts">
+    <section className="mb-8 space-y-2" aria-label={t("memory.conflicts")}>
       <h2 className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-fg-subtle">
-        <GitCompare className="h-3.5 w-3.5" /> Possible conflicts · {reviews.length}
+        <GitCompare className="h-3.5 w-3.5" /> {t("memory.conflicts")} · {reviews.length}
       </h2>
       {reviews.map((r) => (
         <div key={r.id} className="rounded-xl border border-warning/40 bg-surface px-4 py-3">
           <p className="text-xs text-fg-subtle">{r.reason}</p>
           <dl className="mt-2 grid gap-1 text-sm">
             <div className="flex gap-2">
-              <dt className="w-16 shrink-0 text-fg-subtle">Newer</dt>
+              <dt className="w-16 shrink-0 text-fg-subtle">{t("memory.newer")}</dt>
               <dd>{r.memory.content}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-16 shrink-0 text-fg-subtle">Older</dt>
+              <dt className="w-16 shrink-0 text-fg-subtle">{t("memory.older")}</dt>
               <dd>{r.other.content}</dd>
             </div>
           </dl>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => resolve.mutate({ id: r.id, action: "keep_both" })}>
-              Keep both
+              {t("memory.keepBoth")}
             </Button>
             <Button size="sm" onClick={() => resolve.mutate({ id: r.id, action: "mark_historical" })}>
-              Mark older as past
+              {t("memory.markOlderPast")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => resolve.mutate({ id: r.id, action: "replace" })}>
-              Replace older
+              {t("memory.replaceOlder")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => resolve.mutate({ id: r.id, action: "cancel" })}>
-              Discard newer
+              {t("memory.discardNewer")}
             </Button>
           </div>
         </div>
@@ -281,11 +278,12 @@ function ReviewPanel({ reviews }: { reviews: MemoryReview[] }) {
 
 function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: () => void }) {
   const i18n = useI18n();
+  const { t } = i18n;
   const { data, isLoading } = useMemoryHistory(memory?.id ?? null);
   const current = data ? (data.next.at(-1) ?? data.memory) : null;
   const earlier = data ? [...data.previous, ...(data.next.length ? [data.memory, ...data.next.slice(0, -1)] : [])].reverse() : [];
   return (
-    <Dialog open={!!memory} onClose={onClose} title="Memory history">
+    <Dialog open={!!memory} onClose={onClose} title={t("memory.history")}>
       {isLoading || !data || !current ? (
         <div className="flex justify-center py-6">
           <Spinner />
@@ -293,30 +291,30 @@ function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
       ) : (
         <div className="space-y-4 text-sm">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{current.status === "historical" ? "Latest" : "Current"}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{current.status === "historical" ? t("memory.latest") : t("memory.current")}</p>
             <p className="mt-1 leading-6">“{current.content}”</p>
             <p className="text-xs text-fg-subtle">
-              Saved {relativeTime(current.created_at, i18n)}
-              {current.valid_from && ` · since ${current.valid_from}`}
+              {t("memory.savedAt", { when: relativeTime(current.created_at, i18n) })}
+              {current.valid_from && ` · ${t("memory.since", { date: current.valid_from })}`}
             </p>
           </div>
           {earlier.length > 0 ? (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">Previously</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t("memory.previously")}</p>
               <ul className="mt-1 space-y-2">
                 {earlier.map((m) => (
                   <li key={m.id} className="text-fg-muted">
                     “{m.content}”
                     <span className="block text-xs text-fg-subtle">
-                      Saved {relativeTime(m.created_at, i18n)}
-                      {m.valid_until && ` · until ${m.valid_until}`}
+                      {t("memory.savedAt", { when: relativeTime(m.created_at, i18n) })}
+                      {m.valid_until && ` · ${t("memory.until", { date: m.valid_until })}`}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
-            <p className="text-fg-subtle">No earlier versions.</p>
+            <p className="text-fg-subtle">{t("memory.noEarlier")}</p>
           )}
         </div>
       )}
@@ -326,13 +324,14 @@ function HistoryDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
 
 /** Saves a newer version of a fact; the old one is kept as history. */
 function CorrectDialog({ memory, onClose }: { memory: Memory | null; onClose: () => void }) {
+  const { t } = useI18n();
   const [content, setContent] = useState("");
   const toast = useToast();
   useEffect(() => setContent(memory?.content ?? ""), [memory]);
   const save = useApiMutation(() => api<WriteResponse>(`/memories/${memory!.id}/correct`, { method: "POST", body: { content } }), {
     invalidate: [["memories"]],
     onSuccess: (r) => {
-      toast(writeMessage(r));
+      toast(writeMessage(t, r));
       onClose();
     },
   });
@@ -340,24 +339,22 @@ function CorrectDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
     <Dialog
       open={!!memory}
       onClose={onClose}
-      title="Update this fact"
+      title={t("memory.updateFact")}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t("memory.cancel")}
           </Button>
           <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!content.trim() || content.trim() === memory?.content}>
-            Save new version
+            {t("memory.saveNewVersion")}
           </Button>
         </>
       }
     >
       <div className="space-y-3">
-        <p className="text-sm text-fg-muted">
-          Use this when something changed. Talorys will remember the new version as current and keep “{memory?.content}” as a past fact.
-        </p>
+        <p className="text-sm text-fg-muted">{t("memory.correctExplain", { content: memory?.content ?? "" })}</p>
         <div>
-          <Label htmlFor="memory-correct">What's true now?</Label>
+          <Label htmlFor="memory-correct">{t("memory.whatIsTrueNow")}</Label>
           <Textarea id="memory-correct" rows={3} value={content} onChange={(e) => setContent(e.target.value)} maxLength={2000} autoFocus />
         </div>
       </div>
@@ -366,6 +363,7 @@ function CorrectDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
 }
 
 function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onClose: () => void }) {
+  const { t } = useI18n();
   const [content, setContent] = useState("");
   const [category, setCategory] = useState<MemoryCategory>("other");
   const toast = useToast();
@@ -386,7 +384,7 @@ function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onCl
     {
       invalidate: [["memories"]],
       onSuccess: (r) => {
-        toast(writeMessage(r));
+        toast(writeMessage(t, r));
         onClose();
       },
     },
@@ -395,37 +393,35 @@ function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onCl
     <Dialog
       open={!!memory}
       onClose={onClose}
-      title={memory === "new" ? "Add memory" : "Edit memory"}
+      title={memory === "new" ? t("memory.add") : t("memory.edit")}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t("memory.cancel")}
           </Button>
           <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!content.trim()}>
-            Save
+            {t("memory.save")}
           </Button>
         </>
       }
     >
       <div className="space-y-4">
         <div>
-          <Label htmlFor="memory-content">What should Talorys remember?</Label>
-          <Textarea id="memory-content" rows={3} value={content} onChange={(e) => setContent(e.target.value)} maxLength={2000} autoFocus placeholder="Prefers concise answers" />
-          {memory !== "new" && memory && (
-            <p className="mt-1 text-xs text-fg-subtle">Fixing a typo? Edit here. Did the fact change? Use “Update this fact” to keep the old version as history.</p>
-          )}
+          <Label htmlFor="memory-content">{t("memory.whatToRemember")}</Label>
+          <Textarea id="memory-content" rows={3} value={content} onChange={(e) => setContent(e.target.value)} maxLength={2000} autoFocus placeholder={t("memory.contentPlaceholder")} />
+          {memory !== "new" && memory && <p className="mt-1 text-xs text-fg-subtle">{t("memory.editHint")}</p>}
         </div>
         <div>
-          <Label htmlFor="memory-category">Category</Label>
+          <Label htmlFor="memory-category">{t("memory.category")}</Label>
           <Select id="memory-category" value={category} onChange={(e) => setCategory(e.target.value as MemoryCategory)}>
             {MEMORY_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {CATEGORY_LABELS[c]}
+                {t(CATEGORY_KEYS[c])}
               </option>
             ))}
           </Select>
         </div>
-        <Badge tone="accent">Stored only in your Cloudflare account</Badge>
+        <Badge tone="accent">{t("memory.storedOnlyInCloudflare")}</Badge>
       </div>
     </Dialog>
   );
