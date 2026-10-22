@@ -48,3 +48,6 @@ export const LIMIT_CEILINGS = {
   maxScheduledAiRunsPerDay: 48,
   maxAiRequestsPerDay: 2000,
 } as const;
+
+/** Defined here rather than in schemas.ts so plans.ts can use it without an import cycle. */
+export const TASK_PRIORITIES = ["low", "medium", "high", "urgent"] as const;

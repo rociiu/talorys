@@ -107,8 +107,8 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
       db.run(
         `INSERT INTO tal_messages (id, conversation_id, role, content, tools, status, error, created_at, source)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'import') ON CONFLICT(id) DO NOTHING`,
-        // Approvals refer to pending actions in the exporting instance; an imported one could only mislead.
-        m.id, m.conversation_id, m.role, m.content, JSON.stringify(decodeTools(m.tools).map(({ approval: _a, ...t }) => t)),
+        // Approvals and task plans refer to drafts in the exporting instance; an imported one could only mislead.
+        m.id, m.conversation_id, m.role, m.content, JSON.stringify(decodeTools(m.tools).map(({ approval: _a, plan: _p, ...t }) => t)),
         pick(m.status, ["complete", "error", "cancelled"], "complete"), strOrNull(m.error), m.created_at,
       );
       messages++;

@@ -14,6 +14,7 @@ import { MemoryHistoryService, type MemoryHistoryHooks } from "../memory";
 import { PushSubscriptionRepository } from "../push/repository";
 import { PushService } from "../push/service";
 import { RemoteTokenService } from "../remote/tokens";
+import { TaskPlanService } from "./task-plans";
 
 /** All data services for the single owner, bound to one Durable Object's storage. */
 export interface Services {
@@ -34,6 +35,7 @@ export interface Services {
   memoryHistory: MemoryHistoryService;
   push: PushService;
   remote: RemoteTokenService;
+  taskPlans: TaskPlanService;
 }
 
 /** `background` keeps work alive after the request or alarm that started it (the Durable Object's waitUntil). */
@@ -55,12 +57,14 @@ export function createServices(
   const activity = new ActivityLog(db);
   const memories = new MemoryRepository(db);
   const usage = new UsageService(db);
+  const tasks = new TaskRepository(db);
+  const projects = new ProjectRepository(db);
   return {
     db,
-    tasks: new TaskRepository(db),
+    tasks,
     memories,
     notes: new NoteRepository(db),
-    projects: new ProjectRepository(db),
+    projects,
     conversations: new ConversationRepository(db),
     automationsRepo,
     notifications,
@@ -77,5 +81,6 @@ export function createServices(
     memoryHistory: new MemoryHistoryService(db, memories, settings, usage, activity, memoryHooks),
     push,
     remote: new RemoteTokenService(db, settings, env.SESSION_SECRET),
+    taskPlans: new TaskPlanService(db, tasks, projects, activity),
   };
 }

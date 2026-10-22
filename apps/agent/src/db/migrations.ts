@@ -328,6 +328,27 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    version: 11,
+    name: "task plan drafts",
+    statements: [
+      // Plans the agent proposed in chat. Tasks are created only when the owner confirms one.
+      // Drafts are conversation-bound and never exported in backups, like pending actions.
+      `CREATE TABLE tal_task_plan_drafts (
+        id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL REFERENCES tal_conversations(id) ON DELETE CASCADE,
+        payload TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','confirmed','cancelled')),
+        revision INTEGER NOT NULL DEFAULT 1,
+        result TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        confirmed_at TEXT
+      )`,
+      `CREATE INDEX tal_task_plan_drafts_created ON tal_task_plan_drafts(created_at)`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;

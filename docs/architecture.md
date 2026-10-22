@@ -136,6 +136,21 @@ duplicate-call (loop) detection, owner approval for destructive actions
 scheduled runs. Tools only use the service layer — no
 shell, code execution, network or credentials.
 
+`propose_task_plan` (a `write` tool, so never offered to scheduled runs, once per
+turn) is neither immediate nor destructive in effect: it validates the model's
+proposal with the shared Zod schema (`packages/shared/src/plans.ts`), drops
+duplicate tasks, resolves the project and stores a draft in
+`tal_task_plan_drafts` through `TaskPlanService`. It creates no tasks. The draft
+travels on the chat message's tool activity (`ToolActivity.plan`) and is
+refreshed from the table whenever a conversation is read, so the card survives
+reloads. The owner edits (`PATCH /api/conversations/:cid/task-plans/:id`),
+confirms (`POST …/confirm`) or cancels (`POST …/cancel`); each call names the
+conversation and the revision the owner saw. Confirmation re-validates the final
+plan, claims the draft with a conditional update and creates the project and
+tasks in the same SQLite transaction, so it is atomic and runs at most once; a
+repeated call returns the first result. No model call is made for editing or
+confirming. A turn the owner stops withdraws any plan it proposed.
+
 ## Data model
 
 `tal_settings`, `tal_conversations`, `tal_messages`, `tal_memories`,
@@ -151,7 +166,8 @@ added approval binding columns to `tal_pending_actions` (`target_version`,
 Migration 7 adds per-day, per-model provenance and persisted price estimates,
 leaving legacy chat tokens untouched. Existing semantic embedding counters are
 copied into its legacy token bucket without creating semantic tables when the
-feature has never been enabled.
+feature has never been enabled. Migrations 8–10 add remote access tokens and
+their counters; migration 11 adds `tal_task_plan_drafts` for proposed task plans.
 
 ## Free-tier choices
 

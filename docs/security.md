@@ -71,6 +71,11 @@ the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
 - A proposal is bound to the item as it was shown: if the item changes before the
   owner approves (an edit, another tab, a backup import), approval fails and
   nothing is done.
+- Task plans (`propose_task_plan`) only store a draft. Tasks are created by the
+  owner's authenticated confirm request, which is bound to the draft's
+  conversation and revision, re-validates the final plan on the server, and
+  runs in one transaction at most once. Expired, cancelled and outdated drafts
+  are refused. Plan routes are not reachable with remote access tokens.
 - The agent cannot erase text on its own: `update_note` only renames a note or
   appends to it, and `update_memory` saves the new wording as a new memory while
   the old one is kept as a past fact.

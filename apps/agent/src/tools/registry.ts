@@ -86,6 +86,8 @@ export class ToolExecutor {
   private readonly signatures = new Map<string, number>();
   /** Approval requests created this turn, by provider tool-call id. */
   private readonly approvals = new Map<string, PendingAction>();
+  /** Task plan drafts proposed this turn, by provider tool-call id. */
+  private readonly plans = new Map<string, string>();
 
   constructor(
     private readonly tools: ToolDefinition[],
@@ -115,6 +117,16 @@ export class ToolExecutor {
     return this.approvals.get(callId);
   }
 
+  /** The draft id of a task plan proposed by this call, if any. */
+  planFor(callId: string): string | undefined {
+    return this.plans.get(callId);
+  }
+
+  /** Every task plan draft proposed this turn. */
+  proposedPlans(): string[] {
+    return [...this.plans.values()];
+  }
+
   async execute(name: string, rawInput: unknown, callId?: string): Promise<unknown> {
     const tool = this.find(name);
     if (!tool) throw new ToolError(`Tool "${name}" is not available.`);
@@ -138,7 +150,13 @@ export class ToolExecutor {
     this.calls++;
     this.perTool.set(name, used + 1);
     this.signatures.set(signature, repeats + 1);
-    if (tool.permission !== "destructive") return await tool.execute(parsed.data, this.ctx);
+    if (tool.permission !== "destructive") {
+      const result = await tool.execute(parsed.data, this.ctx);
+      if (callId && result && typeof result === "object" && "plan_id" in result && typeof result.plan_id === "string") {
+        this.plans.set(callId, result.plan_id);
+      }
+      return result;
+    }
 
     if (!this.ctx.conversationId) throw new ToolError(`"${name}" needs the owner's approval and can only be used in chat.`);
     const prepared = await tool.prepare(parsed.data, this.ctx);

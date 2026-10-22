@@ -412,7 +412,7 @@ describe("migration from the previous schema", () => {
       for (const col of ["status", "superseded_by", "valid_from", "valid_until"]) db.run(`ALTER TABLE tal_memories DROP COLUMN ${col}`);
       // ...and what later migrations added.
       for (const col of ["target_version", "payload", "preview"]) db.run(`ALTER TABLE tal_pending_actions DROP COLUMN ${col}`);
-      for (const table of ["tal_remote_tokens", "tal_remote_auth_failures", "tal_remote_auth_failure_days", "tal_remote_write_days"]) db.run(`DROP TABLE ${table}`);
+      for (const table of ["tal_remote_tokens", "tal_remote_auth_failures", "tal_remote_auth_failure_days", "tal_remote_write_days", "tal_task_plan_drafts"]) db.run(`DROP TABLE ${table}`);
       db.run(`UPDATE tal_schema SET version = 3`);
       db.run(
         `INSERT INTO tal_memories (id, content, category, source, created_at, updated_at) VALUES ('legacy-1', 'Legacy memory about sailing', 'fact', 'manual', '2025-01-01T00:00:00.000Z', '2025-01-01T00:00:00.000Z')`,

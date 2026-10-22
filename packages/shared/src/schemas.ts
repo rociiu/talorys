@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { BACKUP_FORMAT, LANGUAGES, LIMIT_CEILINGS } from "./constants";
+import { BACKUP_FORMAT, LANGUAGES, LIMIT_CEILINGS, TASK_PRIORITIES } from "./constants";
 import { isValidTimeZone, scheduleSpecSchema } from "./recurrence";
+import { type TaskPlanDraft, taskPlanDraftSchema } from "./plans";
 
 // ---------- Primitives ----------
 
@@ -11,7 +12,6 @@ const shortText = (max: number) => z.string().trim().min(1).max(max);
 // ---------- Entities ----------
 
 export const TASK_STATUSES = ["todo", "in_progress", "done"] as const;
-export const TASK_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 export const MEMORY_CATEGORIES = ["preference", "fact", "goal", "project", "habit", "person", "other"] as const;
 export const PROJECT_STATUSES = ["active", "paused", "completed", "archived"] as const;
 export const AUTOMATION_KINDS = ["reminder", "task_digest", "agent_prompt"] as const;
@@ -124,6 +124,8 @@ export interface ToolActivity {
   error?: string;
   /** Set when a destructive tool call is waiting for (or got) the owner's approval. */
   approval?: PendingAction;
+  /** Set when the agent proposed a task plan; tasks exist only after the owner confirms it. */
+  plan?: TaskPlanDraft;
 }
 
 /** Shape check for tool activity stored with a message. Entries that fail it (e.g. from a hostile backup) are dropped on read. */
@@ -143,7 +145,8 @@ export const toolActivitySchema = z.object({
       preview: z.string().optional(),
     })
     .optional(),
-}) satisfies z.ZodType<ToolActivity>;
+  plan: taskPlanDraftSchema.optional(),
+}) satisfies z.ZodType<ToolActivity, unknown>;
 
 export interface ChatMessage {
   id: string;

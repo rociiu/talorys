@@ -78,6 +78,20 @@ function planTools(text: string): PlannedCall[] {
   if ((m = text.match(/^(?:add|create) (?:a )?task(?: to)?\s*:?\s+(.+)$/i))) {
     return [{ name: "create_task", input: { title: m[1] }, describe: () => `Added the task "${m![1]}".` }];
   }
+  if ((m = text.match(/^plan (.+?):\s*(.+)$/i))) {
+    // "plan Trip to Japan: book flights; renew passport!; pack" — "!" marks high priority.
+    const tasks = m[2]!.split(";").map((t) => t.trim()).filter(Boolean).map((t) => ({
+      title: t.replace(/!$/, "").trim(),
+      priority: t.endsWith("!") ? "high" : "medium",
+    }));
+    return [
+      {
+        name: "propose_task_plan",
+        input: { title: m[1], tasks },
+        describe: () => `I've proposed a plan with ${tasks.length} tasks. Review it and confirm to create them.`,
+      },
+    ];
+  }
   if ((m = text.match(/^(?:add|create|write) (?:a )?note\s*:?\s+(.+)$/i))) {
     return [{ name: "create_note", input: { title: m[1]!.slice(0, 80), content: m[1] }, describe: () => `Saved a note.` }];
   }

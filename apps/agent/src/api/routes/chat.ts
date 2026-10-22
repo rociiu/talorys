@@ -1,4 +1,4 @@
-import { type ChatStreamEvent, chatRequestSchema, conversationCreateSchema, conversationUpdateSchema } from "@talorys/shared";
+import { type ChatStreamEvent, chatRequestSchema, conversationCreateSchema, conversationUpdateSchema, taskPlanSubmitSchema } from "@talorys/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app";
@@ -24,7 +24,7 @@ chatRoutes.get("/conversations/:id", (c) => {
   const { summary: _s, summary_upto: _u, ...rest } = conversation;
   return c.json({
     conversation: rest,
-    messages: s.pendingActions.withCurrentStatus(s.conversations.messages(conversation.id)),
+    messages: s.taskPlans.withCurrentState(s.pendingActions.withCurrentStatus(s.conversations.messages(conversation.id))),
     streaming: c.env.agent.activeRuns.has(conversation.id),
   });
 });
@@ -140,4 +140,28 @@ chatRoutes.post("/actions/:id/cancel", (c) => {
   if (!pending.get(id)) throw new NotFoundError("This action no longer exists.");
   pending.resolve(id, "cancelled");
   return c.json({ action: pending.view(id) });
+});
+
+/**
+ * Task plans the agent proposed. Only these owner-facing routes can turn a plan into tasks;
+ * every call names the conversation the plan was proposed in.
+ */
+chatRoutes.get("/conversations/:cid/task-plans/:id", (c) => {
+  return c.json({ plan: c.env.agent.services.taskPlans.require(c.req.param("cid"), c.req.param("id")) });
+});
+
+chatRoutes.patch("/conversations/:cid/task-plans/:id", async (c) => {
+  const { revision, plan } = await body(c, taskPlanSubmitSchema, 64 * 1024);
+  return c.json({ plan: c.env.agent.services.taskPlans.update(c.req.param("cid"), c.req.param("id"), revision, plan) });
+});
+
+chatRoutes.post("/conversations/:cid/task-plans/:id/confirm", async (c) => {
+  const { revision, plan } = await body(c, taskPlanSubmitSchema, 64 * 1024);
+  const s = c.env.agent.services;
+  const result = s.taskPlans.confirm(c.req.param("cid"), c.req.param("id"), revision, plan, s.settings.get().timezone);
+  return c.json({ plan: result.draft, replayed: result.replayed });
+});
+
+chatRoutes.post("/conversations/:cid/task-plans/:id/cancel", (c) => {
+  return c.json({ plan: c.env.agent.services.taskPlans.cancel(c.req.param("cid"), c.req.param("id")) });
 });

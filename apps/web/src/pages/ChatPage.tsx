@@ -20,6 +20,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { ApprovalCard } from "../components/ApprovalCard";
+import { TaskPlanCard } from "../components/TaskPlanCard";
 import { ChatUsage } from "../components/ChatUsage";
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
@@ -528,6 +529,7 @@ function AssistantBubble({
           </div>
         )}
         {tools.map((t) => t.approval && <ApprovalCard key={t.approval.id} action={t.approval} />)}
+        {tools.map((t) => t.plan && <TaskPlanCard key={t.plan.id} plan={t.plan} />)}
         {text ? (
           <Markdown content={text} />
         ) : streaming && tools.every((t) => t.status !== "running") ? (

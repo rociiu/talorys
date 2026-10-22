@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatStreamEvent, PendingAction, ToolActivity } from "@talorys/shared";
+import type { ChatMessage, ChatStreamEvent, PendingAction, TaskPlanDraft, ToolActivity } from "@talorys/shared";
 import type { Services } from "../services/container";
 import { type AIProvider, classifyAiError, estimateTokens, type ProviderTool, usageOfFailure } from "../ai/provider";
 import { AppError, NotFoundError } from "../api/errors";
@@ -51,9 +51,26 @@ const APPROVAL_OUTCOME: Record<PendingAction["status"], string> = {
   failed: "approved but failed",
 };
 
-/** Lets the model see what happened to actions it proposed in earlier turns. */
+function planOutcome(plan: TaskPlanDraft): string {
+  const name = `Task plan “${plan.plan.title}”`;
+  switch (plan.status) {
+    case "pending":
+      return `[${name}: waiting for the owner to review and confirm; no tasks exist yet]`;
+    case "confirmed":
+      return `[${name}: confirmed by the owner; ${plan.result?.task_ids.length ?? 0} task(s) were created]`;
+    case "cancelled":
+      return `[${name}: cancelled; nothing was created]`;
+    case "expired":
+      return `[${name}: expired without confirmation; nothing was created]`;
+  }
+}
+
+/** Lets the model see what happened to actions and plans it proposed in earlier turns. */
 function withApprovalOutcomes(m: ChatMessage): ChatMessage {
-  const notes = m.tools.flatMap((t) => (t.approval ? [`[${t.approval.summary}: ${APPROVAL_OUTCOME[t.approval.status]}]`] : []));
+  const notes = m.tools.flatMap((t) => [
+    ...(t.approval ? [`[${t.approval.summary}: ${APPROVAL_OUTCOME[t.approval.status]}]`] : []),
+    ...(t.plan ? [planOutcome(t.plan)] : []),
+  ]);
   return notes.length ? { ...m, content: `${m.content}\n\n${notes.join("\n")}`.trim() } : m;
 }
 
@@ -95,8 +112,14 @@ export class AgentRunner {
 
     let text = "";
     const tools: ToolActivity[] = [];
-    const finish = (status: ChatMessage["status"], error: string | null): ChatMessage =>
-      s.conversations.addMessage({
+    let executor: ToolExecutor | null = null;
+    const finish = (status: ChatMessage["status"], error: string | null): ChatMessage => {
+      // A plan proposed in a turn the owner stopped is withdrawn, so a half-finished reply can't leave one to confirm.
+      if (status === "cancelled" && executor) {
+        for (const id of executor.proposedPlans()) s.taskPlans.discard(id);
+        for (const t of tools) if (t.plan) t.plan = s.taskPlans.get(t.plan.id) ?? t.plan;
+      }
+      return s.conversations.addMessage({
         id: assistantId,
         conversation_id: conversation!.id,
         role: "assistant",
@@ -105,6 +128,7 @@ export class AgentRunner {
         status,
         error,
       });
+    };
 
     try {
       if (!this.provider) {
@@ -116,8 +140,8 @@ export class AgentRunner {
       const selected = this.ext ? await this.ext.selectMemories(userMessage.content) : selectRelevantMemories(s.memories, userMessage.content);
       const memories = s.memoryHistory.promptMemories(selected, memoryTokenBudget(limits));
       const items = this.ext?.selectItems ? await this.ext.selectItems(userMessage.content) : undefined;
-      const history = s.pendingActions
-        .withCurrentStatus(s.conversations.messages(conversation.id, { limit: 200 }))
+      const history = s.taskPlans
+        .withCurrentState(s.pendingActions.withCurrentStatus(s.conversations.messages(conversation.id, { limit: 200 })))
         .filter((m) => m.role === "user" || m.status === "complete")
         .map(withApprovalOutcomes);
       let summary = conversation.summary;
@@ -170,12 +194,13 @@ export class AgentRunner {
           });
 
       // 3. Tools with per-turn limits.
-      const executor = new ToolExecutor(
+      executor = new ToolExecutor(
         this.ext?.tools ?? ALL_TOOLS,
         { services: s, timezone: settings.timezone, mode: "chat", conversationId: conversation.id },
         { maxToolCalls: limits.maxToolCalls },
       );
       const providerTools = toProviderTools(executor);
+      const turnTools = executor;
 
       // Memory selection and summarizing may have spent budget since the first check.
       if (!s.usage.reserveAi(limits)) throw aiLimitReached(limits.maxAiRequestsPerDay);
@@ -186,7 +211,7 @@ export class AgentRunner {
         maxIterations: limits.maxAgentIterations,
         maxOutputTokens: limits.maxOutputTokens,
         temperature: settings.temperature,
-        toolBudgetExhausted: () => executor.budgetExhausted(),
+        toolBudgetExhausted: () => turnTools.budgetExhausted(),
         reserveNextStep: () => s.usage.reserveAi(limits),
         signal: input.signal,
       })) {
@@ -197,7 +222,7 @@ export class AgentRunner {
           const activity: ToolActivity = {
             id: event.id,
             name: event.name,
-            label: toolLabel(executor.find(event.name), event.name, event.input),
+            label: toolLabel(turnTools.find(event.name), event.name, event.input),
             status: "running",
           };
           tools.push(activity);
@@ -207,15 +232,18 @@ export class AgentRunner {
           if (activity) {
             activity.status = event.error ? "error" : "success";
             if (event.error) activity.error = event.error.slice(0, 300);
-            const approval = executor.approvalFor(event.id);
+            const approval = turnTools.approvalFor(event.id);
             if (approval) activity.approval = approval;
+            const planId = turnTools.planFor(event.id);
+            const plan = planId ? s.taskPlans.get(planId) : null;
+            if (plan) activity.plan = plan;
             yield { type: "tool", tool: { ...activity } };
           }
         } else if (event.type === "usage") {
           s.usage.record(event.usage);
         }
       }
-      s.usage.increment({ tool_calls: executor.callCount });
+      s.usage.increment({ tool_calls: turnTools.callCount });
 
       // Providers (like the AI SDK's streamText) may end the stream quietly on abort instead of throwing.
       if (input.signal.aborted) {
@@ -223,7 +251,9 @@ export class AgentRunner {
         return;
       }
       if (!text.trim()) {
-        text = tools.some((t) => t.status === "success") ? "Done." : "I wasn't able to produce a response. Please try rephrasing.";
+        text = tools.some((t) => t.plan)
+          ? "I've proposed a plan for you to review. Nothing is created until you confirm it."
+          : tools.some((t) => t.status === "success") ? "Done." : "I wasn't able to produce a response. Please try rephrasing.";
       }
       yield { type: "done", message: finish("complete", null) };
     } catch (error) {
