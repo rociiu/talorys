@@ -19,25 +19,27 @@ async function proposePlan(page: Page, message: string) {
 }
 
 test.describe("AI task planning", () => {
-  test("a proposed plan is reviewed, edited and confirmed before any task exists @mobile", async ({ page }) => {
+  test("a proposed plan is reviewed, edited and confirmed before any task exists @mobile", async ({ page }, testInfo) => {
+    // Desktop and mobile runs share one database, and a plan leaves out tasks that already exist.
+    const p = `e2e ${testInfo.project.name}`;
     await login(page);
-    const card = await proposePlan(page, "plan e2e Japan trip: e2e renew passport!; e2e book flights!; e2e buy rail pass");
+    const card = await proposePlan(page, `plan ${p} Japan trip: ${p} renew passport!; ${p} book flights!; ${p} buy rail pass`);
     await expect(card.getByText("3 tasks")).toBeVisible();
     await expect(card.getByText("Nothing is created until you confirm.")).toBeVisible();
 
     // Nothing exists yet, and the card survives a reload.
     await page.reload();
-    await expect(card.getByText("e2e renew passport")).toBeVisible();
+    await expect(card.getByText(`${p} renew passport`)).toBeVisible();
 
     await card.getByRole("button", { name: "Edit" }).click();
-    await card.getByLabel("Task 1 title").fill("e2e renew passport this week");
+    await card.getByLabel("Task 1 title").fill(`${p} renew passport this week`);
     await card.getByRole("button", { name: /Remove task 3/ }).click();
     await expect(card.getByText("1 removed")).toBeVisible();
     await card.getByRole("button", { name: "Save" }).click();
     await expect(card.getByText("2 tasks")).toBeVisible();
     // Saved edits are part of the draft on the server.
     await page.reload();
-    await expect(card.getByText("e2e renew passport this week")).toBeVisible();
+    await expect(card.getByText(`${p} renew passport this week`)).toBeVisible();
 
     await card.getByRole("button", { name: "Confirm plan" }).click();
     const done = page.getByRole("group", { name: "Confirmed plan" });
@@ -48,9 +50,9 @@ test.describe("AI task planning", () => {
     await done.getByRole("link", { name: "View tasks" }).click();
     // Undated tasks are listed under Upcoming.
     await page.getByRole("tab", { name: /upcoming/i }).click();
-    await expect(page.getByText("e2e renew passport this week")).toBeVisible();
-    await expect(page.getByText("e2e book flights")).toBeVisible();
-    await expect(page.getByText("e2e buy rail pass")).toHaveCount(0);
+    await expect(page.getByText(`${p} renew passport this week`)).toBeVisible();
+    await expect(page.getByText(`${p} book flights`)).toBeVisible();
+    await expect(page.getByText(`${p} buy rail pass`)).toHaveCount(0);
   });
 
   test("cancelling a plan creates nothing", async ({ page }) => {
