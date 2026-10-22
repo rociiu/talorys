@@ -1,5 +1,6 @@
 import type { ChatMessage, PendingAction } from "@talorys/shared";
 import { type Database, newId, now } from "../database";
+import { decodeTools } from "./conversations";
 
 /** How long the owner has to approve a proposed destructive action. */
 export const PENDING_ACTION_TTL_MS = 30 * 60_000;
@@ -70,24 +71,47 @@ export class PendingActionRepository {
    */
   resolve(id: string, status: "approved" | "cancelled"): boolean {
     const at = now();
-    return (
+    const resolved =
       this.db.run(
         `UPDATE tal_pending_actions SET status = ?, resolved_at = ? WHERE id = ? AND status = 'pending' AND expires_at > ?`,
         status, at, id, at,
-      ).changes === 1
-    );
+      ).changes === 1;
+    if (resolved) this.syncMessage(id);
+    return resolved;
   }
 
   /** Refreshes approval cards stored on messages with each action's current status. */
   withCurrentStatus(messages: ChatMessage[]): ChatMessage[] {
     return messages.map((m) =>
       m.tools.some((t) => t.approval)
-        ? { ...m, tools: m.tools.map((t) => (t.approval ? { ...t, approval: this.view(t.approval.id) ?? t.approval } : t)) }
+        ? { ...m, tools: m.tools.map((t) => (t.approval ? { ...t, approval: this.view(t.approval.id) ?? lapsed(t.approval) } : t)) }
         : m,
     );
   }
 
   markFailed(id: string, error: string): void {
     this.db.run(`UPDATE tal_pending_actions SET status = 'failed', error = ? WHERE id = ?`, error.slice(0, 300), id);
+    this.syncMessage(id);
+  }
+
+  /**
+   * Copies an action's latest status into the chat message that shows it. Actions are pruned
+   * after 30 days, and the message's copy is what the card and the model see after that.
+   */
+  private syncMessage(id: string): void {
+    const row = this.get(id);
+    if (!row) return;
+    const action = present(row);
+    const messages = this.db.all<{ id: string; tools: string }>(
+      `SELECT id, tools FROM tal_messages WHERE conversation_id = ? AND tools LIKE ?`,
+      row.conversation_id, `%${id}%`,
+    );
+    for (const m of messages) {
+      const tools = decodeTools(m.tools).map((t) => (t.approval?.id === id ? { ...t, approval: action } : t));
+      this.db.run(`UPDATE tal_messages SET tools = ? WHERE id = ?`, JSON.stringify(tools), m.id);
+    }
   }
 }
+
+/** A message's copy of a pruned action. One still pending was never approved and has long expired. */
+const lapsed = (action: PendingAction): PendingAction => (action.status === "pending" ? { ...action, status: "expired" } : action);

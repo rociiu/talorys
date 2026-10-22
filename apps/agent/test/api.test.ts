@@ -152,6 +152,36 @@ describe("chat (mock provider)", () => {
     expect((await c.call(`/api/actions/missing/approve`, { method: "POST", body: {} })).status).toBe(404);
   });
 
+  it("approval cards keep their outcome after the action is pruned", async () => {
+    const c = await loggedIn();
+    const { conversation } = await c.json("/api/conversations", { method: "POST", body: {} });
+    const propose = async (title: string) => {
+      await c.json("/api/tasks", { method: "POST", body: { title } });
+      const events = await readSse(await c.call("/api/chat", { method: "POST", body: { conversation_id: conversation.id, message: `delete task ${title}` } }));
+      return events.filter((e) => e.type === "tool").at(-1).tool.approval.id as string;
+    };
+    const prune = (id: string) => inAgent((a) => a.services.db.run(`DELETE FROM tal_pending_actions WHERE id = ?`, id));
+    const statusOf = async (id: string) => {
+      const conv = await c.json(`/api/conversations/${conversation.id}`);
+      return conv.messages.flatMap((m: { tools: { approval?: { id: string; status: string } }[] }) => m.tools).find((t: { approval?: { id: string } }) => t.approval?.id === id).approval.status;
+    };
+
+    const approved = await propose("Prune-approved chores");
+    await c.json(`/api/actions/${approved}/approve`, { method: "POST", body: {} });
+    await prune(approved);
+    expect(await statusOf(approved)).toBe("approved");
+
+    const declined = await propose("Prune-declined chores");
+    await c.json(`/api/actions/${declined}/cancel`, { method: "POST", body: {} });
+    await prune(declined);
+    expect(await statusOf(declined)).toBe("cancelled");
+
+    // An action pruned while still pending was never approved.
+    const abandoned = await propose("Prune-abandoned chores");
+    await prune(abandoned);
+    expect(await statusOf(abandoned)).toBe("expired");
+  });
+
   it("rejects a second concurrent turn in the same conversation", async () => {
     const c = await loggedIn();
     const { conversation } = await c.json("/api/conversations", { method: "POST", body: {} });
