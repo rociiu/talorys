@@ -238,14 +238,14 @@ function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: () => v
         footer={
           <div className="flex w-full justify-between">
             <Button variant="ghost" className="text-danger" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" /> {t("tasks.delete")}
+              <Trash2 className="h-4 w-4" /> {t("common.delete")}
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={close}>
-                {t("tasks.cancel")}
+                {t("common.cancel")}
               </Button>
               <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!form.title.trim()}>
-                {t("tasks.save")}
+                {t("common.save")}
               </Button>
             </div>
           </div>

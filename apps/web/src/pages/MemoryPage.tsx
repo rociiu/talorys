@@ -204,7 +204,7 @@ export default function MemoryPage() {
                       <Button variant="ghost" size="icon" onClick={() => setEditing(m)} aria-label={t("memory.edit")} title={t("memory.editShort")}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label={t("memory.delete")} title={t("memory.deleteShort")}>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleting(m)} aria-label={t("memory.delete")} title={t("common.delete")}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -343,7 +343,7 @@ function CorrectDialog({ memory, onClose }: { memory: Memory | null; onClose: ()
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            {t("memory.cancel")}
+            {t("common.cancel")}
           </Button>
           <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!content.trim() || content.trim() === memory?.content}>
             {t("memory.saveNewVersion")}
@@ -397,10 +397,10 @@ function MemoryEditor({ memory, onClose }: { memory: Memory | "new" | null; onCl
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            {t("memory.cancel")}
+            {t("common.cancel")}
           </Button>
           <Button onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!content.trim()}>
-            {t("memory.save")}
+            {t("common.save")}
           </Button>
         </>
       }
