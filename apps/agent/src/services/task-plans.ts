@@ -9,6 +9,7 @@ import {
 } from "@talorys/shared";
 import { type Database, newId, now } from "../db/database";
 import type { TaskRepository } from "../db/repositories/tasks";
+import { decodeTools } from "../db/repositories/conversations";
 import type { ProjectRepository } from "../db/repositories/notes";
 import { AppError, NotFoundError, ValidationError } from "../api/errors";
 import type { ActivityLog } from "./usage";
@@ -139,7 +140,7 @@ export class TaskPlanService {
       JSON.stringify(next), now(), id, revision, now(),
     ).changes;
     if (changed !== 1) throw stale();
-    return this.require(conversationId, id);
+    return this.syncMessage(this.require(conversationId, id));
   }
 
   /**
@@ -184,6 +185,7 @@ export class TaskPlanService {
       const result: TaskPlanResult = { task_ids: taskIds, project_id: projectId, project_created: projectCreated };
       this.db.run(`UPDATE tal_task_plan_drafts SET result = ? WHERE id = ?`, JSON.stringify(result), id);
       this.activity.record("task_plan.confirmed", `Created ${taskIds.length} task(s) from the plan “${plan.title}”`);
+      this.syncMessage(this.require(conversationId, id));
     });
     return { draft: this.require(conversationId, id), replayed: false };
   }
@@ -194,7 +196,7 @@ export class TaskPlanService {
     if (draft.status === "cancelled") return draft;
     if (draft.status !== "pending") throw new AppError("CONFLICT", draft.status === "confirmed" ? "This plan was already confirmed." : "This plan expired.");
     this.db.run(`UPDATE tal_task_plan_drafts SET status = 'cancelled', updated_at = ? WHERE id = ? AND status = 'pending'`, now(), id);
-    return this.require(conversationId, id);
+    return this.syncMessage(this.require(conversationId, id));
   }
 
   /** Cancels a draft whose chat turn was stopped before it finished. */
@@ -206,9 +208,25 @@ export class TaskPlanService {
   withCurrentState(messages: ChatMessage[]): ChatMessage[] {
     return messages.map((m) =>
       m.tools.some((t) => t.plan)
-        ? { ...m, tools: m.tools.map((t) => (t.plan ? { ...t, plan: this.get(t.plan.id) ?? t.plan } : t)) }
+        ? { ...m, tools: m.tools.map((t) => (t.plan ? { ...t, plan: this.get(t.plan.id) ?? lapsed(t.plan) } : t)) }
         : m,
     );
+  }
+
+  /**
+   * Copies a draft's latest state into the chat message that shows it. Drafts are pruned after
+   * DRAFT_RETENTION_MS, and the message's copy is what the card and the model see after that.
+   */
+  private syncMessage(draft: TaskPlanDraft): TaskPlanDraft {
+    const rows = this.db.all<{ id: string; tools: string }>(
+      `SELECT id, tools FROM tal_messages WHERE conversation_id = ? AND tools LIKE ?`,
+      draft.conversation_id, `%${draft.id}%`,
+    );
+    for (const row of rows) {
+      const tools = decodeTools(row.tools).map((t) => (t.plan?.id === draft.id ? { ...t, plan: draft } : t));
+      this.db.run(`UPDATE tal_messages SET tools = ? WHERE id = ?`, JSON.stringify(tools), row.id);
+    }
+    return draft;
   }
 
   private row(id: string): DraftRow | null {
@@ -256,5 +274,8 @@ export class TaskPlanService {
     return plan;
   }
 }
+
+/** A message's copy of a pruned draft. One still pending was never confirmed, so it has expired. */
+const lapsed = (plan: TaskPlanDraft): TaskPlanDraft => (plan.status === "pending" ? { ...plan, status: "expired" } : plan);
 
 const stale = () => new AppError("CONFLICT", "This plan changed or expired since you opened it. Reload to see the latest version.");

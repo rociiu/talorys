@@ -151,7 +151,14 @@ export class ToolExecutor {
     this.perTool.set(name, used + 1);
     this.signatures.set(signature, repeats + 1);
     if (tool.permission !== "destructive") {
-      const result = await tool.execute(parsed.data, this.ctx);
+      let result: unknown;
+      try {
+        result = await tool.execute(parsed.data, this.ctx);
+      } catch (error) {
+        // A rejected call doesn't use up the tool's per-turn allowance, so the model can correct its input.
+        if (error instanceof ToolError) this.perTool.set(name, used);
+        throw error;
+      }
       if (callId && result && typeof result === "object" && "plan_id" in result && typeof result.plan_id === "string") {
         this.plans.set(callId, result.plan_id);
       }

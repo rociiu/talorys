@@ -127,6 +127,18 @@ describe("plan validation", () => {
   });
 });
 
+describe("rejected proposals", () => {
+  it("a rejected proposal can be corrected in the same turn", async () => {
+    await inAgent(async (a) => {
+      const ex = executor(a.services);
+      const tasks = [{ title: uniq("a") }, { title: uniq("b") }];
+      await expect(ex.execute("propose_task_plan", { title: "A", existing_project: "No such project", tasks })).rejects.toThrow(/does not exist/);
+      await ex.execute("propose_task_plan", { title: "A", tasks });
+      await expect(ex.execute("propose_task_plan", { title: "B", tasks: [{ title: uniq("c") }, { title: uniq("d") }] })).rejects.toThrow(/already used/);
+    });
+  });
+});
+
 describe("confirmation workflow", () => {
   it("confirmation creates every task atomically, in a new project, and is idempotent", async () => {
     const projectName = uniq("App launch");
@@ -358,6 +370,34 @@ describe("chat integration", () => {
       for await (const _ of new AgentRunner(a.services, provider).chat({ conversationId: convId, message: "thanks", signal: new AbortController().signal })) { /* drain */ }
     });
     expect(seenHistory).toMatch(/confirmed by the owner; 3 task\(s\) were created/);
+  });
+
+  it("plan cards keep their outcome after the draft is pruned", async () => {
+    const c = await loggedIn();
+    const proposeInChat = async () => {
+      const events = await readSse(await c.call("/api/chat", { method: "POST", body: { message: `plan ${uniq("Pruned")}: ${uniq("a")}; ${uniq("b")}` } }));
+      return events.at(-1).message.tools.find((t: { plan?: TaskPlanDraft }) => t.plan).plan as TaskPlanDraft;
+    };
+    const cardOf = async (d: TaskPlanDraft) => {
+      const conv = await c.json(`/api/conversations/${d.conversation_id}`);
+      return conv.messages.flatMap((m: { tools: { plan?: TaskPlanDraft }[] }) => m.tools).find((t: { plan?: TaskPlanDraft }) => t.plan?.id === d.id).plan as TaskPlanDraft;
+    };
+    const prune = (d: TaskPlanDraft) => inAgent((a) => a.services.db.run(`DELETE FROM tal_task_plan_drafts WHERE id = ?`, d.id));
+
+    const confirmed = await proposeInChat();
+    await confirm(c, confirmed);
+    await prune(confirmed);
+    expect(await cardOf(confirmed)).toMatchObject({ status: "confirmed", result: { task_ids: expect.any(Array) } });
+
+    const cancelled = await proposeInChat();
+    await c.call(url(cancelled, "/cancel"), { method: "POST" });
+    await prune(cancelled);
+    expect((await cardOf(cancelled)).status).toBe("cancelled");
+
+    // A draft pruned while still pending was never confirmed.
+    const abandoned = await proposeInChat();
+    await prune(abandoned);
+    expect((await cardOf(abandoned)).status).toBe("expired");
   });
 
   it("ordinary chat and single-task creation still work", async () => {
