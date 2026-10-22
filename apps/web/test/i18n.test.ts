@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { format, formatMessage, translate } from "../src/lib/i18n/core";
+import { format, formatMessage, type MessageKey, translate } from "../src/lib/i18n/core";
 import { en } from "../src/lib/i18n/en";
+import { ko } from "../src/lib/i18n/ko";
 import { formatDateTime, relativeTime } from "../src/lib/utils";
 
 describe("translate", () => {
@@ -26,10 +27,17 @@ describe("translate", () => {
     for (const [key, message] of Object.entries(en)) expect(message, key).not.toBe("");
   });
 
-  it("returns the Korean message and falls back to English for a missing key", () => {
+  it("returns the Korean message", () => {
     expect(translate("ko", "ko", "login.unlock")).toBe("잠금 해제");
     expect(translate("ko", "ko", "login.tryAgainIn", { seconds: 30 })).toBe("30초 뒤에 다시 시도");
     expect(translate("ko", "ko", "time.justNow")).toBe("방금");
+  });
+
+  it("falls back to English for a key that is missing in Korean", () => {
+    // Picked at run time so the test keeps working as ko.ts grows. It has
+    // nothing to check once every key is translated.
+    const missing = (Object.keys(en) as MessageKey[]).filter((key) => !(key in ko));
+    for (const key of missing) expect(format("ko", "ko", key), key).toEqual(format("en", "en", key));
   });
 });
 
