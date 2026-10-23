@@ -101,6 +101,11 @@ export class MemoryHistoryService {
     const before = this.repo.require(id);
     const memory = this.repo.update(id, patch);
     if (memory.content === before.content) return { memory, superseded: [], reviews: [] };
+    // Keep the activity line quoting the current text, so `delete` can still find it.
+    this.db.run(
+      `UPDATE tal_activity SET summary = ? WHERE type = 'memory.created' AND summary = ?`,
+      `Agent remembered: ${memory.content}`.slice(0, 500), `Agent remembered: ${before.content}`.slice(0, 500),
+    );
     return this.afterWrite(memory, opts.signal);
   }
 

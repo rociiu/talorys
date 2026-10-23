@@ -387,6 +387,18 @@ describe("memory lifecycle", () => {
     });
   });
 
+  it("removes the activity line that quoted a memory even after the memory was edited", async () => {
+    const run = freshAgent();
+    await run(async (agent) => {
+      const s = agent.services;
+      const { memory } = await s.memoryHistory.create({ content: "My locker code is 4821", source: "agent" });
+      s.activity.record("memory.created", `Agent remembered: ${memory.content}`);
+      await s.memoryHistory.update(memory.id, { content: "I have a locker at the gym" });
+      s.memoryHistory.delete(memory.id);
+      expect(s.activity.list(1000).filter((a) => a.type === "memory.created")).toEqual([]);
+    });
+  });
+
   it("keeps the prompt's memory block within its token budget", async () => {
     const run = freshAgent();
     await run(async (agent) => {
