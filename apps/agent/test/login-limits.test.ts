@@ -36,6 +36,9 @@ describe("login limits per client", () => {
     expect(clientKey("fe80::1%eth0")).toBe("fe80:0:0:0::/64");
     // IPv4-mapped addresses stay per IPv4 address rather than collapsing into one /64.
     expect(clientKey("::ffff:192.0.2.1")).toBe("192.0.2.1");
+    expect(clientKey("::ffff:c000:201")).toBe("192.0.2.1");
+    expect(clientKey("0:0:0:0:0:ffff:192.0.2.1")).toBe("192.0.2.1");
+    expect(clientKey("::ffff:192.000.002.001")).toBe("192.0.2.1");
     expect(clientKey("local")).toBe("local");
   });
 });

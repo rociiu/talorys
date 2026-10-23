@@ -157,20 +157,70 @@ export function clientId(c: Context<AppEnv>): string {
   return clientKey(c.req.header("cf-connecting-ip") ?? "local");
 }
 
+function ipv4Octets(text: string): number[] | null {
+  const parts = text.split(".");
+  if (parts.length !== 4) return null;
+  const octets: number[] = [];
+  for (const part of parts) {
+    if (!/^\d{1,3}$/.test(part)) return null;
+    const n = Number(part);
+    if (n > 255) return null;
+    octets.push(n);
+  }
+  return octets;
+}
+
+/** Eight hextets, or null when `addr` is not an IPv6 address. A trailing dotted quad is two hextets. */
+function expandIPv6(addr: string): number[] | null {
+  const halves = addr.split("::");
+  if (halves.length > 2) return null;
+  const pieces = (half: string): number[] | null => {
+    if (!half) return [];
+    const out: number[] = [];
+    for (const part of half.split(":")) {
+      if (part.includes(".")) {
+        const octets = ipv4Octets(part);
+        if (!octets) return null;
+        out.push((octets[0]! << 8) | octets[1]!, (octets[2]! << 8) | octets[3]!);
+      } else if (/^[0-9a-f]{1,4}$/.test(part)) {
+        out.push(Number.parseInt(part, 16));
+      } else {
+        return null;
+      }
+    }
+    return out;
+  };
+  const left = pieces(halves[0] ?? "");
+  const right = halves.length === 2 ? pieces(halves[1] ?? "") : [];
+  if (!left || !right) return null;
+  if (halves.length === 1) return left.length === 8 ? left : null;
+  const missing = 8 - left.length - right.length;
+  if (missing < 0) return null;
+  return [...left, ...Array(missing).fill(0), ...right];
+}
+
 /**
  * Rate-limit key for a client IP. IPv6 is grouped by /64: one subscriber usually holds a
  * whole /64 and could otherwise rotate addresses for a fresh allowance on every guess.
+ * IPv4-mapped addresses (::ffff:192.0.2.1, ::ffff:c000:201, and the expanded form) stay
+ * per IPv4 address, or they all collapse into the same ::/64 bucket as ::1.
  */
 export function clientKey(ip: string): string {
   if (!ip.includes(":")) return ip;
   const addr = ip.toLowerCase().split("%")[0]!;
-  // IPv4-mapped (::ffff:192.0.2.1) stays per IPv4 address.
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(addr);
-  if (mapped) return mapped[1]!;
+  const groups = expandIPv6(addr);
+  if (groups) {
+    const mapped = groups.slice(0, 5).every((g) => g === 0) && groups[5] === 0xffff;
+    if (mapped) {
+      const hi = groups[6]!;
+      const lo = groups[7]!;
+      return `${(hi >> 8) & 255}.${hi & 255}.${(lo >> 8) & 255}.${lo & 255}`;
+    }
+    return `${groups.slice(0, 4).map((g) => g.toString(16)).join(":")}::/64`;
+  }
   const [head = "", tail = ""] = addr.split("::");
   const left = head ? head.split(":") : [];
   const right = addr.includes("::") && tail ? tail.split(":") : [];
   const zeros = addr.includes("::") ? Array(Math.max(0, 8 - left.length - right.length)).fill("0") : [];
-  const groups = [...left, ...zeros, ...right];
-  return `${groups.slice(0, 4).map((g) => (Number.parseInt(g, 16) || 0).toString(16)).join(":")}::/64`;
+  return `${[...left, ...zeros, ...right].slice(0, 4).map((g) => (Number.parseInt(g, 16) || 0).toString(16)).join(":")}::/64`;
 }
