@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { inAgent } from "./helpers";
+import { toLocalMinute } from "../src/services/time";
+import { inAgent, loggedIn } from "./helpers";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -169,6 +170,28 @@ describe("resuming a paused one-off automation", () => {
       expect(await s.automations.update(a.id, { enabled: true })).toMatchObject({ enabled: true, status: "scheduled" });
       await s.automations.delete(a.id);
     });
+  });
+});
+
+describe("changing the timezone", () => {
+  it("pauses a pending one-off whose local time has now passed instead of marking it completed", async () => {
+    const c = await loggedIn();
+    await c.json("/api/settings", { method: "PATCH", body: { timezone: "UTC" } });
+    const at = toLocalMinute(new Date(Date.now() + 2 * 3600_000), "UTC");
+    const { automation } = await c.json("/api/automations", {
+      method: "POST",
+      body: { name: "Later today", kind: "reminder", message: "Hi", schedule: { type: "once", at } },
+    });
+    try {
+      // The same wall-clock time in UTC+14 was hours ago.
+      await c.json("/api/settings", { method: "PATCH", body: { timezone: "Pacific/Kiritimati" } });
+      const current = (await c.json("/api/automations")).automations.find((a: any) => a.id === automation.id);
+      expect(current).toMatchObject({ enabled: false, status: "paused", run_count: 0, next_run: null, schedule_id: null });
+      expect(await inAgent((agent) => agent.getScheduleById(automation.schedule_id))).toBeUndefined();
+    } finally {
+      await c.call(`/api/automations/${automation.id}`, { method: "DELETE" });
+      await c.json("/api/settings", { method: "PATCH", body: { timezone: "UTC" } });
+    }
   });
 });
 

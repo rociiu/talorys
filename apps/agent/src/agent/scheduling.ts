@@ -94,11 +94,15 @@ export class AutomationService {
   /**
    * Re-arms every enabled automation, e.g. after a timezone change or an import.
    * Disabled automations that still hold a schedule (e.g. disabled by an import) are disarmed.
+   * A pending one-off whose local time is now in the past never ran, so it is paused, not completed.
    */
   async rearmAll(): Promise<void> {
     for (const a of this.repo.list()) {
       await this.disarm(a);
-      if (a.enabled) await this.arm(a);
+      if (a.enabled && !computeNextRun(a.schedule, this.tz(), new Date())) {
+        this.repo.update(a.id, { enabled: false, status: "paused", next_run: null, schedule_id: null });
+        this.activity.record("automation.paused", `Paused “${a.name}”: its time has passed before it ran`);
+      } else if (a.enabled) await this.arm(a);
       else if (a.schedule_id || a.status === "scheduled") {
         this.repo.update(a.id, { status: "paused", next_run: null, schedule_id: null });
       }
