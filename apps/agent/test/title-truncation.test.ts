@@ -21,4 +21,13 @@ describe("truncating text for titles", () => {
     expect(clip("abc😀", 5)).toBe("abc😀");
     expect(clip("abc", 10)).toBe("abc");
   });
+
+  it("does not leave a joiner when a family emoji is cut from a title", () => {
+    const family = "👨‍👩‍👧";
+    const title = titleFromMessage(`${"a".repeat(57)}${family} and more words after the cut`);
+    expect(title).toBe(`${"a".repeat(57)}…`);
+    expect(title).not.toMatch(/\u200d/);
+    expect(clip(`abc${family}`, 4)).toBe("abc");
+    expect(clip(`abc${family}`, 3 + family.length)).toBe(`abc${family}`);
+  });
 });
