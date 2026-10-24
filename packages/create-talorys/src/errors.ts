@@ -30,6 +30,8 @@ export function sanitize(output: string, maxLines = 12): string {
     .replace(SECRETISH, "$1$2: [redacted]")
     // Only token-like values (a digit or ./~+-= punctuation, or 20+ characters), so "Bearer authentication failed" stays readable.
     .replace(/\bbearer\s+([\w.~+/-]{8,}=*)/gi, (m, v: string) => (/[\d.~+/=-]/.test(v) || v.length >= 20 ? "Bearer [redacted]" : m))
+    // Provider keys are often pasted without a token= label.
+    .replace(/\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g, "[redacted]")
     .split("\n")
     .map((l) => l.trimEnd())
     .filter((l) => l.trim() && !/^\s*(?:▲|⛅|🪵)/u.test(l) && !l.includes("Proxy environment variables detected"))

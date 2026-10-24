@@ -104,6 +104,16 @@ describe("wrangler output handling", () => {
     expect(sanitize("The token has expired; log in again")).toBe("The token has expired; log in again");
   });
 
+  it("redacts an unlabeled provider key left in installer output", () => {
+    const anthropic = `sk-ant-api03-${"a".repeat(24)}`;
+    const github = `ghp_${"b".repeat(36)}`;
+    const pat = `github_pat_${"c".repeat(22)}`;
+    for (const key of [anthropic, github, pat]) {
+      expect(sanitize(`Deploy failed: ${key}`)).toBe("Deploy failed: [redacted]");
+    }
+    expect(sanitize("Bearer authentication failed")).toBe("Bearer authentication failed");
+  });
+
   it("classifies common failures with recovery hints", () => {
     expect(explainWranglerFailure("X", "fetch failed ETIMEDOUT").message).toMatch(/network/);
     expect(explainWranglerFailure("X", "[code: 10001] forbidden").hint).toMatch(/Workers Scripts:Edit/);
