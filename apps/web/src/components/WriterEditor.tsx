@@ -17,18 +17,33 @@ export type WriterHandle = {
 };
 
 const TASK_RE = /^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\](\s|$)/;
-const FENCE_RE = /^\s*(```|~~~)/;
 const LIST_RE = /^(\s*)([-*+]|(\d+)([.)]))(\s+)(\[[ xX]\]\s+)?/;
+// A fence is its own line: indent, then a run of ` or ~. A closer must use the
+// same character, be at least as long, and have nothing after it — so ```js
+// or ~~~ inside a ``` sample stays part of the sample.
+const FENCE_LINE = /^(\s*)(`{3,}|~{3,})(.*)$/;
 
 /** For each line, whether it sits inside (or on the edge of) a fenced code block, which has no todos. */
 function fencedLines(lines: string[]): boolean[] {
-  let open = false;
+  let marker: { char: string; len: number } | null = null;
   return lines.map((line) => {
-    if (FENCE_RE.test(line)) {
-      open = !open;
+    const match = FENCE_LINE.exec(line);
+    const fence = match?.[2];
+    const rest = match?.[3] ?? "";
+    if (marker) {
+      const closes =
+        fence !== undefined &&
+        fence.charAt(0) === marker.char &&
+        fence.length >= marker.len &&
+        rest.trim() === "";
+      if (closes) marker = null;
       return true;
     }
-    return open;
+    if (fence !== undefined) {
+      marker = { char: fence.charAt(0), len: fence.length };
+      return true;
+    }
+    return false;
   });
 }
 
@@ -85,7 +100,7 @@ function inline(text: string, keyBase: string): React.ReactNode[] {
 }
 
 function highlightLine(line: string, inFence: boolean, key: string): React.ReactNode {
-  if (inFence || /^\s*(```|~~~)/.test(line)) return <span className="w-code-block">{line}</span>;
+  if (inFence) return <span className="w-code-block">{line}</span>;
   const h = /^(#{1,6}\s+)(.*)$/.exec(line);
   if (h) return <span className="w-heading"><span className="w-mark">{h[1]}</span>{inline(h[2] ?? "", key)}</span>;
   if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) return <span className="w-mark">{line}</span>;
@@ -133,6 +148,7 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
   const ta = useRef<HTMLTextAreaElement>(null);
   const [cursor, setCursor] = useState(0);
   const lines = useMemo(() => value.split("\n"), [value]);
+  const fenced = useMemo(() => fencedLines(lines), [lines]);
   const cursorLine = useMemo(() => value.slice(0, cursor).split("\n").length - 1, [value, cursor]);
   const [focusA, focusB] = focusMode ? blockRange(lines, cursorLine) : [-1, -1];
 
@@ -157,6 +173,8 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
   };
 
   const toggleTaskAt = (pos: number) => {
+    const lineIndex = value.slice(0, pos).split("\n").length - 1;
+    if (fencedLines(value.split("\n"))[lineIndex]) return;
     const [s, e] = lineBounds(pos);
     const line = value.slice(s, e);
     const m = TASK_RE.exec(line);
@@ -239,14 +257,11 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
     if (pos >= boxStart && pos <= boxStart + 3) toggleTaskAt(pos);
   };
 
-  let fence = false;
   return (
     <div className={cn("writer relative grid", focusMode && "writer-focus")}>
       <div aria-hidden className="writer-layer pointer-events-none col-start-1 row-start-1">
         {lines.map((line, i) => {
-          const fenceLine = /^\s*(```|~~~)/.test(line);
-          const node = highlightLine(line, fence, `l${i}`);
-          if (fenceLine) fence = !fence;
+          const node = highlightLine(line, fenced[i] ?? false, `l${i}`);
           const dim = focusMode && (i < focusA || i > focusB);
           return (
             <div key={i} className={cn("transition-opacity duration-200", dim && "opacity-25")}>
