@@ -28,13 +28,19 @@ function fencedLines(lines: string[]): boolean[] {
   let marker: { char: string; len: number } | null = null;
   return lines.map((line) => {
     const match = FENCE_LINE.exec(line);
+    const fence = match?.[2];
+    const rest = match?.[3] ?? "";
     if (marker) {
-      const closes = !!match && match[2][0] === marker.char && match[2].length >= marker.len && match[3].trim() === "";
+      const closes =
+        fence !== undefined &&
+        fence.charAt(0) === marker.char &&
+        fence.length >= marker.len &&
+        rest.trim() === "";
       if (closes) marker = null;
       return true;
     }
-    if (match) {
-      marker = { char: match[2][0]!, len: match[2].length };
+    if (fence !== undefined) {
+      marker = { char: fence.charAt(0), len: fence.length };
       return true;
     }
     return false;
