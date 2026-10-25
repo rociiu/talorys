@@ -7,7 +7,7 @@ import { cn, copyText } from "../lib/utils";
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
   const [copied, setCopied] = useState(false);
   const text = String(children ?? "").replace(/\n$/, "");
-  const lang = /language-(\w+)/.exec(className ?? "")?.[1];
+  const lang = /language-(\S+)/.exec(className ?? "")?.[1];
   return (
     <div className="group relative">
       <div className="absolute right-2 top-2 flex items-center gap-2">
