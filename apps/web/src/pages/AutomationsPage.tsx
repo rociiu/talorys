@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { type Automation, type AutomationKind, type AutomationRun, type ScheduleSpec, describeSchedule, scheduleSpecSchema, upcomingRuns } from "@talorys/shared";
+import { type Automation, type AutomationKind, type AutomationRun, type ScheduleSpec, describeSchedule, getZonedParts, scheduleSpecSchema, upcomingRuns } from "@talorys/shared";
 import { AlarmClock, Bell, Bot, CalendarClock, ChevronDown, History, ListChecks, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { Badge, Button, Card, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch, Textarea } from "../components/ui";
 import { keys, useApiMutation, useAutomationRuns, useAutomations } from "../hooks/queries";
@@ -329,10 +329,16 @@ function RunHistoryDialog({ automation, tz, onClose }: { automation: Automation 
   );
 }
 
-function tomorrowAt9(): string {
-  const d = new Date(Date.now() + 86400_000);
+/**
+ * "YYYY-MM-DDTHH:MM" for 09:00 on the next calendar day in `timeZone`.
+ * A one-off schedule is read in the owner's timezone, which may not be this browser's,
+ * and a 24-hour jump can land on the day after tomorrow when daylight saving starts.
+ */
+export function tomorrowAt9(timeZone: string, now = new Date()): string {
+  const today = getZonedParts(now, timeZone);
+  const next = new Date(Date.UTC(today.year, today.month - 1, today.day + 1));
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00`;
+  return `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-${pad(next.getUTCDate())}T09:00`;
 }
 
 function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onClose: () => void; tz: string; automation?: Automation | null }) {
@@ -343,7 +349,7 @@ function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onCl
   const [name, setName] = useState(automation?.name ?? "");
   const [message, setMessage] = useState(automation?.message ?? "");
   const [type, setType] = useState<ScheduleSpec["type"]>(initial?.type ?? "once");
-  const [at, setAt] = useState(initial?.type === "once" ? initial.at : tomorrowAt9());
+  const [at, setAt] = useState(initial?.type === "once" ? initial.at : tomorrowAt9(tz));
   const [time, setTime] = useState(initial && "time" in initial ? initial.time : "09:00");
   const [days, setDays] = useState<number[]>(initial?.type === "weekly" ? initial.days : [1]);
   const [day, setDay] = useState(initial?.type === "monthly" ? initial.day : 1);
@@ -374,7 +380,7 @@ function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onCl
     setMessage("");
     setKind("reminder");
     setType("once");
-    setAt(tomorrowAt9());
+    setAt(tomorrowAt9(tz));
   };
   const save = useApiMutation(
     () => {
