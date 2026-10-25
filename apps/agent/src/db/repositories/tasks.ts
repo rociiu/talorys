@@ -44,7 +44,8 @@ export class TaskRepository {
         params.push(query.dayEnd ?? nowIso);
         break;
       case "upcoming":
-        where.push(`status != 'done' AND (due_at IS NULL OR due_at >= ?)`);
+        // Undated work already under way is listed under today, so it is not upcoming as well.
+        where.push(`status != 'done' AND ((due_at IS NOT NULL AND due_at >= ?) OR (due_at IS NULL AND status != 'in_progress'))`);
         params.push(query.dayEnd ?? nowIso);
         break;
       case "overdue":
