@@ -24,7 +24,13 @@ export function relativeTime(iso: string | null | undefined, { locale, t }: Pick
     relativeFormats.set(locale, rtf);
   }
   for (const [unit, ms] of units) {
-    if (abs >= ms) return rtf.format(Math.round(diff / ms), unit);
+    if (abs >= ms) {
+      const value = diff / ms;
+      // Round halves away from zero. Math.round ties toward +∞, so 90 minutes ago
+      // became "1 hour ago" while the same span ahead became "in 2 hours".
+      const rounded = Math.sign(value) * Math.round(Math.abs(value));
+      return rtf.format(rounded, unit);
+    }
   }
   return diff < 0 ? t("time.justNow") : t("time.inAMoment");
 }
