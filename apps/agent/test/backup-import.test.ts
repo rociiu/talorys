@@ -68,6 +68,34 @@ describe("backup import treats the file as untrusted", () => {
     }
   });
 
+  it("does not revert a task, note or project edited after the backup was made", async () => {
+    const c = await loggedIn();
+    const { project } = await c.json("/api/projects", { method: "POST", body: { name: "Trip, current" } });
+    const { task } = await c.json("/api/tasks", { method: "POST", body: { title: "Book flights, current" } });
+    const { note } = await c.json("/api/notes", { method: "POST", body: { title: "Plan", content: "current draft" } });
+    try {
+      // Copies from a backup made a minute ago, before these edits.
+      const backup = backupOf({
+        projects: [{ ...project, name: "Trip, old", updated_at: at(0) }],
+        tasks: [{ ...task, title: "Book flights, old", updated_at: at(0) }],
+        notes: [{ ...note, content: "old draft", updated_at: at(0) }],
+      });
+      await c.json("/api/import", { method: "POST", body: backup });
+      expect((await c.json(`/api/projects`)).projects.find((p: { id: string }) => p.id === project.id)?.name).toBe("Trip, current");
+      expect((await c.json(`/api/tasks/${task.id}`)).task.title).toBe("Book flights, current");
+      expect((await c.json(`/api/notes/${note.id}`)).note.content).toBe("current draft");
+
+      // A copy newer than the local one still imports.
+      const newer = new Date(Date.now() + 60_000).toISOString();
+      await c.json("/api/import", { method: "POST", body: backupOf({ notes: [{ ...note, content: "newer draft", updated_at: newer }] }) });
+      expect((await c.json(`/api/notes/${note.id}`)).note.content).toBe("newer draft");
+    } finally {
+      await c.call(`/api/notes/${note.id}`, { method: "DELETE" });
+      await c.call(`/api/tasks/${task.id}`, { method: "DELETE" });
+      await c.call(`/api/projects/${project.id}`, { method: "DELETE" });
+    }
+  });
+
   it("keeps well-formed tool activity, including approvals, and drops only malformed entries", () => {
     const ok = { id: "1", name: "delete_task", label: "Deleting", status: "success", approval: { id: "p", summary: "Delete task", status: "pending", error: null, expires_at: at(9) } };
     expect(decodeTools(JSON.stringify([ok, { id: 2 }, "junk"]))).toEqual([ok]);

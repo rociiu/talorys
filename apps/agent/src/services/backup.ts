@@ -65,8 +65,9 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T):
 
 /**
  * Merges a backup into the current data inside one transaction. Records are
- * upserted by id, so importing the same backup twice is harmless and nothing
- * that exists only locally is deleted. A backup is untrusted input: new automations
+ * upserted by id, so importing the same backup twice is harmless, nothing
+ * that exists only locally is deleted, and a record edited after the backup was
+ * made keeps the newer local version. A backup is untrusted input: new automations
  * arrive paused, existing automations and the settings in IMPORT_IGNORED_SETTINGS are
  * never changed, and imported messages can never be retried as owner input.
  */
@@ -87,7 +88,8 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
     for (const p of d.projects) {
       db.run(
         `INSERT INTO tal_projects (id, name, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET name = excluded.name, description = excluded.description, status = excluded.status, updated_at = excluded.updated_at`,
+         ON CONFLICT(id) DO UPDATE SET name = excluded.name, description = excluded.description, status = excluded.status, updated_at = excluded.updated_at
+         WHERE excluded.updated_at > tal_projects.updated_at`,
         p.id, p.name, str(p.description), pick(p.status, ["active", "paused", "completed", "archived"], "active"), p.created_at, p.updated_at,
       );
     }
@@ -143,7 +145,8 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, status = excluded.status,
            priority = excluded.priority, due_at = excluded.due_at, project_id = excluded.project_id, updated_at = excluded.updated_at,
-           completed_at = excluded.completed_at`,
+           completed_at = excluded.completed_at
+         WHERE excluded.updated_at > tal_tasks.updated_at`,
         t.id, t.title, str(t.description), pick(t.status, ["todo", "in_progress", "done"], "todo"),
         pick(t.priority, ["low", "medium", "high", "urgent"], "medium"), strOrNull(t.due_at),
         projectExists(t.project_id) ? t.project_id : null, t.created_at, t.updated_at, strOrNull(t.completed_at),
@@ -152,7 +155,8 @@ export async function importData(s: Services, raw: unknown): Promise<ImportSumma
     for (const n of d.notes) {
       db.run(
         `INSERT INTO tal_notes (id, title, content, project_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET title = excluded.title, content = excluded.content, project_id = excluded.project_id, updated_at = excluded.updated_at`,
+         ON CONFLICT(id) DO UPDATE SET title = excluded.title, content = excluded.content, project_id = excluded.project_id, updated_at = excluded.updated_at
+         WHERE excluded.updated_at > tal_notes.updated_at`,
         n.id, n.title, n.content, projectExists(n.project_id) ? n.project_id : null, n.created_at, n.updated_at,
       );
     }
