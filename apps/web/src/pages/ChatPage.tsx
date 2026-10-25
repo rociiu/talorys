@@ -1,7 +1,7 @@
 import { type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ChatMessage, Conversation, ToolActivity } from "@talorys/shared";
+import { getZonedParts, type ChatMessage, type Conversation, type ToolActivity } from "@talorys/shared";
 import {
   AlertTriangle,
   ArrowUp,
@@ -25,7 +25,7 @@ import { ChatUsage } from "../components/ChatUsage";
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
-import { keys, useApiMutation, useConversation, useConversations, useSettings } from "../hooks/queries";
+import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
 import { api, ApiError, streamChat } from "../lib/api";
 import { cn, copyText, relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
@@ -264,14 +264,20 @@ function ChatHeader({
   );
 }
 
+/** Time-of-day greeting for the hour of `now` in `timeZone`. */
+export function chatGreeting(now: Date, timeZone: string): string {
+  const hour = getZonedParts(now, timeZone).hour;
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 function EmptyChat({ name, onPick }: { name: string; onPick: (s: string) => void }) {
   const i18n = useI18n();
+  const tz = useTimezone();
   const recent = useConversations();
   const navigate = useNavigate();
-  const greeting = (() => {
-    const h = new Date().getHours();
-    return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-  })();
+  const greeting = chatGreeting(new Date(), tz);
   return (
     <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center px-5 py-10 animate-fade-in">
       <div className="flex items-center gap-3 text-fg-muted">
