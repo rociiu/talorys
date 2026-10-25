@@ -49,7 +49,7 @@ const components: Components = {
 };
 
 /** Task list items with clickable checkboxes; `line` is the 0-based source line. */
-function taskComponents(onToggleTask: (line: number) => void): Components {
+export function taskComponents(onToggleTask: (line: number) => void): Components {
   return {
     ...components,
     input: ({ checked, type }) =>
@@ -62,7 +62,9 @@ function taskComponents(onToggleTask: (line: number) => void): Components {
         <li
           className={cn(className, done && "task-done")}
           onClick={isTask ? (e) => {
-            if ((e.target as HTMLElement).tagName === "INPUT") onToggleTask(line);
+            // The click also bubbles to the item of a parent task; only the item holding the box toggles.
+            const target = e.target as HTMLElement;
+            if (target.tagName === "INPUT" && target.closest("li") === e.currentTarget) onToggleTask(line);
           } : undefined}
         >
           {children}
