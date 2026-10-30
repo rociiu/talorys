@@ -30,7 +30,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "concurrently": "^10.0.6",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "typescript": "^6.0.3",
     "@playwright/test": "^1.64.0"
   },
