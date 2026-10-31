@@ -3,8 +3,10 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Check, Copy } from "lucide-react";
 import { cn, copyText } from "../lib/utils";
+import { useI18n } from "../lib/i18n";
 
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const text = String(children ?? "").replace(/\n$/, "");
   const lang = /language-(\S+)/.exec(className ?? "")?.[1];
@@ -20,7 +22,7 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
             });
           }}
           className="rounded-md border border-border bg-surface p-1 text-fg-subtle opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus:opacity-100"
-          aria-label="Copy code"
+          aria-label={t("markdown.copyCode")}
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
@@ -30,6 +32,16 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
       </pre>
     </div>
   );
+}
+
+function ImagePlaceholder({ alt }: { alt?: string }) {
+  const { t } = useI18n();
+  return <span className="text-fg-subtle">{t("markdown.image", { alt: alt ?? "" })}</span>;
+}
+
+function TaskCheckbox({ checked }: { checked: boolean }) {
+  const { t } = useI18n();
+  return <input type="checkbox" checked={checked} readOnly aria-label={checked ? t("markdown.markNotDone") : t("markdown.markDone")} />;
 }
 
 const components: Components = {
@@ -45,7 +57,7 @@ const components: Components = {
     </a>
   ),
   // Never load remote images from model output (privacy + exfiltration defence).
-  img: ({ alt }) => <span className="text-fg-subtle">[image: {alt}]</span>,
+  img: ({ alt }) => <ImagePlaceholder alt={alt} />,
 };
 
 /** Task list items with clickable checkboxes; `line` is the 0-based source line. */
@@ -53,7 +65,7 @@ export function taskComponents(onToggleTask: (line: number) => void): Components
   return {
     ...components,
     input: ({ checked, type }) =>
-      type === "checkbox" ? <input type="checkbox" checked={!!checked} readOnly aria-label={checked ? "Mark as not done" : "Mark as done"} /> : null,
+      type === "checkbox" ? <TaskCheckbox checked={!!checked} /> : null,
     li: ({ node, className, children }) => {
       const line = (node?.position?.start.line ?? 0) - 1;
       const isTask = className?.includes("task-list-item");
