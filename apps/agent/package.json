@@ -19,13 +19,13 @@
     "eventsource-parser": "^3.1.1",
     "hono": "^4.13.13",
     "workers-ai-provider": "^4.0.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.4.0",
+    "@cloudflare/vitest-plugin": "^1.4.11",
     "@cloudflare/workers-types": "^5.20261010.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.12",
-    "wrangler": "^4.149.0"
+    "wrangler": "^4.156.0"
   }
 }
