@@ -204,7 +204,9 @@ test.describe("Talorys owner experience", () => {
 
     // Typing then switching notes immediately (before autosave fires) keeps the edit.
     await page.getByRole("button", { name: "New note" }).click();
-    await expect(page.getByLabel("Note title")).toHaveValue("Untitled");
+    // An untitled note opens with an empty title field and is listed under the localized fallback.
+    await expect(page.getByLabel("Note title")).toHaveValue("");
+    await expect(page.getByRole("button", { name: /^Untitled/ })).toBeVisible();
     await page.getByLabel("Note title").fill("e2e Quick switch");
     await page.getByRole("button", { name: /e2e Spaced title/ }).click();
     await expect(page.getByRole("button", { name: /e2e Quick switch/ })).toBeVisible();
