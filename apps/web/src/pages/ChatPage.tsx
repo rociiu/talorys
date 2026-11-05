@@ -27,6 +27,7 @@ import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui"
 import { Logo } from "../components/Logo";
 import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
 import { api, ApiError, streamChat } from "../lib/api";
+import { notifyChatTurn } from "../lib/chatAlerts";
 import { cn, copyText, relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
 
@@ -49,6 +50,7 @@ const SUGGESTIONS = [
 ];
 
 export function ChatPage() {
+  const { t } = useI18n();
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -124,6 +126,7 @@ export function ChatPage() {
               break;
             case "done": {
               const id = event.message.conversation_id;
+              void notifyChatTurn(event.message, t);
               void qc
                 .invalidateQueries({ queryKey: keys.conversation(id) })
                 .then(() => setStream((s) => (s && s.assistantId === event.message.id ? null : s)));

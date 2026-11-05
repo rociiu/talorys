@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Bell, Brain, CalendarClock, CheckSquare, LogOut, type LucideIcon, MessageSquare, NotebookPen, Settings } from "lucide-react";
 import { Logo } from "./Logo";
 import { NotificationCenter } from "./NotificationCenter";
@@ -27,6 +27,16 @@ export function AppShell() {
   const [notifOpen, setNotifOpen] = useState(false);
   useKeyboardOpenFlag();
   const location = useLocation();
+  const navigate = useNavigate();
+  // A clicked notification asks this window to open the conversation it is about.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "talorys.navigate" && typeof event.data.path === "string") navigate(event.data.path);
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [navigate]);
   const unread = notifications.data?.unread ?? 0;
   const agentName = settings.data?.agentName ?? "Talorys";
   const isChat = location.pathname.startsWith("/chat");
