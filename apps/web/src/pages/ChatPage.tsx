@@ -27,7 +27,7 @@ import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui"
 import { Logo } from "../components/Logo";
 import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
 import { api, ApiError, streamChat } from "../lib/api";
-import { notifyChatTurn } from "../lib/chatAlerts";
+import { notifyChatFailure, notifyChatTurn } from "../lib/chatAlerts";
 import { cn, copyText, relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
 
@@ -87,6 +87,9 @@ export function ChatPage() {
     abortRef.current = controller;
     stickToBottom.current = true;
     let convId = conversationId ?? null;
+    // Most turns end with `done`, which alerts. One that doesn't still needs to tell the owner it failed.
+    let sawDone = false;
+    let streamError: string | null = null;
     if (opts.retry && convId) {
       // Optimistically hide the failed reply that the server is about to replace.
       qc.setQueryData<{ conversation: Conversation; messages: ChatMessage[] }>(keys.conversation(convId), (old) =>
@@ -122,10 +125,12 @@ export function ChatPage() {
               });
               break;
             case "error":
+              streamError = event.message;
               setStream((s) => s && { ...s, error: event.message });
               break;
             case "done": {
               const id = event.message.conversation_id;
+              sawDone = true;
               void notifyChatTurn(event.message, t);
               void qc
                 .invalidateQueries({ queryKey: keys.conversation(id) })
@@ -137,20 +142,23 @@ export function ChatPage() {
         },
         controller.signal,
       );
+      // The stream closed without finishing the turn, so nothing else would release the composer.
+      if (!sawDone) throw new Error(streamError ?? "Connection lost.");
     } catch (error) {
       if (controller.signal.aborted) {
         setStream((s) => s && { ...s, done: true });
       } else {
         const message = error instanceof ApiError || error instanceof Error ? error.message : "Connection lost.";
         setStream((s) => s && { ...s, error: message, done: true });
+        if (!sawDone) void notifyChatFailure(convId, message, t);
       }
     } finally {
       abortRef.current = null;
       void qc.invalidateQueries({ queryKey: ["conversations"] });
       void qc.invalidateQueries({ queryKey: keys.usage });
       if (convId) void qc.invalidateQueries({ queryKey: keys.conversation(convId) });
-      // Drop the transient bubble once persisted messages are back.
-      setTimeout(() => setStream((s) => (s?.done ? null : s)), 400);
+      // Drop the transient bubble once persisted messages are back. An error may have no saved message, so it stays.
+      setTimeout(() => setStream((s) => (s?.done && !s.error ? null : s)), 400);
     }
   }
 

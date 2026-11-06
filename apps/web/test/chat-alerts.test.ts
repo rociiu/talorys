@@ -1,6 +1,16 @@
 import type { ToolActivity } from "@talorys/shared";
 import { describe, expect, it } from "vitest";
-import { chatAlertFor } from "../src/lib/chatAlerts";
+import { chatAlertFor, failedTurnAlert } from "../src/lib/chatAlerts";
+
+describe("failedTurnAlert", () => {
+  it("links to the conversation the turn failed in", () => {
+    expect(failedTurnAlert("c1", "Connection lost.")).toEqual({ kind: "failed", body: "Connection lost.", url: "/chat/c1", tag: "chat-c1" });
+  });
+
+  it("works when the failure came before a conversation existed, or gave no reason", () => {
+    expect(failedTurnAlert(null, null)).toEqual({ kind: "failed", body: "", url: "/chat", tag: "chat-new" });
+  });
+});
 
 const message = (over: Partial<Parameters<typeof chatAlertFor>[0]> = {}) => ({
   conversation_id: "c1",

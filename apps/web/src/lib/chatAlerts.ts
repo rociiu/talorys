@@ -19,11 +19,21 @@ function preview(markdown: string): string {
   return plain.length > PREVIEW_LENGTH ? `${plain.slice(0, PREVIEW_LENGTH - 1).trimEnd()}…` : plain;
 }
 
+/** A turn that ended without a saved reply. It has no conversation yet if the very first request failed. */
+export function failedTurnAlert(conversationId: string | null, error: string | null): ChatAlert {
+  return {
+    kind: "failed",
+    body: preview(error ?? ""),
+    url: conversationId ? `/chat/${conversationId}` : "/chat",
+    tag: `chat-${conversationId ?? "new"}`,
+  };
+}
+
 /** What to tell the owner about a finished turn. A turn they stopped themselves says nothing. */
 export function chatAlertFor(message: Pick<ChatMessage, "conversation_id" | "content" | "status" | "error" | "tools">): ChatAlert | null {
-  const where = { url: `/chat/${message.conversation_id}`, tag: `chat-${message.conversation_id}` };
-  if (message.status === "error") return { kind: "failed", body: preview(message.error ?? ""), ...where };
+  if (message.status === "error") return failedTurnAlert(message.conversation_id, message.error);
   if (message.status !== "complete") return null;
+  const where = { url: `/chat/${message.conversation_id}`, tag: `chat-${message.conversation_id}` };
   const waiting = message.tools?.some((t) => t.approval?.status === "pending" || t.plan?.status === "pending");
   return waiting ? { kind: "needs-you", body: "", ...where } : { kind: "reply", body: preview(message.content), ...where };
 }
@@ -57,16 +67,17 @@ export function disableChatAlerts() {
   remember(false);
 }
 
-/** Alerts about a finished turn if this device opted in and the owner is looking elsewhere. Never throws. */
-export async function notifyChatTurn(message: ChatMessage, t: I18n["t"]): Promise<void> {
+/** Shows an alert if this device opted in and the owner is looking elsewhere. Never throws. */
+async function showAlert(alert: ChatAlert | null, t: I18n["t"]): Promise<void> {
   try {
-    if (!chatAlertsEnabled() || document.hasFocus() || Notification.permission !== "granted") return;
-    const alert = chatAlertFor(message);
-    if (!alert) return;
+    if (!alert || !chatAlertsEnabled() || document.hasFocus() || Notification.permission !== "granted") return;
     const titles = { "needs-you": t("chatAlerts.needsYou"), reply: t("chatAlerts.reply"), failed: t("chatAlerts.failed") };
     // Phones only allow notifications shown through the service worker.
     const reg = await navigator.serviceWorker.getRegistration("/");
-    await reg?.showNotification(titles[alert.kind], {
+    if (!reg) return;
+    // Replacing a notification with the same tag makes no sound or banner, so close the old one first.
+    for (const old of await reg.getNotifications({ tag: alert.tag })) old.close();
+    await reg.showNotification(titles[alert.kind], {
       body: alert.body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
@@ -76,4 +87,13 @@ export async function notifyChatTurn(message: ChatMessage, t: I18n["t"]): Promis
   } catch (error) {
     console.warn("Chat alert failed", error);
   }
+}
+
+export function notifyChatTurn(message: ChatMessage, t: I18n["t"]): Promise<void> {
+  return showAlert(chatAlertFor(message), t);
+}
+
+/** For a turn that ended without a `done` event: a lost connection or a request the server refused. */
+export function notifyChatFailure(conversationId: string | null, error: string | null, t: I18n["t"]): Promise<void> {
+  return showAlert(failedTurnAlert(conversationId, error), t);
 }
