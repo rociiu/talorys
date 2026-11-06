@@ -119,8 +119,30 @@ export class TalorysAgent extends Agent<Env, AgentState> {
 
   /** Scheduled callback invoked by the Agents SDK (Durable Object alarm). */
   async runAutomation(payload: AutomationPayload, schedule: { id: string }): Promise<void> {
-    await this.services.automations.fire(payload.automationId, schedule.id, (a) => this.executeAutomation(a));
+    await this.services.automations.fire(payload.automationId, schedule.id, async (a) => {
+      try {
+        return await this.executeAutomation(a);
+      } catch (error) {
+        this.notifyFailure(a, error);
+        throw error;
+      }
+    });
     this.refreshUnread();
+  }
+
+  /**
+   * Tells the owner a scheduled run failed. Only the first failure in a row, so a broken
+   * routine on a short interval can't send a notification every time it runs.
+   */
+  private notifyFailure(a: Automation, error: unknown): void {
+    const s = this.services;
+    if (a.status === "failed" || !s.automationsRepo.get(a.id)) return;
+    const reason = error instanceof Error ? error.message : String(error);
+    s.notifications.create({
+      title: a.name,
+      body: `This automation failed: ${reason}\n\nYou won't be notified again until it succeeds. See Automations for details.`,
+      automation_id: a.id,
+    });
   }
 
   /** "Run now" from the UI: executes immediately without touching the schedule. */
