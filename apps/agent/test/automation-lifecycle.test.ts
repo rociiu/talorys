@@ -225,6 +225,39 @@ describe("run now concurrency and recovery", () => {
     });
   });
 
+  it("notifies about the first scheduled failure in a row, and again after a success", async () => {
+    await inAgent(async (agent) => {
+      const s = agent.services;
+      const a = await s.automations.create({ name: "Failing routine", kind: "agent_prompt", message: "Summarize",
+        schedule: { type: "interval", minutes: 15 }, enabled: true });
+      const failures = () => s.notifications.list({ limit: 50 }).filter((n) => n.automation_id === a.id && n.body.includes("failed: AI is down"));
+      const fire = () => agent.runAutomation({ automationId: a.id }, { id: s.automationsRepo.get(a.id)!.schedule_id! });
+      const original = agent.runner.bind(agent);
+      const failing = () => {
+        agent.runner = () => ({ runScheduledPrompt: async () => { throw new Error("AI is down"); } }) as never;
+      };
+
+      failing();
+      await fire();
+      await fire();
+      expect(failures()).toHaveLength(1);
+      expect(s.automationsRepo.get(a.id)).toMatchObject({ status: "failed", last_error: "AI is down", run_count: 2 });
+
+      // A manual failure is on screen already, so it adds nothing.
+      await agent.runAutomationNow(a.id);
+      expect(failures()).toHaveLength(1);
+
+      agent.runner = () => ({ runScheduledPrompt: async () => "All good" }) as never;
+      await fire();
+      failing();
+      await fire();
+      expect(failures()).toHaveLength(2);
+
+      agent.runner = original;
+      await s.automations.delete(a.id);
+    });
+  });
+
   it("closes runs interrupted by a restart so run now works again", async () => {
     await inAgent(async (agent) => {
       const s = agent.services;
