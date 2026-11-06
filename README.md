@@ -227,8 +227,8 @@ the effective installer defaults. If an imported timezone changes, retained
 local automations are also rescheduled in that timezone. A backup file is
 treated as untrusted: new automations arrive paused, existing automations are
 never changed except to pause them, and the model, limits, demo mode,
-auto-memory and memory history settings are kept as they are (the import
-result lists any it skipped).
+auto-memory, memory history and agent name settings are kept as they are (the
+import result lists any it skipped).
 
 ## 10. Update
 

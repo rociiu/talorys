@@ -15,6 +15,12 @@ export const en = {
   "common.save": "Save",
   "common.somethingWentWrong": "Something went wrong.",
   "common.unreachable": "Talorys is unreachable.",
+  "common.connectionFailed": "Can't reach Talorys. Check your connection and try again.",
+
+  "error.title": "Something went wrong",
+  "error.body": "This page couldn't be shown. Your data is safe, and reloading usually fixes it.",
+  "error.updatedBody": "Talorys was updated while this page was open. Reload to get the new version.",
+  "error.reload": "Reload",
 
   "nav.main": "Main",
   "nav.chat": "Chat",

@@ -85,13 +85,12 @@ export async function runChecks(baseUrl: string, fetchFn: FetchLike, deadline = 
     const data = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
       storage?: string;
-      schema_version?: number;
       configured?: { password?: boolean; session_secret?: boolean };
     };
     if (data.storage !== "ok") throw new Error(`Storage: ${data.storage ?? `HTTP ${res.status}`}`);
     if (!data.configured?.password || !data.configured?.session_secret) throw new Error("Owner secrets are not configured yet");
     if (!data.ok) throw new Error(`HTTP ${res.status}`);
-    return `SQLite schema v${data.schema_version}`;
+    return "SQLite storage ready";
   });
   return results;
 }

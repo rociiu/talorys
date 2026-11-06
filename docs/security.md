@@ -47,7 +47,8 @@ The Worker is deployed with `workers_dev: false` and `preview_urls: false`. It i
 reachable only through the Pages service binding. A one-Worker deploy is public
 on `workers.dev` instead, behind the same checks. Authorization is enforced in
 the Worker for every route except `GET /api/health`, `POST /api/auth/login` and
-`GET /api/auth/session`. The agent instance name is fixed server-side.
+`GET /api/auth/session`. Without a session or access token, `GET /api/health`
+leaves out the exact version and schema. The agent instance name is fixed server-side.
 
 ## XSS and browser hardening
 
@@ -122,8 +123,9 @@ does on its own:
 
 - New automations arrive paused, and existing ones are never rewritten or
   re-enabled (a backup may only pause them).
-- The model, limits, demo mode, auto-memory and memory history settings are
-  not imported.
+- The model, limits, demo mode, auto-memory, memory history and agent name
+  settings are not imported. The agent name goes into the system prompt as
+  instructions, not marked as data.
 - Conversation summaries are dropped; they feed the system prompt but are
   invisible in the UI. They are regenerated from the visible messages.
 - Imported messages are marked as imported. Retry refuses them, and recorded

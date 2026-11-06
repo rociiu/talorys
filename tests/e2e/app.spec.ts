@@ -25,9 +25,9 @@ test.describe("Talorys owner experience", () => {
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/chat\/[0-9a-f-]{36}$/);
     await expect(page.getByLabel("Actions taken").getByText(/Adding task/)).toBeVisible();
-    await expect(page.getByText('Added the task "e2e review the roadmap".')).toBeVisible();
+    await expect(page.locator("section .overflow-y-auto").getByText('Added the task "e2e review the roadmap".')).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Added the task "e2e review the roadmap".')).toBeVisible();
+    await expect(page.locator("section .overflow-y-auto").getByText('Added the task "e2e review the roadmap".')).toBeVisible();
     await expect(page.getByRole("heading", { name: "add task e2e review the roadmap" })).toBeVisible();
   });
 
@@ -52,14 +52,14 @@ test.describe("Talorys owner experience", () => {
     const composer = page.getByRole("textbox", { name: "Message", exact: true });
     await composer.fill("add task e2e approve-me");
     await page.keyboard.press("Enter");
-    await expect(page.getByText('Added the task "e2e approve-me".')).toBeVisible();
+    await expect(page.locator("section .overflow-y-auto").getByText('Added the task "e2e approve-me".')).toBeVisible();
     // The reply text lands before the turn finishes; the composer ignores Enter until it does.
     await expect(page.getByRole("button", { name: "Send message" })).toBeVisible();
     await composer.fill("delete task e2e approve-me");
     await page.keyboard.press("Enter");
     const card = page.getByRole("group", { name: "Approval needed" });
     await expect(card.getByText("Delete task “e2e approve-me”?")).toBeVisible();
-    await expect(page.getByText(`I've asked to delete "e2e approve-me". Approve it above if you want it gone.`)).toBeVisible();
+    await expect(page.locator("section .overflow-y-auto").getByText(`I've asked to delete "e2e approve-me". Approve it above if you want it gone.`)).toBeVisible();
     // The card survives a reload and nothing has been deleted yet.
     await page.reload();
     await expect(card.getByText("Delete task “e2e approve-me”?")).toBeVisible();

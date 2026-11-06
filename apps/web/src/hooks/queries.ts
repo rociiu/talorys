@@ -219,7 +219,14 @@ export function useMcpTools(serverId: string | null) {
  */
 export function useApiMutation<TVars, TResult = unknown>(
   fn: (vars: TVars) => Promise<TResult>,
-  opts: { invalidate?: readonly (readonly unknown[])[]; success?: string | ((r: TResult) => string); onSuccess?: (r: TResult, v: TVars) => void } = {},
+  opts: {
+    invalidate?: readonly (readonly unknown[])[];
+    success?: string | ((r: TResult) => string);
+    onSuccess?: (r: TResult, v: TVars) => void;
+    onError?: (error: unknown) => void;
+    /** No error toast, for callers that show the failure themselves. */
+    quiet?: boolean;
+  } = {},
 ) {
   const qc = useQueryClient();
   const toast = useToast();
@@ -231,6 +238,9 @@ export function useApiMutation<TVars, TResult = unknown>(
       if (opts.success) toast(typeof opts.success === "function" ? opts.success(result) : opts.success);
       opts.onSuccess?.(result, vars);
     },
-    onError: (error) => toast(errorMessage(error, t("common.somethingWentWrong")), "error"),
+    onError: (error) => {
+      opts.onError?.(error);
+      if (!opts.quiet) toast(errorMessage(error, t("common.somethingWentWrong")), "error");
+    },
   });
 }

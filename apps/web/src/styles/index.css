@@ -30,6 +30,7 @@
   --color-fg-subtle: var(--fg-subtle);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-control-off: var(--control-off);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-soft: var(--accent-soft);
@@ -58,16 +59,20 @@
   --muted: oklch(0.955 0.004 240);
   --fg: oklch(0.21 0.01 250);
   --fg-muted: oklch(0.45 0.012 250);
-  --fg-subtle: oklch(0.6 0.01 250);
+  /* At least 4.5:1 on every background token, the smallest text included. */
+  --fg-subtle: oklch(0.52 0.01 250);
   --border: oklch(0.92 0.004 250);
   --border-strong: oklch(0.86 0.006 250);
+  /* An off switch: 3:1 against the surface, which is what a control needs and a border doesn't. */
+  --control-off: oklch(0.62 0.01 250);
   --accent: var(--color-brand-700);
   --accent-fg: oklch(0.99 0.01 185);
   --accent-soft: var(--color-brand-50);
   --danger: oklch(0.55 0.19 25);
   --danger-soft: oklch(0.97 0.02 25);
-  --warning: oklch(0.7 0.14 70);
-  --success: oklch(0.58 0.13 155);
+  /* Also used as text on their own 15% tint (badges), so they need 4.5:1 there too. */
+  --warning: oklch(0.5 0.11 70);
+  --success: oklch(0.5 0.12 155);
   color-scheme: light;
 }
 
@@ -78,14 +83,17 @@
   --muted: oklch(0.26 0.009 250);
   --fg: oklch(0.95 0.004 250);
   --fg-muted: oklch(0.75 0.008 250);
-  --fg-subtle: oklch(0.6 0.01 250);
+  --fg-subtle: oklch(0.64 0.01 250);
   --border: oklch(0.29 0.009 250);
   --border-strong: oklch(0.36 0.01 250);
+  --control-off: oklch(0.52 0.01 250);
   --accent: var(--color-brand-400);
   --accent-fg: oklch(0.18 0.03 185);
   --accent-soft: oklch(0.27 0.04 185);
   --danger: oklch(0.68 0.17 25);
   --danger-soft: oklch(0.28 0.05 25);
+  --warning: oklch(0.72 0.14 70);
+  --success: oklch(0.68 0.13 155);
   color-scheme: dark;
 }
 

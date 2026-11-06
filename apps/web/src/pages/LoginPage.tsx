@@ -17,6 +17,11 @@ export function LoginPage({ configured }: { configured: boolean }) {
   const [pending, setPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // A locked tab must not keep showing the title of the conversation that was open.
+  useEffect(() => {
+    document.title = "Talorys";
+  }, []);
+
   useEffect(() => {
     if (!retryAt) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
