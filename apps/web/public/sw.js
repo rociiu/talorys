@@ -1,4 +1,4 @@
-// Talorys service worker. It only shows Web Push notifications: nothing is cached, so the
+// Talorys service worker. It only shows notifications: nothing is cached, so the
 // app always loads fresh from the network. Payloads arrive encrypted end to end (RFC 8291).
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -40,13 +40,17 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(safePath(event.notification.data?.url), self.location.origin).href;
+  const path = safePath(event.notification.data?.url);
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       const open = windows.find((w) => new URL(w.url).origin === self.location.origin);
-      if (open) return open.focus();
-      return self.clients.openWindow(target);
+      if (open) {
+        // The app routes itself, so a reply streaming in that window is not interrupted by a reload.
+        if (path !== "/") open.postMessage({ type: "talorys.navigate", path });
+        return open.focus();
+      }
+      return self.clients.openWindow(new URL(path, self.location.origin).href);
     })(),
   );
 });

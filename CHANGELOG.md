@@ -6,6 +6,7 @@ All notable changes to Talorys are listed here. Versions match the `create-talor
 
 ### Added
 
+- **Chat alerts**: a system notification when a reply finishes or needs approval while the window is out of focus
 - A notification when a scheduled automation fails, sent once until it succeeds again
 
 ## 0.1.8 — 2026-11-03
