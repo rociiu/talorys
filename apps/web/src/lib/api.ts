@@ -1,4 +1,5 @@
 import { CSRF_HEADER, type ApiErrorBody, type ApiErrorCode, type ChatStreamEvent } from "@talorys/shared";
+import { i18nNow } from "./i18n";
 
 export class ApiError extends Error {
   constructor(
@@ -16,6 +17,15 @@ const unauthorizedListeners = new Set<Listener>();
 export function onUnauthorized(fn: Listener): () => void {
   unauthorizedListeners.add(fn);
   return () => unauthorizedListeners.delete(fn);
+}
+
+/** The request never got an answer: the device is offline or Talorys can't be reached. */
+export class NetworkError extends Error {}
+
+/** `fetch` and body reads reject with a bare TypeError ("Failed to fetch"), which means nothing to the owner. */
+function rethrowNetworkFailure(error: unknown): never {
+  if (error instanceof TypeError) throw new NetworkError(i18nNow().t("common.connectionFailed"));
+  throw error;
 }
 
 async function toApiError(res: Response): Promise<ApiError> {
@@ -41,7 +51,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     },
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     signal: init.signal,
-  });
+  }).catch(rethrowNetworkFailure);
   if (!res.ok) {
     const error = await toApiError(res);
     if (res.status === 401 && !path.startsWith("/auth/")) for (const fn of unauthorizedListeners) fn();
@@ -64,7 +74,7 @@ export async function streamChat(
     headers: { [CSRF_HEADER]: "1", "content-type": "application/json", accept: "text/event-stream" },
     body: JSON.stringify(payload),
     signal,
-  });
+  }).catch(rethrowNetworkFailure);
   if (!res.ok || !res.body) {
     const error = await toApiError(res);
     if (res.status === 401) for (const fn of unauthorizedListeners) fn();
@@ -73,7 +83,7 @@ export async function streamChat(
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
   for (;;) {
-    const { value, done } = await reader.read();
+    const { value, done } = await reader.read().catch(rethrowNetworkFailure);
     if (done) break;
     buffer += value;
     let boundary: number;

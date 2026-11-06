@@ -96,6 +96,8 @@ export class AuthService {
         this.settings.delete(OVERRIDE_KEY);
         this.db.run(`DELETE FROM tal_sessions`);
         this.db.run(`DELETE FROM tal_remote_tokens`);
+        // A reset is how a locked-out owner gets back in, so failures against the old password must not count.
+        this.db.run(`DELETE FROM tal_login_attempts`);
       }
       this.settings.setJson(FINGERPRINT_KEY, fingerprint);
     });
@@ -123,6 +125,16 @@ export class AuthService {
     return row?.n ?? 0;
   }
 
+  /** When enough failures will have aged out of the window for the count to drop below `limit`. */
+  private limitClearsAt(limit: number, client?: string): number {
+    const since = Date.now() - LOGIN_WINDOW_MS;
+    const excess = this.recentFailures(client) - limit;
+    const row = client
+      ? this.db.one<{ at: number }>(`SELECT at FROM tal_login_attempts WHERE success = 0 AND at > ? AND client = ? ORDER BY at LIMIT 1 OFFSET ?`, since, client, excess)
+      : this.db.one<{ at: number }>(`SELECT at FROM tal_login_attempts WHERE success = 0 AND at > ? ORDER BY at LIMIT 1 OFFSET ?`, since, excess);
+    return (row?.at ?? Date.now()) + LOGIN_WINDOW_MS;
+  }
+
   /** True when this client signed in successfully within TRUSTED_CLIENT_MS: one of the owner's own networks. */
   private isTrustedClient(client: string): boolean {
     const since = Date.now() - TRUSTED_CLIENT_MS;
@@ -139,12 +151,13 @@ export class AuthService {
     // Failures matter for a day; successes are kept as long as they mark a trusted network.
     this.db.run(`DELETE FROM tal_login_attempts WHERE (success = 0 AND at < ?) OR at < ?`, nowMs - 24 * 3600_000, nowMs - TRUSTED_CLIENT_MS);
     const clientBlocked = this.recentFailures(client) >= MAX_FAILURES_PER_CLIENT;
-    if (clientBlocked || (this.recentFailures() >= MAX_FAILURES_GLOBAL && !this.isTrustedClient(client))) {
-      const oldest = this.db.one<{ at: number }>(
-        `SELECT min(at) AS at FROM tal_login_attempts WHERE success = 0 AND at > ?`,
-        Date.now() - LOGIN_WINDOW_MS,
+    const globalBlocked = this.recentFailures() >= MAX_FAILURES_GLOBAL && !this.isTrustedClient(client);
+    if (clientBlocked || globalBlocked) {
+      const until = Math.max(
+        clientBlocked ? this.limitClearsAt(MAX_FAILURES_PER_CLIENT, client) : 0,
+        globalBlocked ? this.limitClearsAt(MAX_FAILURES_GLOBAL) : 0,
       );
-      const retryAfter = Math.max(1, Math.ceil(((oldest?.at ?? Date.now()) + LOGIN_WINDOW_MS - Date.now()) / 1000));
+      const retryAfter = Math.max(1, Math.ceil((until - Date.now()) / 1000));
       throw new AppError("RATE_LIMITED", "Too many failed attempts. Please wait before trying again.", { retry_after: retryAfter }, {
         "retry-after": String(retryAfter),
       });

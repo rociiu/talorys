@@ -83,6 +83,11 @@ function snapshot(): I18n {
   return current!;
 }
 
+/** The active language for code outside React. Components use `useI18n`, which also follows changes. */
+export function i18nNow(): I18n {
+  return snapshot();
+}
+
 /** The active language, its message lookup and its formatting locale. Re-renders when the language changes. */
 export function useI18n(): I18n {
   return useSyncExternalStore(subscribe, snapshot);

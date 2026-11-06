@@ -11,6 +11,12 @@ export const ko = {
   "common.save": "저장",
   "common.somethingWentWrong": "문제가 발생했습니다.",
   "common.unreachable": "Talorys에 연결할 수 없습니다.",
+  "common.connectionFailed": "Talorys에 연결할 수 없습니다. 연결 상태를 확인한 후 다시 시도해 주세요.",
+
+  "error.title": "문제가 발생했습니다",
+  "error.body": "이 페이지를 표시할 수 없습니다. 데이터는 안전하며, 대개 새로고침하면 해결됩니다.",
+  "error.updatedBody": "이 페이지가 열려 있는 동안 Talorys가 업데이트되었습니다. 새 버전을 사용하려면 새로고침하세요.",
+  "error.reload": "새로고침",
 
   "nav.main": "주 메뉴",
   "nav.chat": "채팅",

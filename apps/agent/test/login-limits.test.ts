@@ -26,6 +26,24 @@ describe("login limits per client", () => {
     expect((await login(`${randomPrefix()}::1`)).status).toBe(200);
   });
 
+  it("sets Retry-After from this client's failures, not an older one from someone else", async () => {
+    await recordAttempt("198.51.100.200", 0, Date.now() - 14 * 60_000);
+    const ip = freshIp();
+    for (let i = 0; i < 5; i++) expect((await login(ip, `wrong-${i}`)).status).toBe(401);
+    const res = await login(ip);
+    expect(res.status).toBe(429);
+    expect(Number(res.headers.get("retry-after"))).toBeGreaterThan(14 * 60);
+  });
+
+  it("clears a lockout on a CLI password reset (a changed secret), so the owner can get back in", async () => {
+    const ip = freshIp();
+    for (let i = 0; i < 5; i++) await login(ip, `wrong-${i}`);
+    expect((await login(ip)).status).toBe(429);
+    // A different stored fingerprint is what a reset looks like on the next request.
+    await inAgent((a) => a.services.settings.setJson("auth.secret_fingerprint", "0".repeat(32)));
+    expect((await login(ip)).status).toBe(200);
+  });
+
   it("derives one key per IPv4 address or IPv6 /64", () => {
     expect(clientKey("203.0.113.7")).toBe("203.0.113.7");
     expect(clientKey("2001:db8:a:b:1:2:3:4")).toBe("2001:db8:a:b::/64");

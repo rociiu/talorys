@@ -9,9 +9,16 @@ import { App } from "./App";
 import { SessionProvider } from "./hooks/session";
 import { ToastProvider } from "./hooks/toast";
 import { ApiError } from "./lib/api";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { reloadForNewVersion } from "./lib/chunkErrors";
 
 initTheme();
 initLanguage();
+
+// A chunk from before an update is gone. If the reload is refused, the error reaches the boundary.
+window.addEventListener("vite:preloadError", (event) => {
+  if (reloadForNewVersion()) event.preventDefault();
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +36,9 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <ToastProvider>
           <SessionProvider>
-            <App />
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
           </SessionProvider>
         </ToastProvider>
       </BrowserRouter>

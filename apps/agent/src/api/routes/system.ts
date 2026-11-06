@@ -12,7 +12,8 @@ export const systemRoutes = new Hono<AppEnv>();
 
 /**
  * Non-inference health check used by the installer and monitoring.
- * Verifies storage and configuration without calling Workers AI.
+ * Verifies storage and configuration without calling Workers AI. The route is public, so the
+ * exact version and schema (which tell an attacker what a deployment is missing) need a login.
  */
 systemRoutes.get("/health", (c) => {
   const s = c.env.agent.services;
@@ -28,11 +29,11 @@ systemRoutes.get("/health", (c) => {
     password: s.auth.passwordConfigured(),
     session_secret: (c.env.env.SESSION_SECRET?.length ?? 0) >= 32,
   };
+  const signedIn = !!c.get("sessionId") || !!c.get("remote");
   const report: HealthReport = {
     ok: storage === "ok" && s.auth.isConfigured(),
-    version: TALORYS_VERSION,
+    ...(signedIn ? { version: TALORYS_VERSION, schema_version: version } : {}),
     storage,
-    schema_version: version,
     configured,
     ai_binding: !!c.env.env.AI,
     push: s.push.configured(),

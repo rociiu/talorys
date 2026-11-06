@@ -24,12 +24,12 @@ describe("backup import treats the file as untrusted", () => {
     });
     const { imported } = await c.json("/api/import", { method: "POST", body: backup });
     expect(imported.automations_paused).toBe(1);
-    expect([...imported.ignored_settings].sort()).toEqual(["autoMemory", "demoMode", "limits", "model"]);
+    expect([...imported.ignored_settings].sort()).toEqual(["agentName", "autoMemory", "demoMode", "limits", "model"]);
     try {
       const after = (await c.json("/api/settings")).settings;
       const pick = (s: typeof before) => ({ model: s.model, limits: s.limits, demoMode: s.demoMode, autoMemory: s.autoMemory });
       expect(pick(after)).toEqual(pick(before));
-      expect(after.agentName).toBe("Imported"); // harmless settings still import
+      expect(after.agentName).toBe(before.agentName); // it goes into the system prompt as instructions
 
       const auto = await inAgent((a) => a.services.automationsRepo.get(autoId));
       expect({ enabled: auto?.enabled, schedule_id: auto?.schedule_id }).toEqual({ enabled: false, schedule_id: null });

@@ -66,13 +66,14 @@ export default function AutomationsPage() {
     const meta = KIND_META[a.kind];
     const Icon = meta.icon;
     return (
-      <li key={a.id} className="flex items-start gap-3 px-4 py-3">
+      <li key={a.id} className="flex flex-wrap items-start gap-3 px-4 py-3 sm:flex-nowrap">
         <div className={cn("mt-0.5 rounded-lg p-2", a.enabled ? "bg-accent-soft text-accent" : "bg-muted text-fg-subtle")}>
           <Icon className="h-4 w-4" />
         </div>
-        <div className="min-w-0 flex-1">
+        {/* On a phone the text takes the whole row and the actions drop below it, so they can't crush the name. */}
+        <div className="min-w-0 flex-1 basis-[calc(100%-3.25rem)] sm:basis-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-medium">{a.name}</p>
+            <p className="max-w-full truncate font-medium">{a.name}</p>
             {a.status === "failed" && <Badge tone="danger">Last run failed</Badge>}
             {a.status === "completed" && <Badge>Completed</Badge>}
             {a.status === "running" && <Badge tone="accent">Running</Badge>}
@@ -85,7 +86,7 @@ export default function AutomationsPage() {
           </p>
           {a.last_error && <p className="mt-1 text-xs text-danger">{a.last_error}</p>}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="icon"

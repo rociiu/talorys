@@ -6,6 +6,7 @@ import {
   type TextareaHTMLAttributes,
   forwardRef,
   useEffect,
+  useId,
   useRef,
 } from "react";
 import { Loader2, X } from "lucide-react";
@@ -165,6 +166,7 @@ export function Dialog({
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -174,6 +176,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       // Only user-initiated closes; the effect's own el.close() (open → false) must not re-trigger onClose.
       onClose={() => {
         if (open) onClose();
@@ -193,7 +196,7 @@ export function Dialog({
       {open && (
         <div className="animate-slide-up">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-base font-semibold">{title}</h2>
+            <h2 id={titleId} className="text-base font-semibold">{title}</h2>
             <button type="button" onClick={onClose} className="rounded-md p-1 text-fg-subtle hover:bg-muted hover:text-fg" aria-label={t("common.close")}>
               <X className="h-4 w-4" />
             </button>
@@ -256,7 +259,7 @@ export function Switch({ checked, onChange, label, disabled }: { checked: boolea
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors disabled:opacity-50",
-        checked ? "bg-accent" : "bg-border-strong",
+        checked ? "bg-accent" : "bg-control-off",
       )}
     >
       <span className={cn("inline-block h-5 w-5 rounded-full bg-white shadow transition-transform", checked ? "translate-x-[18px]" : "translate-x-0.5")} />

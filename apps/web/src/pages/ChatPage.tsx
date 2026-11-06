@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { getZonedParts, type ChatMessage, type Conversation, type ToolActivity } from "@talorys/shared";
@@ -26,6 +26,7 @@ import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
 import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
+import { usePageTitle } from "../hooks/pageTitle";
 import { api, ApiError, streamChat } from "../lib/api";
 import { notifyChatFailure, notifyChatTurn } from "../lib/chatAlerts";
 import { cn, copyText, relativeTime } from "../lib/utils";
@@ -40,6 +41,8 @@ interface StreamState {
   tools: ToolActivity[];
   error: string | null;
   done: boolean;
+  /** The server has the owner's message, so a failed reply can be retried. Otherwise it goes back to the composer. */
+  canRetry: boolean;
 }
 
 const SUGGESTIONS = [
@@ -61,18 +64,28 @@ export function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
+  /** Identifies the newest send; an older one still running elsewhere no longer drives this page. */
+  const latestSend = useRef(0);
+  const sendsInFlight = useRef(0);
+  const restoreDraft = useRef<(text: string) => void>(() => {});
+  const [announcement, setAnnouncement] = useState("");
 
   const messages = conversation.data?.messages ?? [];
   const streaming = !!stream && !stream.done;
   // The local stream may belong to a conversation the owner navigated away from; only render it in its own.
   const streamHere = stream && stream.conversationId === (conversationId ?? null) ? stream : null;
-  // A reply generating server-side that this page isn't streaming (started before a reload or in another tab).
+  const streamingHere = !!streamHere && !streamHere.done;
+  // A reply generating server-side that this page isn't streaming (started before a reload, in another tab, or in another conversation here).
   const remoteStreaming = !streamHere && !!conversation.data?.streaming;
+
+  usePageTitle(conversation.data?.conversation.title ?? t("nav.chat"));
 
   // Reset transient stream state when switching conversations (unless it belongs to the new one).
   useEffect(() => {
     setStream((s) => (s && s.conversationId === (conversationId ?? null) ? s : streaming ? s : null));
     stickToBottom.current = true;
+    // A cached copy can predate a reply this page started there and has since stopped showing.
+    if (conversationId && sendsInFlight.current > 0) void qc.invalidateQueries({ queryKey: keys.conversation(conversationId) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
@@ -82,21 +95,30 @@ export function ChatPage() {
   }, [messages.length, stream?.text, stream?.tools.length, stream?.error]);
 
   async function send(text: string, opts: { retry?: boolean } = {}) {
-    if (streaming) return;
+    if (streamingHere) return;
     const controller = new AbortController();
     abortRef.current = controller;
     stickToBottom.current = true;
+    const sendId = ++latestSend.current;
+    sendsInFlight.current++;
+    const isLatest = () => latestSend.current === sendId;
+    const update: typeof setStream = (next) => {
+      if (isLatest()) setStream(next);
+    };
+    setAnnouncement("");
     let convId = conversationId ?? null;
     // Most turns end with `done`, which alerts. One that doesn't still needs to tell the owner it failed.
     let sawDone = false;
     let streamError: string | null = null;
+    // A retry answers a message the server already has; a new one is saved just before `start`.
+    let saved = !!opts.retry;
     if (opts.retry && convId) {
       // Optimistically hide the failed reply that the server is about to replace.
       qc.setQueryData<{ conversation: Conversation; messages: ChatMessage[] }>(keys.conversation(convId), (old) =>
         old ? { ...old, messages: old.messages.filter((m) => !(m.role === "assistant" && m.status !== "complete" && m === old.messages.at(-1))) } : old,
       );
     }
-    setStream({ conversationId: convId, userText: opts.retry ? "" : text, userMessageId: null, assistantId: null, text: "", tools: [], error: null, done: false });
+    setStream({ conversationId: convId, userText: opts.retry ? "" : text, userMessageId: null, assistantId: null, text: "", tools: [], error: null, done: false, canRetry: saved });
     try {
       await streamChat(
         { conversation_id: convId ?? undefined, message: opts.retry ? "retry" : text, retry: opts.retry },
@@ -106,17 +128,18 @@ export function ChatPage() {
               void qc.invalidateQueries({ queryKey: ["conversations"] });
               break;
             case "start":
+              saved = true;
               if (!convId) {
                 convId = event.conversation_id;
                 navigate(`/chat/${convId}`, { replace: true });
               }
-              setStream((s) => s && { ...s, conversationId: event.conversation_id, userMessageId: event.user_message_id, assistantId: event.assistant_message_id });
+              update((s) => s && { ...s, conversationId: event.conversation_id, userMessageId: event.user_message_id, assistantId: event.assistant_message_id, canRetry: true });
               break;
             case "text":
-              setStream((s) => s && { ...s, text: s.text + event.delta });
+              update((s) => s && { ...s, text: s.text + event.delta });
               break;
             case "tool":
-              setStream((s) => {
+              update((s) => {
                 if (!s) return s;
                 const tools = s.tools.some((t) => t.id === event.tool.id)
                   ? s.tools.map((t) => (t.id === event.tool.id ? event.tool : t))
@@ -126,7 +149,7 @@ export function ChatPage() {
               break;
             case "error":
               streamError = event.message;
-              setStream((s) => s && { ...s, error: event.message });
+              update((s) => s && { ...s, error: event.message });
               break;
             case "done": {
               const id = event.message.conversation_id;
@@ -134,8 +157,10 @@ export function ChatPage() {
               void notifyChatTurn(event.message, t);
               void qc
                 .invalidateQueries({ queryKey: keys.conversation(id) })
-                .then(() => setStream((s) => (s && s.assistantId === event.message.id ? null : s)));
-              setStream((s) => s && { ...s, done: true });
+                .then(() => update((s) => (s && s.assistantId === event.message.id ? null : s)));
+              update((s) => s && { ...s, done: true });
+              // Announced whole: reading each streamed fragment aloud would be unusable.
+              if (isLatest() && event.message.status === "complete") setAnnouncement(event.message.content);
               break;
             }
           }
@@ -145,26 +170,30 @@ export function ChatPage() {
       // The stream closed without finishing the turn, so nothing else would release the composer.
       if (!sawDone) throw new Error(streamError ?? "Connection lost.");
     } catch (error) {
+      // The server never got this message: hand it back instead of showing a bubble that was never sent.
+      if (!saved) restoreDraft.current(text);
       if (controller.signal.aborted) {
-        setStream((s) => s && { ...s, done: true });
+        update((s) => s && { ...s, done: true, userText: saved ? s.userText : "" });
       } else {
         const message = error instanceof ApiError || error instanceof Error ? error.message : "Connection lost.";
-        setStream((s) => s && { ...s, error: message, done: true });
+        update((s) => s && { ...s, error: message, done: true, userText: saved ? s.userText : "" });
         if (!sawDone) void notifyChatFailure(convId, message, t);
       }
     } finally {
-      abortRef.current = null;
+      sendsInFlight.current--;
+      if (isLatest()) abortRef.current = null;
       void qc.invalidateQueries({ queryKey: ["conversations"] });
       void qc.invalidateQueries({ queryKey: keys.usage });
       if (convId) void qc.invalidateQueries({ queryKey: keys.conversation(convId) });
       // Drop the transient bubble once persisted messages are back. An error may have no saved message, so it stays.
-      setTimeout(() => setStream((s) => (s?.done && !s.error ? null : s)), 400);
+      setTimeout(() => update((s) => (s?.done && !s.error ? null : s)), 400);
     }
   }
 
   function stop() {
-    const convId = stream?.conversationId ?? (remoteStreaming ? conversationId : null);
-    abortRef.current?.abort();
+    const convId = streamHere?.conversationId ?? (remoteStreaming ? conversationId : null);
+    // The local request may belong to another conversation, which stopping this one must leave running.
+    if (streamHere) abortRef.current?.abort();
     if (convId) void api("/chat/cancel", { method: "POST", body: { conversation_id: convId } }).catch(() => {});
   }
 
@@ -211,7 +240,7 @@ export function ChatPage() {
                   <MessageView
                     key={m.id}
                     message={m}
-                    onRetry={lastFailed?.id === m.id && !streaming && !remoteStreaming ? () => void send("", { retry: true }) : undefined}
+                    onRetry={lastFailed?.id === m.id && !streamingHere && !remoteStreaming ? () => void send("", { retry: true }) : undefined}
                   />
                 ),
               )}
@@ -226,7 +255,7 @@ export function ChatPage() {
                     tools={streamHere.tools}
                     error={streamHere.error}
                     streaming={!streamHere.done}
-                    onRetry={streamHere.error && streamHere.done && conversationId ? () => void send("", { retry: true }) : undefined}
+                    onRetry={streamHere.error && streamHere.done && streamHere.canRetry && conversationId ? () => void send("", { retry: true }) : undefined}
                   />
                 </>
               )}
@@ -235,7 +264,8 @@ export function ChatPage() {
           )}
         </div>
 
-        <Composer streaming={streaming || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} />
+        <Composer streaming={streamingHere || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} restoreRef={restoreDraft} />
+        <div role="status" className="sr-only">{announcement}</div>
       </section>
 
       <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} title="Conversations">
@@ -256,13 +286,15 @@ function ChatHeader({
   onOpenHistory: () => void;
   onNew: () => void;
 }) {
+  // With no conversation open, the greeting is the page's main heading.
+  const Title = conversation ? "h1" : "h2";
   return (
     <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-3 md:px-4">
       <div className="flex min-w-0 items-center gap-1">
         <button type="button" onClick={onOpenHistory} className="rounded-lg p-2 text-fg-muted hover:bg-muted lg:hidden" aria-label="Conversation history">
           <History className="h-[18px] w-[18px]" />
         </button>
-        <h2 className="truncate text-sm font-medium text-fg">{conversation?.title ?? "New conversation"}</h2>
+        <Title className="truncate text-sm font-medium text-fg">{conversation?.title ?? "New conversation"}</Title>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <ChatUsage />
@@ -344,6 +376,26 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
   const [deleting, setDeleting] = useState<Conversation | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const openMenuItem = useRef<HTMLLIElement>(null);
+
+  // The options menu closes on Escape (returning focus to its button) or a press anywhere else.
+  useEffect(() => {
+    if (!menu) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!openMenuItem.current?.contains(e.target as Node)) setMenu(null);
+    };
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      openMenuItem.current?.querySelector<HTMLButtonElement>("button[aria-expanded]")?.focus();
+      setMenu(null);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menu]);
 
   const rename = useApiMutation(
     (v: { id: string; title: string }) => api(`/conversations/${v.id}`, { method: "PATCH", body: { title: v.title } }),
@@ -386,7 +438,7 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
         ) : (
           <ul className="space-y-0.5">
             {list.data.map((c) => (
-              <li key={c.id} className="group relative">
+              <li key={c.id} ref={menu === c.id ? openMenuItem : undefined} className="group relative">
                 <button type="button"
                   onClick={() => {
                     navigate(`/chat/${c.id}`);
@@ -404,11 +456,12 @@ function ConversationList({ activeId, onNavigate }: { activeId?: string; onNavig
                   onClick={() => setMenu(menu === c.id ? null : c.id)}
                   className="absolute right-1.5 top-2 rounded-md p-1 text-fg-subtle opacity-100 hover:bg-border hover:text-fg md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
                   aria-label={`Options for ${c.title}`}
+                  aria-expanded={menu === c.id}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
                 {menu === c.id && (
-                  <div className="absolute right-1 top-9 z-10 w-36 rounded-lg border border-border bg-surface py-1 shadow-lg animate-fade-in" onMouseLeave={() => setMenu(null)}>
+                  <div className="absolute right-1 top-9 z-10 w-36 rounded-lg border border-border bg-surface py-1 shadow-lg animate-fade-in">
                     <button type="button"
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted"
                       onClick={() => {
@@ -569,7 +622,7 @@ function AssistantBubble({
           </div>
         )}
         {!streaming && text && (
-          <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+          <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
             <button type="button"
               onClick={() =>
                 void copyText(text).then(() => {
@@ -590,9 +643,26 @@ function AssistantBubble({
   );
 }
 
-function Composer({ streaming, onSend, onStop, autoFocus }: { streaming: boolean; onSend: (t: string) => void; onStop: () => void; autoFocus?: boolean }) {
+function Composer({
+  streaming,
+  onSend,
+  onStop,
+  autoFocus,
+  restoreRef,
+}: {
+  streaming: boolean;
+  onSend: (t: string) => void;
+  onStop: () => void;
+  autoFocus?: boolean;
+  /** Filled with a function that puts unsent text back, ahead of anything typed since. */
+  restoreRef: RefObject<(text: string) => void>;
+}) {
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
+  restoreRef.current = (text) => {
+    setValue((typed) => (typed.trim() ? `${text}\n\n${typed}` : text));
+    ref.current?.focus();
+  };
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;

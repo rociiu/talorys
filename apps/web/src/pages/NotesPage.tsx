@@ -111,6 +111,11 @@ export default function NotesPage() {
   );
 }
 
+/** Milliseconds to wait before autosaving: quick normally, backing off to a minute while saves keep failing. */
+export function autosaveDelay(failures: number): number {
+  return Math.min(1000 * 2 ** failures, 60_000);
+}
+
 function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const projects = useProjects();
   const [note, setNote] = useState<Note | null>(null);
@@ -156,9 +161,18 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const dirty = !!note && (savedTitle !== note.title || content !== note.content || projectId !== (note.project_id ?? ""));
   const body = { title: savedTitle, content, project_id: projectId || null };
 
+  const saveFailures = useRef(0);
+  // Quiet: autosave retries by itself, so the failure is a status in the toolbar, not a toast per attempt.
   const save = useApiMutation(() => api<{ note: Note }>(`/notes/${id}`, { method: "PATCH", body }), {
     invalidate: [["notes"]],
-    onSuccess: (r) => setNote(r.note),
+    quiet: true,
+    onError: () => {
+      saveFailures.current++;
+    },
+    onSuccess: (r) => {
+      saveFailures.current = 0;
+      setNote(r.note);
+    },
   });
 
   // Flush pending edits when leaving the note (switching notes or pages) before autosave fires.
@@ -181,7 +195,7 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
   saveRef.current = save;
   useEffect(() => {
     if (!dirty || save.isPending) return;
-    const t = setTimeout(() => saveRef.current.mutate(undefined), 1000);
+    const t = setTimeout(() => saveRef.current.mutate(undefined), autosaveDelay(saveFailures.current));
     return () => clearTimeout(t);
   }, [dirty, title, content, projectId, save.isPending]);
 
@@ -228,11 +242,11 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex rounded-lg bg-muted p-0.5">
-            <button type="button" onClick={() => setMode("edit")} className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium", mode === "edit" ? "bg-surface shadow-sm" : "text-fg-muted")}>
-              <Pencil className="h-3 w-3" /> Write
+            <button type="button" onClick={() => setMode("edit")} aria-pressed={mode === "edit"} className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium", mode === "edit" ? "bg-surface shadow-sm" : "text-fg-muted")}>
+              <Pencil className="h-3 w-3" /> <span className="max-sm:sr-only">Write</span>
             </button>
-            <button type="button" onClick={() => setMode("preview")} className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium", mode === "preview" ? "bg-surface shadow-sm" : "text-fg-muted")}>
-              <Eye className="h-3 w-3" /> Preview
+            <button type="button" onClick={() => setMode("preview")} aria-pressed={mode === "preview"} className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium", mode === "preview" ? "bg-surface shadow-sm" : "text-fg-muted")}>
+              <Eye className="h-3 w-3" /> <span className="max-sm:sr-only">Preview</span>
             </button>
           </div>
           {mode === "edit" && (
@@ -245,21 +259,24 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
               </Button>
             </>
           )}
-          {save.isPending ? <span className="text-xs text-fg-subtle">Saving…</span> : dirty ? <Badge tone="warning">Unsaved</Badge> : <span className="hidden text-xs text-fg-subtle sm:inline">Saved</span>}
+          <span role="status" className="ml-1 flex items-center">
+            {saveFailures.current > 0 && dirty ? (
+              <Badge tone="danger">Couldn't save</Badge>
+            ) : save.isPending ? (
+              <span className="text-xs text-fg-subtle">Saving…</span>
+            ) : dirty ? (
+              <Badge tone="warning">Unsaved</Badge>
+            ) : (
+              <span className="hidden text-xs text-fg-subtle sm:inline">Saved</span>
+            )}
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-8 w-36 text-xs" aria-label="Project">
-            <option value="">No project</option>
-            {projects.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+        <div className="flex shrink-0 items-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(true)} aria-label="Delete note">
             <Trash2 className="h-4 w-4" />
           </Button>
-          <Button size="sm" onClick={() => save.mutate(undefined)} disabled={!dirty} loading={save.isPending}>
+          {/* Autosave makes this a retry; on a phone it only takes up room when there's something to save. */}
+          <Button size="sm" onClick={() => save.mutate(undefined)} disabled={!dirty} loading={save.isPending} className={cn(!dirty && "max-sm:hidden")}>
             Save
           </Button>
         </div>
@@ -276,6 +293,16 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
             className="w-full bg-transparent text-2xl font-semibold tracking-tight placeholder:text-fg-subtle focus:outline-none"
           />
           <NoteMeta content={content} updatedAt={note.updated_at} />
+          <div className="mt-3 w-44 max-w-full">
+            <Select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-8 text-xs" aria-label="Project">
+              <option value="">No project</option>
+              {projects.data?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </div>
           <div className="mt-6">
             {mode === "edit" ? (
               <div className="min-h-[55vh] cursor-text pb-[30vh]" onClick={(e) => e.target === e.currentTarget && editorRef.current?.focus()}>

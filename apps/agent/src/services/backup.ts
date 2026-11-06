@@ -18,9 +18,10 @@ import { validateEndpoint } from "../mcp/url";
 
 /**
  * Settings a backup may never change: they control cost and model behaviour, and a
- * backup file is untrusted input. The owner changes them in Settings instead.
+ * backup file is untrusted input. The owner changes them in Settings instead. The agent
+ * name counts because it goes into the system prompt as instructions, not marked as data.
  */
-export const IMPORT_IGNORED_SETTINGS = ["model", "limits", "demoMode", "autoMemory", "memoryHistory"] as const;
+export const IMPORT_IGNORED_SETTINGS = ["model", "limits", "demoMode", "autoMemory", "memoryHistory", "agentName"] as const;
 
 /** Builds a portable backup. Sessions, login attempts and credentials are never exported. */
 export function exportData(s: Services): Backup {

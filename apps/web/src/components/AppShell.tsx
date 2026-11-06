@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Bell, Brain, CalendarClock, CheckSquare, LogOut, type LucideIcon, MessageSquare, NotebookPen, Settings } from "lucide-react";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Logo } from "./Logo";
 import { NotificationCenter } from "./NotificationCenter";
 import { useKeyboardOpenFlag } from "../hooks/keyboard";
+import { usePageTitle } from "../hooks/pageTitle";
 import { useSession } from "../hooks/session";
 import { useNotifications, useSettings } from "../hooks/queries";
 import { cn } from "../lib/utils";
@@ -40,6 +42,9 @@ export function AppShell() {
   const unread = notifications.data?.unread ?? 0;
   const agentName = settings.data?.agentName ?? "Talorys";
   const isChat = location.pathname.startsWith("/chat");
+  // Chat titles itself after the open conversation.
+  const section = location.pathname.startsWith("/settings") ? "nav.settings" : NAV.find((n) => location.pathname.startsWith(n.to))?.label;
+  usePageTitle(isChat || !section ? null : t(section));
 
   const bell = (
     <button type="button"
@@ -123,7 +128,9 @@ export function AppShell() {
         </header>
 
         <main className={cn("min-h-0 flex-1", isChat ? "overflow-hidden" : "overflow-y-auto pb-20 md:pb-0")}>
-          <Outlet />
+          <ErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
 
         {/* Mobile bottom navigation */}

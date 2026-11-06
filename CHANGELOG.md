@@ -9,6 +9,22 @@ All notable changes to Talorys are listed here. Versions match the `create-talor
 - **Chat alerts**: a system notification when a reply finishes or needs approval while the window is out of focus
 - A notification when a scheduled automation fails, sent once until it succeeds again
 
+### Fixed
+
+- A chat message that never reached the server goes back to the composer instead of being lost, and Retry only appears when there's something to retry
+- A reply generating in one conversation no longer replaces Send with Stop in the others, where Stop cancelled the wrong reply
+- A failed page load or render shows a way to reload instead of a blank screen, and a tab left open across an update reloads itself
+- Note autosave backs off when saves fail, with one "Couldn't save" status instead of a stream of errors
+- The note's project picker no longer collapses to a blank box, and automation names are no longer cut to a few letters on phones
+- Connection failures read "Can't reach Talorys" instead of "Failed to fetch"
+- `create-talorys reset-password` now clears a login lockout, as the docs said it did, and `Retry-After` reflects the client's own failures
+
+### Changed
+
+- Accessibility: higher contrast for secondary text, warning and success colors and off switches; finished replies are announced to screen readers; dialogs have names; the conversation menu closes on Escape or a press elsewhere; Copy stays visible when focused; browser tabs are titled after what's open
+- `GET /api/health` shows the exact version and schema only to a signed-in session or access token
+- Importing a backup no longer changes the agent name, which goes into the system prompt
+
 ## 0.1.8 — 2026-11-03
 
 ### Added

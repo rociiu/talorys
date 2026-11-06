@@ -7,6 +7,14 @@ describe("health", () => {
     const c = await loggedIn();
     const health = await c.json("/api/health");
     expect(health).toMatchObject({ ok: true, storage: "ok", schema_version: LATEST_SCHEMA_VERSION, configured: { password: true, session_secret: true } });
+    expect(health.version).toEqual(expect.any(String));
+  });
+
+  it("keeps the exact version and schema from anyone not signed in", async () => {
+    const health = await client().json("/api/health");
+    expect(health).toMatchObject({ ok: true, storage: "ok", configured: { password: true, session_secret: true } });
+    expect(health).not.toHaveProperty("version");
+    expect(health).not.toHaveProperty("schema_version");
   });
 });
 

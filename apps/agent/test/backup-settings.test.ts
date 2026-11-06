@@ -51,13 +51,13 @@ describe("portable backup settings", () => {
     try {
       const res = await c.call("/api/import", {
         method: "POST",
-        body: { format: BACKUP_FORMAT, version: 1, exported_at: new Date().toISOString(), data: { settings: { language: "zz", agentName: "Imported" } } },
+        body: { format: BACKUP_FORMAT, version: 1, exported_at: new Date().toISOString(), data: { settings: { language: "zz", theme: "dark" } } },
       });
       expect(res.status).toBe(200);
       const { settings } = await c.json("/api/settings");
-      expect(settings).toMatchObject({ language: "en", agentName: "Imported" });
+      expect(settings).toMatchObject({ language: "en", theme: "dark" });
     } finally {
-      await c.json("/api/settings", { method: "PATCH", body: { language: before.language, agentName: before.agentName } });
+      await c.json("/api/settings", { method: "PATCH", body: { language: before.language, theme: before.theme } });
     }
   });
 
