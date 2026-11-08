@@ -5,6 +5,7 @@ import type { AppEnv } from "../app";
 import { body, query } from "../middleware";
 import { AppError, NotFoundError } from "../errors";
 import { ALL_TOOLS, runApprovedAction } from "../../tools";
+import { webSearchTools } from "../../tools/web";
 
 export const chatRoutes = new Hono<AppEnv>();
 
@@ -130,8 +131,8 @@ chatRoutes.post("/chat/cancel", async (c) => {
 /** Owner approval of a destructive action the agent proposed. The agent has no way to call this. */
 chatRoutes.post("/actions/:id/approve", async (c) => {
   const s = c.env.agent.services;
-  // MCP tools that ask first are rebuilt from their current state; a disabled one can't be approved.
-  const tools = [...ALL_TOOLS, ...s.mcp.chatTools()];
+  // Web search and MCP tools that ask first are rebuilt from their current state; a disabled one can't be approved.
+  const tools = [...ALL_TOOLS, ...webSearchTools(s.webSearch), ...s.mcp.chatTools()];
   const action = await runApprovedAction(tools, { services: s, timezone: s.settings.get().timezone, mode: "chat" }, c.req.param("id"));
   return c.json({ action });
 });

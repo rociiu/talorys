@@ -35,8 +35,11 @@ interface BaseTool<S extends z.ZodType> {
   maxCallsPerTurn?: number;
   /** Short human-readable label for the UI, e.g. "Adding task “Buy milk”". */
   label: (input: z.infer<S>) => string;
-  /** Set on tools from a remote MCP server. They are offered in chat only, never in scheduled runs. */
-  external?: { serverId: string };
+  /**
+   * Set on tools that send their arguments outside Talorys: remote MCP tools (`source` is the server
+   * id) and the built-in web search (`web-search`). They are offered in chat only, never in scheduled runs.
+   */
+  external?: { source: string };
 }
 
 export interface ImmediateTool<S extends z.ZodType = z.ZodType, R = unknown> extends BaseTool<S> {

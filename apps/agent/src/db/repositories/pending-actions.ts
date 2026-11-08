@@ -1,4 +1,4 @@
-import { type ChatMessage, MCP_TOOL_PREFIX, type PendingAction } from "@talorys/shared";
+import { type ChatMessage, MCP_TOOL_PREFIX, type PendingAction, WEB_SEARCH_TOOL } from "@talorys/shared";
 import { type Database, newId, now } from "../database";
 import { decodeTools } from "./conversations";
 
@@ -15,7 +15,7 @@ export interface StoredPendingAction {
   summary: string;
   payload: string | null;
   preview: string | null;
-  /** What an approved external (MCP) call returned, shortened. */
+  /** What an approved external call (MCP or web search) returned, shortened. */
   result: string | null;
   status: "pending" | "approved" | "cancelled" | "failed";
   error: string | null;
@@ -28,7 +28,7 @@ function present(row: StoredPendingAction): PendingAction {
   const expired = row.status === "pending" && row.expires_at <= now();
   const action: PendingAction = { id: row.id, summary: row.summary, status: expired ? "expired" : row.status, error: row.error, expires_at: row.expires_at };
   if (row.preview !== null) action.preview = row.preview;
-  if (row.tool.startsWith(MCP_TOOL_PREFIX)) action.kind = "external";
+  if (row.tool.startsWith(MCP_TOOL_PREFIX) || row.tool === WEB_SEARCH_TOOL) action.kind = "external";
   if (row.result) action.result = row.result;
   return action;
 }

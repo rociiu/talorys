@@ -1,4 +1,5 @@
-import { type HealthReport, TALORYS_VERSION, type UsageReport, settingsUpdateSchema } from "@talorys/shared";
+import { type HealthReport, TALORYS_VERSION, type UsageReport, WEB_SEARCH_KEY_SECRETS, WEB_SEARCH_PROVIDER_NAMES, settingsUpdateSchema } from "@talorys/shared";
+import { ValidationError } from "../errors";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app";
@@ -48,13 +49,27 @@ systemRoutes.patch("/settings", async (c) => {
   const patch = await body(c, settingsUpdateSchema);
   const s = c.env.agent.services;
   const before = s.settings.get();
+  const provider = patch.webSearch?.provider;
+  if (provider && provider !== "off" && provider !== before.webSearch.provider && !s.webSearch.configured(provider)) {
+    throw new ValidationError(`${WEB_SEARCH_PROVIDER_NAMES[provider]} needs an API key first. Set the ${WEB_SEARCH_KEY_SECRETS[provider]} Worker secret.`);
+  }
   const settings = s.settings.update(patch);
   if (settings.timezone !== before.timezone) await s.automations.rearmAll();
   if (settings.demoMode !== before.demoMode) {
     s.activity.record("settings.demo_mode", settings.demoMode ? "Demo mode enabled (mock AI)" : "Demo mode disabled");
   }
+  const ws = settings.webSearch;
+  if (ws.provider !== before.webSearch.provider || ws.policy !== before.webSearch.policy) {
+    s.activity.record(
+      "settings.web_search",
+      ws.provider === "off" ? "Web search turned off" : `Web search on: ${WEB_SEARCH_PROVIDER_NAMES[ws.provider]}, ${ws.policy === "approve" ? "asks before each search" : "searches without asking"}`,
+    );
+  }
   return c.json({ settings });
 });
+
+/** Which web search providers have a key. The keys themselves never leave the backend. */
+systemRoutes.get("/web-search", (c) => c.json(c.env.agent.services.webSearch.status()));
 
 systemRoutes.get("/usage", (c) => {
   const s = c.env.agent.services;

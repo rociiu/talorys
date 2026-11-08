@@ -1,4 +1,4 @@
-import { DEFAULT_LIMITS, DEFAULT_MODEL, DEFAULT_MEMORY_HISTORY, type Settings, settingsSchema, settingsUpdateSchema } from "@talorys/shared";
+import { DEFAULT_LIMITS, DEFAULT_MODEL, DEFAULT_MEMORY_HISTORY, DEFAULT_WEB_SEARCH, type Settings, settingsSchema, settingsUpdateSchema } from "@talorys/shared";
 import type { z } from "zod";
 import { type Database, now } from "../db/database";
 import { ValidationError } from "../api/errors";
@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   demoMode: false,
   memoryHistory: { ...DEFAULT_MEMORY_HISTORY },
   updateCheck: true,
+  webSearch: { ...DEFAULT_WEB_SEARCH },
 };
 
 const SETTINGS_KEY = "app.settings";
@@ -35,6 +36,7 @@ export class SettingsService {
       ...stored,
       limits: { ...DEFAULT_SETTINGS.limits, ...(stored.limits ?? {}) },
       memoryHistory: { ...DEFAULT_SETTINGS.memoryHistory, ...(stored.memoryHistory ?? {}) },
+      webSearch: { ...DEFAULT_SETTINGS.webSearch, ...(stored.webSearch ?? {}) },
     };
     const parsed = settingsSchema.safeParse(merged);
     if (parsed.success) return parsed.data;
@@ -52,6 +54,7 @@ export class SettingsService {
       ...stripUndefined(parsedPatch.data),
       limits: { ...current.limits, ...stripUndefined(parsedPatch.data.limits ?? {}) },
       memoryHistory: { ...current.memoryHistory, ...stripUndefined(parsedPatch.data.memoryHistory ?? {}) },
+      webSearch: { ...current.webSearch, ...stripUndefined(parsedPatch.data.webSearch ?? {}) },
     };
     const parsed = settingsSchema.safeParse(next);
     if (!parsed.success) throw ValidationError.fromZod(parsed.error);

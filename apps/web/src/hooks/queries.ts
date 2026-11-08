@@ -16,6 +16,7 @@ import type {
   Settings,
   Task,
   UsageReport,
+  WebSearchStatus,
 } from "@talorys/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -42,6 +43,7 @@ export const keys = {
   remoteTokens: ["remote", "tokens"] as const,
   mcpServers: ["mcp", "servers"] as const,
   mcpTools: (id: string) => ["mcp", "tools", id] as const,
+  webSearch: ["web-search"] as const,
 };
 
 export function useSettings() {
@@ -185,6 +187,10 @@ export interface UpdateStatus {
 /** Whether a newer release is published. The server caches the lookup for a day. */
 export function useUpdateStatus() {
   return useQuery({ queryKey: keys.update, queryFn: () => api<UpdateStatus>("/system/update"), staleTime: 60 * 60_000, retry: false });
+}
+
+export function useWebSearchStatus() {
+  return useQuery({ queryKey: keys.webSearch, queryFn: () => api<WebSearchStatus>("/web-search") });
 }
 
 export function useRemoteStatus() {

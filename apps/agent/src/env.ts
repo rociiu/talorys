@@ -26,6 +26,12 @@ export interface Env {
   TALORYS_MCP?: string;
   /** Most MCP tools enabled at once (default 20, at most 64). */
   TALORYS_MCP_MAX_TOOLS?: string;
+  /**
+   * API keys for the built-in web search (Worker secrets). Web search stays off until the owner
+   * picks a provider whose key is set; without keys nothing changes.
+   */
+  TAVILY_API_KEY?: string;
+  EXA_API_KEY?: string;
   /** "development" enables local-only conveniences (mock AI, http cookies). Never set in production. */
   TALORYS_ENV?: string;
   /** Development only: use the deterministic mock AI provider. */

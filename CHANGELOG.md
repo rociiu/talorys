@@ -8,6 +8,7 @@ All notable changes to Talorys are listed here. Versions match the `create-talor
 
 - **Chat alerts**: a system notification when a reply finishes or needs approval while the window is out of focus
 - A notification when a scheduled automation fails, sent once until it succeeds again
+- **Web search (optional)**: a built-in `web_search` tool in chat backed by Tavily or Exa, with your own key as a Worker secret (`TAVILY_API_KEY` or `EXA_API_KEY`). Off by default (Settings → Integrations). Each query asks for approval unless you choose otherwise, only the query is sent, it's never used by scheduled routines, and a backup import can't turn it on. See [docs/web-search.md](docs/web-search.md).
 
 ### Fixed
 
