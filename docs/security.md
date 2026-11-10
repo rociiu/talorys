@@ -163,6 +163,29 @@ Optional machine-client access with named personal access tokens (`tal_…`).
 - Mutations are attributed in the activity log by token name/id prefix (no bodies or credentials), coalesced to at most one `remote.request` row per token per 15-minute window; write volume is also counted per token per day. Memories created via Bearer use source `remote`.
 - Bearer cannot create or change `agent_prompt` automations (403); see [Remote access](remote-access.md).
 
+## Web search
+
+Optional and off by default. Full details: [Web search](web-search.md).
+
+- Turned on only from an owner session in Settings → Integrations, and only for
+  a provider whose key is set (`TAVILY_API_KEY` or `EXA_API_KEY`, Worker
+  secrets that never reach the browser, logs or backups). Access tokens can't
+  reach the setting, and a backup import never changes it.
+- The `web_search` tool sends only the query, plus fixed options, to one fixed
+  endpoint per provider (`api.tavily.com/search`, `api.exa.ai/search`), with
+  redirects refused, a 10-second timeout and a 512 KiB response cap. It never
+  fetches a page or a URL the model chose.
+- A query can carry private data out, for example after prompt injection. By
+  default each query waits on an approval card, through the same pending-action
+  flow as deletions, bound to the provider that was active. The owner can
+  choose to search without asking; the prompt and tool description still tell
+  the model to keep personal details out of queries.
+- Results are clipped (5 results, 200-character titles, 500-character excerpts),
+  only http(s) links are kept, and the model is told they are third-party data.
+- Chat only: scheduled runs never get the tool. At most 2 searches per turn,
+  within the usual tool budget. The activity log records the provider and
+  outcome, never the query.
+
 ## Remote MCP servers
 
 Optional. Full details: [Remote MCP servers](mcp.md#security-model).

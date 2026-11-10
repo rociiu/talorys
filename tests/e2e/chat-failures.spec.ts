@@ -111,7 +111,10 @@ test.describe("a page chunk that won't load", () => {
     await page.route("**/src/pages/NotesPage.tsx*", (route) => route.abort("failed"));
     await page.getByRole("link", { name: "Notes" }).click();
 
+    // The message can render just before the automatic reload starts, so wait for the reload first.
+    await expect.poll(() => loads, { timeout: 15_000 }).toBe(1);
     await expect(page.getByText("Talorys was updated while this page was open.")).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(1_000);
     expect(loads).toBe(1); // The one automatic reload, not a loop.
     await expect(page.getByRole("button", { name: "Reload" })).toBeVisible();
     // The app around the failed page still works.

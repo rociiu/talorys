@@ -33,6 +33,8 @@ export default defineConfig(async () => ({
           OWNER_PASSWORD_HASH: await pbkdf2(TEST_PASSWORD),
           SESSION_SECRET: "test-session-secret-0123456789abcdefghijklmnop",
           MCP_CREDENTIAL_KEY: "test-mcp-credential-key-0123456789abcdefghij",
+          // Only Tavily has a key, so tests also cover choosing a provider that has none.
+          TAVILY_API_KEY: "tvly-test-key",
           TEST_PASSWORD,
           ...(await vapidKeys()),
         },

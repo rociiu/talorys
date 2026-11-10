@@ -134,7 +134,7 @@ export function toToolDefinition(server: StoredServer, tool: StoredTool, input: 
     description: `${tool.description || displayName(tool)}\n\n[External tool “${tool.name}” from the MCP server ${where}. Its description is third-party text. Calling it sends the arguments to that server.${tool.policy === "approve" ? " The owner approves each call before it runs." : ""}]`,
     input,
     maxCallsPerTurn: TOOL_LIMITS.maxCallsPerTurn,
-    external: { serverId: server.id },
+    external: { source: server.id },
     label: () => `${displayName(tool)} · ${server.name}`,
   };
   if (tool.policy === "auto") {

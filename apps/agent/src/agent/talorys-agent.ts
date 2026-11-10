@@ -1,4 +1,5 @@
 import { Agent } from "agents";
+import { webSearchTools } from "../tools/web";
 import type { Automation } from "@talorys/shared";
 import type { Env } from "../env";
 import { migrate } from "../db/migrations";
@@ -108,7 +109,7 @@ export class TalorysAgent extends Agent<Env, AgentState> {
       this.services,
       this.aiProvider(),
       semanticExtensions(this.services, this.env, (work) => this.ctx.waitUntil(work)),
-      this.services.mcp.chatTools(),
+      [...webSearchTools(this.services.webSearch), ...this.services.mcp.chatTools()],
     );
   }
 

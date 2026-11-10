@@ -2,6 +2,7 @@ import { z } from "zod";
 import { BACKUP_FORMAT, LANGUAGES, LIMIT_CEILINGS, TASK_PRIORITIES } from "./constants";
 import { isValidTimeZone, scheduleSpecSchema } from "./recurrence";
 import { type TaskPlanDraft, taskPlanDraftSchema } from "./plans";
+import { DEFAULT_WEB_SEARCH, webSearchSettingsSchema } from "./web-search";
 
 // ---------- Primitives ----------
 
@@ -345,16 +346,22 @@ export const settingsSchema = z.object({
   memoryHistory: memoryHistorySettingsSchema,
   /** Check the npm registry once a day for a newer Talorys release. */
   updateCheck: z.boolean(),
+  /**
+   * Built-in web search in chat. Off by default; never changed by a backup import. An unknown
+   * value (saved by a newer version, before a rollback) reads as off instead of failing validation.
+   */
+  webSearch: webSearchSettingsSchema.catch({ ...DEFAULT_WEB_SEARCH }),
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export const settingsUpdateSchema = settingsSchema
-  .omit({ limits: true, memoryHistory: true })
+  .omit({ limits: true, memoryHistory: true, webSearch: true })
   .partial()
   .extend({
     // Changes are still validated strictly; only reading stored settings is lenient.
     language: languagePreferenceSchema.optional(),
     limits: limitsSchema.partial().optional(),
     memoryHistory: memoryHistorySettingsSchema.partial().optional(),
+    webSearch: webSearchSettingsSchema.partial().optional(),
   });
 
 export const loginSchema = z.object({ password: z.string().min(1).max(256) });

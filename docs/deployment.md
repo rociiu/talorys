@@ -71,7 +71,8 @@ npx wrangler deploy -c wrangler.standalone.jsonc
 
 Push notifications are optional here; see [Push notifications](#push-notifications)
 to add the keys. To connect MCP servers that need a token, also set
-`MCP_CREDENTIAL_KEY` (see [Remote MCP servers](mcp.md#configuration)).
+`MCP_CREDENTIAL_KEY` (see [Remote MCP servers](mcp.md#configuration)). For web
+search, set `TAVILY_API_KEY` or `EXA_API_KEY` (see [Web search](web-search.md)).
 
 `OWNER_PASSWORD` is the plain password, for deploys that cannot hash it
 beforehand. It must pass the installer's strength check (10+ characters, mixed

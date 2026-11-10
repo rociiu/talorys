@@ -135,6 +135,10 @@ function planTools(text: string): PlannedCall[] {
     }
     return [{ name: m[1]!, input, describe: (out) => `MCP result:\n\n\`\`\`json\n${JSON.stringify(out, null, 2).slice(0, 1500)}\n\`\`\`` }];
   }
+  if ((m = text.match(/^web search (.+)$/i))) {
+    // Exercises the built-in web search: "web search node 24 release".
+    return [{ name: "web_search", input: { query: m[1] }, describe: (out) => `Web results:\n\n\`\`\`json\n${JSON.stringify(out, null, 2).slice(0, 1500)}\n\`\`\`` }];
+  }
   if ((m = text.match(/^(?:search|find)\s+(.+)$/i))) {
     return [{ name: "search", input: { query: m[1] }, describe: (out) => `Search results:\n\n\`\`\`json\n${JSON.stringify(out, null, 2).slice(0, 1500)}\n\`\`\`` }];
   }
