@@ -20,6 +20,7 @@ import type { AppEnv } from "../app";
 import { body, query } from "../middleware";
 import { ValidationError } from "../errors";
 import { localDayBounds } from "../../services/time";
+import { buildToday } from "../../services/today";
 
 /** Tasks, memories, notes and projects. None of these routes need AI. */
 export const dataRoutes = new Hono<AppEnv>();
@@ -27,6 +28,10 @@ export const dataRoutes = new Hono<AppEnv>();
 function assertProject(c: { env: AppEnv["Bindings"] }, projectId: string | null | undefined) {
   if (projectId && !c.env.agent.services.projects.get(projectId)) throw new ValidationError("Project does not exist.");
 }
+
+// ---------- Today ----------
+
+dataRoutes.get("/today", (c) => c.json(buildToday(c.env.agent.services)));
 
 // ---------- Tasks ----------
 
@@ -161,6 +166,7 @@ dataRoutes.delete("/notes/:id", (c) => {
 // ---------- Projects ----------
 
 dataRoutes.get("/projects", (c) => c.json({ projects: c.env.agent.services.projects.list() }));
+dataRoutes.get("/projects/:id", (c) => c.json({ project: c.env.agent.services.projects.require(c.req.param("id")) }));
 
 dataRoutes.post("/projects", async (c) => {
   const input = await body(c, projectCreateSchema);

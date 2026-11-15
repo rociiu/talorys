@@ -2,16 +2,21 @@
 
 All notable changes to Talorys are listed here. Versions match the `create-talorys` package.
 
-## Unreleased
+## 0.2.0 — 2026-11-15
 
 ### Added
 
+- **Today**: a personalized daily dashboard with exact task counts, a three-task focus, overdue and upcoming work, project activity, upcoming reminders and automations, and deterministic next-step suggestions. It uses existing structured data, makes no AI requests, and keeps working when AI is unavailable
+- Lightweight project list and detail pages, with actionable task counts and contextual links between projects, tasks and chat planning
+- A lightweight, skippable first-use guide with example actions and links to create a first task or reminder; dismissal is remembered in the current browser
+- English and Korean localization for the Today dashboard, project pages and first-use guide
 - **Chat alerts**: a system notification when a reply finishes or needs approval while the window is out of focus
 - A notification when a scheduled automation fails, sent once until it succeeds again
 - **Web search (optional)**: a built-in `web_search` tool in chat backed by Tavily or Exa, with your own key as a Worker secret (`TAVILY_API_KEY` or `EXA_API_KEY`). Off by default (Settings → Integrations). Each query asks for approval unless you choose otherwise, only the query is sent, it's never used by scheduled routines, and a backup import can't turn it on. See [docs/web-search.md](docs/web-search.md).
 
 ### Fixed
 
+- An interrupted additive migration can now resume without recreating an existing column or losing its data; the remaining statements and schema-version update still run transactionally
 - A chat message that never reached the server goes back to the composer instead of being lost, and Retry only appears when there's something to retry
 - A reply generating in one conversation no longer replaces Send with Stop in the others, where Stop cancelled the wrong reply
 - A failed page load or render shows a way to reload instead of a blank screen, and a tab left open across an update reloads itself
@@ -22,9 +27,15 @@ All notable changes to Talorys are listed here. Versions match the `create-talor
 
 ### Changed
 
+- Today is the signed-in landing page and the first desktop and mobile navigation destination; Chat remains a first-class destination
+- Task details use a shared editor, and Today can open or complete tasks, filter overdue work, start a project plan in Chat, or create a reminder without sending anything automatically
 - Accessibility: higher contrast for secondary text, warning and success colors and off switches; finished replies are announced to screen readers; dialogs have names; the conversation menu closes on Escape or a press elsewhere; Copy stays visible when focused; browser tabs are titled after what's open
 - `GET /api/health` shows the exact version and schema only to a signed-in session or access token
 - Importing a backup no longer changes the agent name, which goes into the system prompt
+
+### Upgrading
+
+- Today adds `GET /api/today` but no database migration or backup-format change. Existing installations keep their Durable Object namespace, data, settings and backup compatibility; run `npx create-talorys@latest update` as usual.
 
 ## 0.1.8 — 2026-11-03
 

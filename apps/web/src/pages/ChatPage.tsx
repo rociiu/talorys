@@ -264,7 +264,7 @@ export function ChatPage() {
           )}
         </div>
 
-        <Composer streaming={streamingHere || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} restoreRef={restoreDraft} />
+        <Composer key={new URLSearchParams(location.search).get("prompt") ?? ""} initialValue={new URLSearchParams(location.search).get("prompt") ?? ""} streaming={streamingHere || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} restoreRef={restoreDraft} />
         <div role="status" className="sr-only">{announcement}</div>
       </section>
 
@@ -649,6 +649,7 @@ function Composer({
   onStop,
   autoFocus,
   restoreRef,
+  initialValue,
 }: {
   streaming: boolean;
   onSend: (t: string) => void;
@@ -656,8 +657,9 @@ function Composer({
   autoFocus?: boolean;
   /** Filled with a function that puts unsent text back, ahead of anything typed since. */
   restoreRef: RefObject<(text: string) => void>;
+  initialValue: string;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue);
   const ref = useRef<HTMLTextAreaElement>(null);
   restoreRef.current = (text) => {
     setValue((typed) => (typed.trim() ? `${text}\n\n${typed}` : text));

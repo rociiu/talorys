@@ -7,7 +7,7 @@ async function login(page: Page) {
   await page.goto("/");
   await page.getByPlaceholder("Owner password").fill(PASSWORD);
   await page.getByRole("button", { name: "Unlock" }).click();
-  await expect(page.getByText("What would you like to do today?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ask Talorys", exact: true })).toBeVisible();
 }
 
 /** A syntactically valid subscription; nothing is ever sent to it in this test. */

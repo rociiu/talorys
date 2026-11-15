@@ -88,6 +88,23 @@ export class ProjectRepository {
     return this.db.all<Project>(`SELECT * FROM tal_projects ORDER BY status = 'archived', updated_at DESC`);
   }
 
+  dashboard(nowIso: string, soonEnd: string, limit = 3): import("@talorys/shared").TodayProject[] {
+    return this.db.all<import("@talorys/shared").TodayProject>(
+      `SELECT p.*,
+        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done') AS open_tasks,
+        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at < ?) AS overdue_tasks,
+        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at >= ? AND t.due_at < ?) AS due_soon_tasks,
+        (SELECT min(t.due_at) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at IS NOT NULL) AS next_due_at,
+        max(p.updated_at,
+          coalesce((SELECT max(t.updated_at) FROM tal_tasks t WHERE t.project_id = p.id), ''),
+          coalesce((SELECT max(n.updated_at) FROM tal_notes n WHERE n.project_id = p.id), '')) AS last_activity_at
+       FROM tal_projects p WHERE p.status = 'active'
+       ORDER BY open_tasks = 0, overdue_tasks DESC, next_due_at IS NULL, next_due_at ASC, last_activity_at DESC
+       LIMIT ?`,
+      nowIso, nowIso, soonEnd, limit,
+    );
+  }
+
   get(id: string): Project | null {
     return this.db.one<Project>(`SELECT * FROM tal_projects WHERE id = ?`, id);
   }

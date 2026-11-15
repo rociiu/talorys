@@ -15,6 +15,7 @@ import type {
   SessionInfo,
   Settings,
   Task,
+  TodayOverview,
   UsageReport,
   WebSearchStatus,
 } from "@talorys/shared";
@@ -27,6 +28,7 @@ export const keys = {
   settings: ["settings"] as const,
   conversations: (q?: string) => ["conversations", q ?? ""] as const,
   conversation: (id: string) => ["conversation", id] as const,
+  today: ["today"] as const,
   tasks: ["tasks"] as const,
   memories: (q?: string, status?: string) => ["memories", q ?? "", status ?? "all"] as const,
   memoryReviews: ["memories", "reviews"] as const,
@@ -72,15 +74,20 @@ export function useConversation(id: string | undefined) {
   });
 }
 
-export function useTasks() {
+export function useToday() {
+  return useQuery({ queryKey: keys.today, queryFn: () => api<TodayOverview>("/today"), refetchInterval: 60_000, refetchIntervalInBackground: false });
+}
+
+export function useTasks(projectId?: string) {
   // Open and completed tasks are fetched separately so a long completed history can't push
   // open tasks past the page limit.
   return useQuery({
-    queryKey: keys.tasks,
+    queryKey: projectId ? [...keys.tasks, projectId] : keys.tasks,
     queryFn: async () => {
+      const project = projectId ? `&project_id=${encodeURIComponent(projectId)}` : "";
       const [open, completed] = await Promise.all([
-        api<{ tasks: Task[] }>("/tasks?status=open&limit=500"),
-        api<{ tasks: Task[] }>("/tasks?view=completed&limit=200"),
+        api<{ tasks: Task[] }>(`/tasks?status=open&limit=500${project}`),
+        api<{ tasks: Task[] }>(`/tasks?view=completed&limit=200${project}`),
       ]);
       return [...open.tasks, ...completed.tasks];
     },

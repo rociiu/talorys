@@ -6,6 +6,8 @@ async function login(page: Page) {
   await page.goto("/");
   await page.getByPlaceholder("Owner password").fill(PASSWORD);
   await page.getByRole("button", { name: "Unlock" }).click();
+  await expect(page.getByRole("heading", { name: /Good (morning|afternoon|evening)/ })).toBeVisible();
+  await page.goto("/chat");
   await expect(page.getByText("What would you like to do today?")).toBeVisible();
 }
 

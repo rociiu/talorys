@@ -75,6 +75,19 @@ export class TaskRepository {
     );
   }
 
+  counts(dayEnd: string, nowIso = now()): { open: number; today: number; overdue: number; upcoming: number } {
+    const row = this.db.one<{ open: number; today: number; overdue: number; upcoming: number }>(
+      `SELECT
+        count(*) AS open,
+        sum(CASE WHEN (due_at >= ? AND due_at < ?) OR (due_at IS NULL AND status = 'in_progress') THEN 1 ELSE 0 END) AS today,
+        sum(CASE WHEN due_at IS NOT NULL AND due_at < ? THEN 1 ELSE 0 END) AS overdue,
+        sum(CASE WHEN due_at >= ? THEN 1 ELSE 0 END) AS upcoming
+       FROM tal_tasks WHERE status != 'done'`,
+      nowIso, dayEnd, nowIso, dayEnd,
+    );
+    return row ?? { open: 0, today: 0, overdue: 0, upcoming: 0 };
+  }
+
   get(id: string): Task | null {
     return this.db.one<Task>(`SELECT * FROM tal_tasks WHERE id = ?`, id);
   }

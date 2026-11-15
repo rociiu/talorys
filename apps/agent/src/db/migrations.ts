@@ -416,7 +416,16 @@ export function migrate(db: Database, migrations: Migration[] = MIGRATIONS): num
   for (const m of migrations) {
     if (m.version <= version) continue;
     db.transaction(() => {
-      for (const statement of m.statements) db.run(statement);
+      for (const statement of m.statements) {
+        const addColumn = statement.match(/^ALTER TABLE\s+(\w+)\s+ADD COLUMN\s+(\w+)\b/i);
+        if (addColumn) {
+          const columns = db.all<{ name: string }>(`PRAGMA table_info(${addColumn[1]})`);
+          // An interrupted older release may have added the column without recording the version.
+          // Keep that column and its data, then apply the rest of the migration.
+          if (columns.some((column) => column.name === addColumn[2])) continue;
+        }
+        db.run(statement);
+      }
       m.after?.(db);
       db.run(
         `INSERT INTO tal_schema (id, version, updated_at) VALUES (1, ?, ?)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
-import { Bell, Brain, CalendarClock, CheckSquare, LogOut, type LucideIcon, MessageSquare, NotebookPen, Settings } from "lucide-react";
+import { Bell, Brain, CalendarClock, CheckSquare, House, LogOut, type LucideIcon, MessageSquare, NotebookPen, Settings } from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Logo } from "./Logo";
 import { NotificationCenter } from "./NotificationCenter";
@@ -14,9 +14,10 @@ import { type MessageKey, useI18n } from "../lib/i18n";
 type NavKey = Extract<MessageKey, `nav.${string}`>;
 
 const NAV: readonly { to: string; label: NavKey; mobileLabel?: NavKey; icon: LucideIcon }[] = [
+  { to: "/today", label: "nav.today", icon: House },
   { to: "/chat", label: "nav.chat", icon: MessageSquare },
-  { to: "/memory", label: "nav.memory", icon: Brain },
   { to: "/tasks", label: "nav.tasks", icon: CheckSquare },
+  { to: "/memory", label: "nav.memory", icon: Brain },
   { to: "/notes", label: "nav.notes", icon: NotebookPen },
   { to: "/automations", label: "nav.automations", mobileLabel: "nav.automationsShort", icon: CalendarClock },
 ];
@@ -136,7 +137,7 @@ export function AppShell() {
         {/* Mobile bottom navigation */}
         <nav
           aria-label={t("nav.main")}
-          className="mobile-nav fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+          className="mobile-nav fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         >
           {NAV.map(({ to, label, mobileLabel, icon: Icon }) => (
             <NavLink
