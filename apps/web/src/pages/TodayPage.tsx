@@ -5,7 +5,7 @@ import { AlarmClock, ArrowRight, ArrowUpRight, CalendarDays, CheckCircle2, Circl
 import { OnboardingCard } from "../components/OnboardingCard";
 import { TaskEditor } from "../components/TaskEditor";
 import { Badge, Button, ErrorNotice } from "../components/ui";
-import { keys, useApiMutation, useSettings, useToday } from "../hooks/queries";
+import { taskDataKeys, useApiMutation, useSettings, useToday } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, formatDue, formatDateTime, relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
@@ -25,7 +25,7 @@ export default function TodayPage() {
   const [suggestionVisible, setSuggestionVisible] = useState(true);
   const toggle = useApiMutation(
     (task: Task) => api(`/tasks/${task.id}`, { method: "PATCH", body: { status: "done" } }),
-    { invalidate: [keys.today, keys.tasks], success: t("today.completed") },
+    { invalidate: taskDataKeys, success: t("today.completed") },
   );
   const data = today.data;
   const timezone = data?.timezone ?? settings.data?.timezone ?? "UTC";
@@ -62,14 +62,14 @@ export default function TodayPage() {
 
           <section aria-label={t("today.overview")} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <SummaryCard to="/tasks?view=overdue" value={data.counts.overdue} label={t("today.overdue")} tone={data.counts.overdue ? "danger" : undefined} />
-            <SummaryCard to="/tasks" value={data.counts.today} label={t("today.dueToday")} />
+            <SummaryCard to="/tasks?view=today" value={data.counts.today} label={t("today.dueToday")} />
             <SummaryCard to="/tasks?view=upcoming" value={data.counts.upcoming} label={t("today.upcoming")} />
-            <SummaryCard to="/tasks" value={data.counts.open} label={t("today.openTasks")} />
+            <SummaryCard to="/tasks?view=open" value={data.counts.open} label={t("today.openTasks")} />
           </section>
 
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(17rem,1fr)]">
             <section aria-labelledby="focus-heading" className="overflow-hidden rounded-xl border border-border bg-surface">
-              <SectionHeading id="focus-heading" title={t("today.focus")} description={t("today.focusHint")} action={<Link to="/tasks" className="text-xs font-medium text-accent hover:underline">{t("today.allTasks")}</Link>} />
+              <SectionHeading id="focus-heading" title={t("today.focus")} description={t("today.focusHint")} action={<Link to="/tasks?view=open" className="text-xs font-medium text-accent hover:underline">{t("today.allTasks")}</Link>} />
               {data.focus.length ? (
                 <ul className="divide-y divide-border border-t border-border">
                   {data.focus.map((task) => <TaskRow key={task.id} task={task} timezone={timezone} projects={data.projects} onOpen={() => setEditing(task)} onComplete={() => toggle.mutate(task)} completing={toggle.isPending && toggle.variables?.id === task.id} focus />)}
@@ -124,7 +124,7 @@ export default function TodayPage() {
             <SectionHeading id="schedule-heading" title={t("today.taskSchedule")} description={t("today.taskScheduleHint")} />
             <div className="grid border-t border-border md:grid-cols-2">
               <TaskGroup title={t("today.overdueTasks")} tasks={data.tasks.overdue} timezone={timezone} projects={data.projects} onOpen={setEditing} onComplete={(task) => toggle.mutate(task)} completingId={toggle.isPending ? toggle.variables?.id : undefined} viewAll="/tasks?view=overdue" empty={t("today.noOverdue")} embedded />
-              <TaskGroup title={t("today.todayTasks")} tasks={data.tasks.today} timezone={timezone} projects={data.projects} onOpen={setEditing} onComplete={(task) => toggle.mutate(task)} completingId={toggle.isPending ? toggle.variables?.id : undefined} viewAll="/tasks" empty={t("today.noToday")} embedded />
+              <TaskGroup title={t("today.todayTasks")} tasks={data.tasks.today} timezone={timezone} projects={data.projects} onOpen={setEditing} onComplete={(task) => toggle.mutate(task)} completingId={toggle.isPending ? toggle.variables?.id : undefined} viewAll="/tasks?view=today" empty={t("today.noToday")} embedded />
             </div>
           </section>
         </div>
@@ -150,7 +150,7 @@ function SectionHeading({ id, title, description, action }: { id: string; title:
 function TaskRow({ task, timezone, projects, onOpen, onComplete, completing, focus }: { task: Task; timezone: string; projects: TodayProject[]; onOpen: () => void; onComplete: () => void; completing?: boolean; focus?: boolean }) {
   const i18n = useI18n();
   const { t } = i18n;
-  const overdue = !!task.due_at && task.due_at < new Date().toISOString();
+  const overdue = !!task.due_at && Date.parse(task.due_at) < Date.now();
   const project = projects.find((item) => item.id === task.project_id);
   return (
     <li className={cn("flex items-start gap-3 px-4 hover:bg-subtle", focus ? "py-4" : "py-3")}>

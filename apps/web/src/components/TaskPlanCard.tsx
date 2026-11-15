@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { TASK_PLAN_LIMITS, TASK_PRIORITIES, type PlanTask, type TaskPlanContent, type TaskPlanDraft, type TaskPriority } from "@talorys/shared";
 import { ArrowRight, CalendarDays, CheckCircle2, ListChecks, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { Badge, Button, Input, Select, Textarea } from "./ui";
-import { keys, useApiMutation, useProjects } from "../hooks/queries";
+import { keys, taskDataKeys, useApiMutation, useProjects } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
 
@@ -64,7 +64,7 @@ export function TaskPlanCard({ plan: initial }: { plan: TaskPlanDraft }) {
       });
     },
     {
-      invalidate: [keys.tasks, keys.projects],
+      invalidate: [...taskDataKeys, keys.projects],
       success: (r) => (r.plan.status === "confirmed" ? `Created ${r.plan.result?.task_ids.length ?? 0} task(s)` : r.plan.status === "cancelled" ? "Plan cancelled" : "Changes saved"),
       onSuccess: (r) => {
         setDraft(r.plan);
@@ -93,7 +93,7 @@ export function TaskPlanCard({ plan: initial }: { plan: TaskPlanDraft }) {
               {draft.result?.project_created && " (new project)"}
             </p>
           </div>
-          <Link to="/tasks" className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-accent hover:bg-muted">
+          <Link to="/tasks?view=open" className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-accent hover:bg-muted">
             View tasks <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>

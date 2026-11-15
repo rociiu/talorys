@@ -86,3 +86,138 @@ test.describe("Today", () => {
     expect(width).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 });
+
+test("summary links select matching task categories and preserve browser history @mobile", async ({ page }) => {
+  await login(page);
+  const headers = { "x-talorys-request": "1" };
+  const titles = {
+    overdue: "e2e category overdue",
+    today: "e2e category in progress",
+    upcoming: "e2e category upcoming",
+    unscheduled: "e2e category unscheduled",
+    completed: "e2e category completed",
+  };
+  const now = Date.now();
+  const taskIds: string[] = [];
+  try {
+    for (const data of [
+      { title: titles.overdue, due_at: new Date(now - 3600_000).toISOString() },
+      { title: titles.today, status: "in_progress" },
+      { title: titles.upcoming, due_at: new Date(now + 2 * 86_400_000).toISOString() },
+      { title: titles.unscheduled },
+      { title: titles.completed, status: "done" },
+    ]) {
+      const response = await page.request.post("/api/tasks", { headers, data });
+      expect(response.status()).toBe(201);
+      taskIds.push((await response.json()).task.id);
+    }
+
+    for (const [view, label] of [["overdue", "Overdue"], ["today", "Today"], ["upcoming", "Upcoming"], ["open", "Open tasks"]] as const) {
+      await page.goto("/");
+      const summary = page.getByRole("region", { name: "Daily overview" });
+      const card = summary.getByRole("link").filter({ hasText: label });
+      await expect(card).toHaveAttribute("href", `/tasks?view=${view}`);
+      const exactCount = (await card.innerText()).match(/\d+/)?.[0];
+      expect(exactCount).toBeDefined();
+      await card.click();
+      await expect(page.getByRole("tab", { selected: true }).locator("span")).toHaveText(exactCount!);
+
+      for (const [category, title] of Object.entries(titles)) {
+        const shown = view === "open" ? category !== "completed" : category === view;
+        await expect(page.getByRole("button", { name: title, exact: false }).filter({ hasText: title })).toHaveCount(shown ? 1 : 0);
+      }
+    }
+
+    await page.getByRole("tab", { name: /unscheduled/i }).click();
+    await expect(page).toHaveURL(/view=unscheduled/);
+    await expect(page.getByText(titles.unscheduled, { exact: true })).toBeVisible();
+    await expect(page.getByText(titles.upcoming, { exact: true })).toHaveCount(0);
+    await page.goBack();
+    await expect(page.getByRole("tab", { name: /all open/i })).toHaveAttribute("aria-selected", "true");
+    await page.goForward();
+    await expect(page.getByRole("tab", { name: /unscheduled/i })).toHaveAttribute("aria-selected", "true");
+    await page.goto("/tasks?view=completed");
+    await expect(page.getByRole("tab", { name: /completed/i })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByText(titles.completed, { exact: true })).toBeVisible();
+    const width = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  } finally {
+    for (const id of taskIds) expect((await page.request.delete(`/api/tasks/${id}`, { headers })).status()).toBe(200);
+  }
+});
+
+test("project detail totals refresh after task changes and project status edits", async ({ page }) => {
+  await login(page);
+  const headers = { "x-talorys-request": "1" };
+  const names = ["e2e source project counts", "e2e destination project counts"];
+  const ids: string[] = [];
+  const title = "e2e project count task";
+  const counts = async (open: number, done: number) => {
+    await expect(page.getByText("Open tasks", { exact: true }).locator("..")).toHaveText(`${open}Open tasks`);
+    await expect(page.getByText("Completed tasks", { exact: true }).locator("..")).toHaveText(`${done}Completed tasks`);
+  };
+  const viewProject = () => page.getByRole("link", { name: "View project", exact: true }).click();
+  const viewAll = () => page.getByRole("link", { name: "View all project tasks" }).click();
+
+  try {
+    for (const name of names) {
+      const res = await page.request.post("/api/projects", { headers, data: { name } });
+      expect(res.status()).toBe(201);
+      ids.push((await res.json()).project.id);
+    }
+    await page.goto("/projects");
+    await page.getByRole("link").filter({ hasText: names[1] }).click();
+    await counts(0, 0);
+    await page.getByRole("link", { name: "All projects" }).click();
+    await page.getByRole("link").filter({ hasText: names[0] }).click();
+    await counts(0, 0);
+
+    await viewAll();
+    await page.getByLabel("New task title").fill(title);
+    await page.getByRole("button", { name: "Add task" }).click();
+    await expect(page.getByText(title, { exact: true })).toBeVisible();
+    await viewProject();
+    await counts(1, 0);
+
+    // The project task has no due date and sits outside the default Today list.
+    await page.getByRole("link").filter({ hasText: title }).click();
+    const dialog = page.getByRole("dialog", { name: "Edit task" });
+    await expect(dialog.getByLabel("Title")).toHaveValue(title);
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await page.getByRole("tab", { name: /all open/i }).click();
+    await page.getByRole("button", { name: `Complete “${title}”` }).click();
+    await expect(page.getByText(title, { exact: true })).toHaveCount(0);
+    await viewProject();
+    await counts(0, 1);
+
+    await viewAll();
+    await page.getByRole("tab", { name: /completed/i }).click();
+    await page.getByRole("button", { name: `Mark “${title}” as not done` }).click();
+    await expect(page.getByText(title, { exact: true })).toHaveCount(0);
+    await viewProject();
+    await counts(1, 0);
+
+    await page.getByRole("combobox", { name: "Project status" }).selectOption("paused");
+    await expect(page.getByRole("combobox", { name: "Project status" })).toHaveValue("paused");
+    await counts(1, 0);
+    await page.getByRole("link").filter({ hasText: title }).click();
+    await dialog.getByRole("combobox", { name: "Project Optional", exact: true }).selectOption(ids[1]!);
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toHaveCount(0);
+    await viewProject();
+    await expect(page.getByRole("combobox", { name: "Project status" })).toHaveValue("paused");
+    await counts(0, 0);
+
+    await page.getByRole("link", { name: "All projects" }).click();
+    await page.getByRole("link").filter({ hasText: names[1] }).click();
+    await counts(1, 0);
+    await page.getByRole("link").filter({ hasText: title }).click();
+    await dialog.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await viewProject();
+    await counts(0, 0);
+  } finally {
+    for (const id of ids) expect((await page.request.delete(`/api/projects/${id}`, { headers })).status()).toBe(200);
+  }
+});

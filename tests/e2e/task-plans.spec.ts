@@ -28,6 +28,9 @@ test.describe("AI task planning", () => {
     const card = await proposePlan(page, `plan ${p} Japan trip: ${p} renew passport!; ${p} book flights!; ${p} buy rail pass`);
     await expect(card.getByText("3 tasks")).toBeVisible();
     await expect(card.getByText("Nothing is created until you confirm.")).toBeVisible();
+    const tasksBeforeConfirm = await page.request.get(`/api/tasks?status=open&q=${encodeURIComponent(p)}`);
+    expect(tasksBeforeConfirm.status()).toBe(200);
+    expect((await tasksBeforeConfirm.json()).tasks).toEqual([]);
 
     // Nothing exists yet, and the card survives a reload.
     await page.reload();
@@ -50,8 +53,9 @@ test.describe("AI task planning", () => {
     await expect(done.getByText("Created 2 tasks")).toBeVisible();
 
     await done.getByRole("link", { name: "View tasks" }).click();
-    // Undated tasks are listed under Upcoming.
-    await page.getByRole("tab", { name: /upcoming/i }).click();
+    await expect(page.getByRole("tab", { name: /all open/i })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByText(`${p} renew passport this week`)).toBeVisible();
+    await page.getByRole("tab", { name: /unscheduled/i }).click();
     await expect(page.getByText(`${p} renew passport this week`)).toBeVisible();
     await expect(page.getByText(`${p} book flights`)).toBeVisible();
     await expect(page.getByText(`${p} buy rail pass`)).toHaveCount(0);
@@ -63,6 +67,9 @@ test.describe("AI task planning", () => {
     await card.getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByText(/Cancelled — nothing was created/)).toBeVisible();
     await page.getByRole("link", { name: "Tasks" }).first().click();
+    await page.getByRole("tab", { name: /all open/i }).click();
+    await expect(page.getByRole("tab", { name: /all open/i }).locator("span")).toBeVisible();
     await expect(page.getByText("e2e never created one")).toHaveCount(0);
+    await expect(page.getByText("e2e never created two")).toHaveCount(0);
   });
 });

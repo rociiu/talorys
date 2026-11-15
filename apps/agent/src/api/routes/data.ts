@@ -10,6 +10,7 @@ import {
   noteUpdateSchema,
   projectCreateSchema,
   projectUpdateSchema,
+  taskCategoryQuerySchema,
   taskCreateSchema,
   taskListQuerySchema,
   taskUpdateSchema,
@@ -40,6 +41,18 @@ dataRoutes.get("/tasks", (c) => {
   const s = c.env.agent.services;
   const bounds = localDayBounds(s.settings.get().timezone);
   return c.json({ tasks: s.tasks.list({ ...q, dayStart: bounds.start, dayEnd: bounds.end }), today: bounds });
+});
+
+// Dashboard categories have their own contract so existing `view` consumers keep their filters.
+dataRoutes.get("/tasks/categories", (c) => {
+  const { category, project_id, limit, offset } = query(c, taskCategoryQuerySchema);
+  const s = c.env.agent.services;
+  const at = new Date();
+  const bounds = { now: at.toISOString(), nextDay: localDayBounds(s.settings.get().timezone, at).end };
+  return c.json({
+    tasks: s.tasks.listCategory(category, bounds, limit, project_id, offset),
+    counts: s.tasks.counts(bounds, project_id),
+  });
 });
 
 dataRoutes.post("/tasks", async (c) => {
@@ -166,7 +179,11 @@ dataRoutes.delete("/notes/:id", (c) => {
 // ---------- Projects ----------
 
 dataRoutes.get("/projects", (c) => c.json({ projects: c.env.agent.services.projects.list() }));
-dataRoutes.get("/projects/:id", (c) => c.json({ project: c.env.agent.services.projects.require(c.req.param("id")) }));
+dataRoutes.get("/projects/:id", (c) => {
+  const s = c.env.agent.services;
+  const project = s.projects.require(c.req.param("id"));
+  return c.json({ project, task_counts: s.tasks.projectCounts(project.id) });
+});
 
 dataRoutes.post("/projects", async (c) => {
   const input = await body(c, projectCreateSchema);

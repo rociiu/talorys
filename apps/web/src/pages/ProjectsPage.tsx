@@ -3,8 +3,8 @@ import { Link, useParams } from "react-router";
 import type { Project } from "@talorys/shared";
 import { ArrowLeft, ArrowUpRight, CheckCircle2, Circle, CircleDot, FolderKanban, MessageSquare, Plus } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorNotice, Input, PageHeader, Select, Spinner } from "../components/ui";
-import { keys, useApiMutation, useProjects, useTasks, useTimezone } from "../hooks/queries";
-import { api } from "../lib/api";
+import { keys, useApiMutation, useProject, useProjects, useProjectTasks, useTimezone } from "../hooks/queries";
+import { api, ApiError } from "../lib/api";
 import { formatDue } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
 
@@ -17,12 +17,12 @@ const STATUS_KEYS = {
 
 export default function ProjectsPage() {
   const { projectId } = useParams();
-  const projects = useProjects();
   if (projectId) return <ProjectDetail id={projectId} />;
-  return <ProjectList projects={projects.data ?? []} isLoading={projects.isLoading} error={projects.error} onRetry={() => void projects.refetch()} />;
+  return <ProjectList />;
 }
 
-function ProjectList({ projects, isLoading, error, onRetry }: { projects: Project[]; isLoading: boolean; error: unknown; onRetry: () => void }) {
+function ProjectList() {
+  const { data: projects = [], isLoading, error, refetch } = useProjects();
   const { t } = useI18n();
   const [name, setName] = useState("");
   const create = useApiMutation((title: string) => api("/projects", { method: "POST", body: { name: title } }), {
@@ -41,7 +41,7 @@ function ProjectList({ projects, isLoading, error, onRetry }: { projects: Projec
         <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={200} placeholder={t("projects.newName")} aria-label={t("projects.newName")} />
         <Button type="submit" disabled={!name.trim()} loading={create.isPending}><Plus className="h-4 w-4" />{t("projects.add")}</Button>
       </form>
-      {error ? <ErrorNotice error={error} onRetry={onRetry} /> : isLoading ? <div className="flex justify-center py-16"><Spinner /></div> : !projects.length ? (
+      {error ? <ErrorNotice error={error} onRetry={() => void refetch()} /> : isLoading ? <div className="flex justify-center py-16"><Spinner /></div> : !projects.length ? (
         <EmptyState icon={<FolderKanban className="h-9 w-9" />} title={t("projects.emptyTitle")}>{t("projects.emptyBody")}</EmptyState>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
@@ -67,21 +67,20 @@ function ProjectDetail({ id }: { id: string }) {
   const i18n = useI18n();
   const { t } = i18n;
   const tz = useTimezone();
-  const projects = useProjects();
-  const tasks = useTasks(id);
-  const project = projects.data?.find((item) => item.id === id);
+  const detail = useProject(id);
+  const tasks = useProjectTasks(id);
   const update = useApiMutation((status: Project["status"]) => api(`/projects/${id}`, { method: "PATCH", body: { status } }), {
-    invalidate: [keys.projects, keys.today],
+    invalidate: [keys.projects, [...keys.projectDetails, id], keys.today],
     success: t("projects.saved"),
   });
-  if (projects.isLoading || tasks.isLoading) return <div className="flex justify-center py-24"><Spinner /></div>;
-  if (projects.error) return <div className="mx-auto max-w-3xl p-8"><ErrorNotice error={projects.error} onRetry={() => void projects.refetch()} /></div>;
+  if (detail.isLoading || tasks.isLoading) return <div className="flex justify-center py-24"><Spinner /></div>;
+  if (detail.error instanceof ApiError && detail.error.status === 404) return <EmptyState title={t("projects.notFound")} action={<Link to="/projects" className="text-accent hover:underline">{t("projects.viewAll")}</Link>} />;
+  if (detail.error) return <div className="mx-auto max-w-3xl p-8"><ErrorNotice error={detail.error} onRetry={() => void detail.refetch()} /></div>;
   if (tasks.error) return <div className="mx-auto max-w-3xl p-8"><ErrorNotice error={tasks.error} onRetry={() => void tasks.refetch()} /></div>;
-  if (!project) return <EmptyState title={t("projects.notFound")} action={<Link to="/projects" className="text-accent hover:underline">{t("projects.viewAll")}</Link>} />;
+  if (!detail.data) return null;
 
-  const all = tasks.data ?? [];
-  const open = all.filter((task) => task.status !== "done");
-  const done = all.filter((task) => task.status === "done");
+  const { project, task_counts } = detail.data;
+  const open = tasks.data ?? [];
   const planningPrompt = t("projects.planPrompt", { project: project.name });
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
@@ -96,8 +95,8 @@ function ProjectDetail({ id }: { id: string }) {
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-surface p-4"><p className="text-2xl font-semibold tabular-nums">{open.length}</p><p className="mt-1 text-xs text-fg-muted">{t("projects.openTasks")}</p></div>
-        <div className="rounded-xl border border-border bg-surface p-4"><p className="text-2xl font-semibold tabular-nums">{done.length}</p><p className="mt-1 text-xs text-fg-muted">{t("projects.completedTasks")}</p></div>
+        <div className="rounded-xl border border-border bg-surface p-4"><p className="text-2xl font-semibold tabular-nums">{task_counts.open}</p><p className="mt-1 text-xs text-fg-muted">{t("projects.openTasks")}</p></div>
+        <div className="rounded-xl border border-border bg-surface p-4"><p className="text-2xl font-semibold tabular-nums">{task_counts.completed}</p><p className="mt-1 text-xs text-fg-muted">{t("projects.completedTasks")}</p></div>
         <div className="col-span-2 flex items-center gap-2 rounded-xl border border-border bg-surface p-3 sm:col-span-1">
           <Link to={`/chat?prompt=${encodeURIComponent(planningPrompt)}`} className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-sm font-medium text-accent-fg hover:opacity-90"><MessageSquare className="h-4 w-4" />{t("projects.plan")}</Link>
         </div>
@@ -121,7 +120,7 @@ function ProjectDetail({ id }: { id: string }) {
           ))}
         </ul>
       )}
-      <Link to={`/tasks?project=${id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">{t("projects.allTasks")}<ArrowUpRight className="h-4 w-4" /></Link>
+      <Link to={`/tasks?project=${id}&view=open`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">{t("projects.allTasks")}<ArrowUpRight className="h-4 w-4" /></Link>
     </div>
   );
 }

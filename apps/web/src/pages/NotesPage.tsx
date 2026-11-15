@@ -6,7 +6,7 @@ import { ArrowLeft, CircleCheck, Crosshair, Eye, FolderKanban, ListTodo, Noteboo
 import { Markdown } from "../components/Markdown";
 import { WriterEditor, type WriterHandle, taskStats, toggleTaskLine } from "../components/WriterEditor";
 import { Badge, Button, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, Select, Spinner } from "../components/ui";
-import { keys, useApiMutation, useNotes, useProjects } from "../hooks/queries";
+import { keys, taskDataKeys, useApiMutation, useNotes, useProjects } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
@@ -361,14 +361,14 @@ function ProjectsDialog({ open, onClose }: { open: boolean; onClose: () => void 
   const [name, setName] = useState("");
   const [deleting, setDeleting] = useState<Project | null>(null);
   const create = useApiMutation(() => api("/projects", { method: "POST", body: { name } }), {
-    invalidate: [keys.projects],
+    invalidate: [keys.projects, keys.projectDetails, keys.today],
     onSuccess: () => setName(""),
   });
   const update = useApiMutation((v: { id: string; status: Project["status"] }) => api(`/projects/${v.id}`, { method: "PATCH", body: { status: v.status } }), {
-    invalidate: [keys.projects],
+    invalidate: [keys.projects, keys.projectDetails, keys.today],
   });
   const remove = useApiMutation((id: string) => api(`/projects/${id}`, { method: "DELETE" }), {
-    invalidate: [keys.projects, keys.tasks, ["notes"]],
+    invalidate: [keys.projects, ...taskDataKeys, ["notes"]],
     success: "Project deleted",
     onSuccess: () => setDeleting(null),
   });

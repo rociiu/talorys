@@ -25,7 +25,7 @@ import { ChatUsage } from "../components/ChatUsage";
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
-import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
+import { keys, taskDataKeys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
 import { usePageTitle } from "../hooks/pageTitle";
 import { api, ApiError, streamChat } from "../lib/api";
 import { notifyChatFailure, notifyChatTurn } from "../lib/chatAlerts";
@@ -184,6 +184,9 @@ export function ChatPage() {
       if (isLatest()) abortRef.current = null;
       void qc.invalidateQueries({ queryKey: ["conversations"] });
       void qc.invalidateQueries({ queryKey: keys.usage });
+      if (saved) {
+        for (const queryKey of taskDataKeys) void qc.invalidateQueries({ queryKey });
+      }
       if (convId) void qc.invalidateQueries({ queryKey: keys.conversation(convId) });
       // Drop the transient bubble once persisted messages are back. An error may have no saved message, so it stays.
       setTimeout(() => update((s) => (s?.done && !s.error ? null : s)), 400);

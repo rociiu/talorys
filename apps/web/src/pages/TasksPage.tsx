@@ -1,24 +1,21 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { zonedTimeToUtc, type Task, type TaskPriority } from "@talorys/shared";
+import { zonedTimeToUtc, type Task, type TaskCategory, type TaskPriority } from "@talorys/shared";
 import { ArrowUpRight, CalendarDays, CheckCircle2, Circle, CircleDot, Flag, Plus, X } from "lucide-react";
 import { TaskEditor } from "../components/TaskEditor";
 import { Badge, Button, EmptyState, ErrorNotice, Input, PageHeader, Spinner } from "../components/ui";
-import { keys, useApiMutation, useProjects, useTasks, useTimezone } from "../hooks/queries";
+import { taskDataKeys, useApiMutation, useProjects, useTask, useTaskCategory, useTimezone } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn, formatDue } from "../lib/utils";
 import { type MessageKey, useI18n } from "../lib/i18n";
 
-type Tab = "today" | "overdue" | "upcoming" | "completed";
-
-function endOfLocalDay(tz: string, offsetDays = 0): string {
+function endOfLocalDay(tz: string): string {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" })
       .formatToParts(new Date())
       .map((x) => [x.type, x.value]),
   );
-  const d = new Date(Date.UTC(+p.year!, +p.month! - 1, +p.day! + offsetDays));
-  return zonedTimeToUtc(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), 23, 59, tz).toISOString();
+  return zonedTimeToUtc(+p.year!, +p.month!, +p.day!, 23, 59, tz).toISOString();
 }
 
 const PRIORITY_TONE: Record<TaskPriority, "neutral" | "accent" | "warning" | "danger"> = {
@@ -39,8 +36,20 @@ const TAB_KEYS = {
   today: "tasks.tabToday",
   overdue: "tasks.tabOverdue",
   upcoming: "tasks.tabUpcoming",
+  unscheduled: "tasks.tabUnscheduled",
+  open: "tasks.tabOpen",
   completed: "tasks.tabCompleted",
-} as const satisfies Record<Tab, MessageKey>;
+} as const satisfies Record<TaskCategory, MessageKey>;
+
+const TABS = Object.keys(TAB_KEYS) as TaskCategory[];
+const EMPTY_KEYS = {
+  today: "tasks.emptyToday",
+  overdue: "tasks.emptyOverdue",
+  upcoming: "tasks.emptyUpcoming",
+  unscheduled: "tasks.emptyUnscheduled",
+  open: "tasks.emptyOpen",
+  completed: "tasks.emptyCompleted",
+} as const satisfies Record<TaskCategory, MessageKey>;
 
 export default function TasksPage() {
   const i18n = useI18n();
@@ -48,33 +57,29 @@ export default function TasksPage() {
   const tz = useTimezone();
   const [searchParams, setSearchParams] = useSearchParams();
   const projectId = searchParams.get("project");
-  const initialView = searchParams.get("view");
-  const [tab, setTab] = useState<Tab>(initialView === "overdue" || initialView === "upcoming" || initialView === "completed" ? initialView : "today");
-  const { data: tasks, isLoading, error, refetch } = useTasks(projectId ?? undefined);
+  const tab = TABS.find((name) => name === searchParams.get("view")) ?? "today";
+  const limit = tab === "completed" ? 200 : 500;
+  const requestedPage = Number(searchParams.get("page"));
+  const page = Number.isSafeInteger(requestedPage * limit) && Number.isInteger(requestedPage) ? Math.max(1, requestedPage) : 1;
+  const offset = (page - 1) * limit;
+  const { data, isLoading, error, refetch } = useTaskCategory(tab, projectId, limit, offset);
+  const editing = useTask(searchParams.get("task"));
   const projects = useProjects();
   const [quick, setQuick] = useState("");
   const project = projects.data?.find((p) => p.id === projectId);
-  const editing = tasks?.find((task) => task.id === searchParams.get("task")) ?? null;
-
-  const sections = useMemo(() => {
-    const todayEnd = endOfLocalDay(tz);
-    const nowIso = new Date().toISOString();
-    const open = (tasks ?? []).filter((task) => task.status !== "done");
-    return {
-      overdue: open.filter((task) => task.due_at && task.due_at < nowIso),
-      today: open.filter((task) => (task.due_at && task.due_at <= todayEnd) || (!task.due_at && task.status === "in_progress")),
-      upcoming: open.filter((task) => !((task.due_at && task.due_at <= todayEnd) || (!task.due_at && task.status === "in_progress"))),
-      completed: (tasks ?? []).filter((task) => task.status === "done").sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? "")),
-    };
-  }, [tasks, tz]);
+  const addForToday = tab === "today" || tab === "overdue";
 
   const create = useApiMutation(
-    (title: string) => api("/tasks", { method: "POST", body: { title, due_at: tab === "today" || tab === "overdue" ? endOfLocalDay(tz) : null, project_id: projectId } }),
-    { invalidate: [keys.tasks, keys.today], onSuccess: () => setQuick("") },
+    (title: string) => api("/tasks", { method: "POST", body: { title, due_at: addForToday ? endOfLocalDay(tz) : null, project_id: projectId } }),
+    { invalidate: taskDataKeys, onSuccess: () => {
+      setQuick("");
+      if (tab === "overdue") changeTab("today");
+      if (tab === "upcoming") changeTab("unscheduled");
+    } },
   );
   const toggle = useApiMutation(
     (task: Task) => api(`/tasks/${task.id}`, { method: "PATCH", body: { status: task.status === "done" ? "todo" : "done" } }),
-    { invalidate: [keys.tasks, keys.today] },
+    { invalidate: taskDataKeys },
   );
 
   function submitQuick(e: FormEvent) {
@@ -94,18 +99,25 @@ export default function TasksPage() {
     setSearchParams(next, { replace: true });
   }
 
-  function changeTab(nextTab: Tab) {
-    setTab(nextTab);
-    if (searchParams.has("view")) {
-      const next = new URLSearchParams(searchParams);
-      next.delete("view");
-      setSearchParams(next, { replace: true });
-    }
+  function changeTab(nextTab: TaskCategory) {
+    if (tab === nextTab) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("view", nextTab);
+    next.delete("page");
+    setSearchParams(next);
   }
 
-  const list = sections[tab];
+  function changePage(nextPage: number) {
+    const next = new URLSearchParams(searchParams);
+    if (nextPage === 1) next.delete("page");
+    else next.set("page", String(nextPage));
+    setSearchParams(next);
+  }
+
+  const list = data?.tasks ?? [];
+  const total = data?.counts[tab];
   const projectName = (id: string | null) => projects.data?.find((p) => p.id === id)?.name;
-  const nowIso = new Date().toISOString();
+  const now = Date.now();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
@@ -122,8 +134,8 @@ export default function TasksPage() {
         </div>
       )}
 
-      <div role="tablist" className="mb-5 flex gap-1 overflow-x-auto rounded-lg bg-muted p-1">
-        {(["today", "overdue", "upcoming", "completed"] as Tab[]).map((name) => (
+      <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+        {TABS.map((name) => (
           <button
             type="button"
             key={name}
@@ -131,11 +143,11 @@ export default function TasksPage() {
             aria-selected={tab === name}
             onClick={() => changeTab(name)}
             className={cn(
-              "min-w-0 flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "grow whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               tab === name ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
-            {t(TAB_KEYS[name])}<span className="ml-1.5 text-xs text-fg-subtle">{sections[name].length}</span>
+            {t(TAB_KEYS[name])}{data && <span className="ml-1.5 text-xs text-fg-subtle">{data.counts[name]}</span>}
           </button>
         ))}
       </div>
@@ -145,7 +157,7 @@ export default function TasksPage() {
           <Input
             value={quick}
             onChange={(e) => setQuick(e.target.value)}
-            placeholder={tab === "today" || tab === "overdue" ? t("tasks.addForToday") : t("tasks.addOne")}
+            placeholder={addForToday ? t("tasks.addForToday") : t("tasks.addOne")}
             maxLength={300}
             aria-label={t("tasks.newTitle")}
             autoFocus={searchParams.get("new") === "1"}
@@ -162,12 +174,12 @@ export default function TasksPage() {
         <div className="flex justify-center py-16"><Spinner /></div>
       ) : list.length === 0 ? (
         <EmptyState icon={<CheckCircle2 className="h-9 w-9" />} title={tab === "completed" ? t("tasks.emptyCompletedTitle") : t("tasks.emptyTitle")}>
-          {tab === "today" ? t("tasks.emptyToday") : tab === "overdue" ? t("tasks.emptyOverdue") : tab === "upcoming" ? t("tasks.emptyUpcoming") : t("tasks.emptyCompleted")}
+          {offset && total ? t("tasks.emptyPage") : t(EMPTY_KEYS[tab])}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
           {list.map((task) => {
-            const overdue = task.status !== "done" && task.due_at && task.due_at < nowIso;
+            const overdue = task.status !== "done" && task.due_at && Date.parse(task.due_at) < now;
             const due = task.due_at ? formatDue(task.due_at, tz, i18n.locale) : "";
             return (
               <li key={task.id} className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-subtle">
@@ -197,7 +209,19 @@ export default function TasksPage() {
         </ul>
       )}
 
-      <TaskEditor task={editing} onClose={closeTask} tz={tz} />
+      {!error && total !== undefined && (page > 1 || total > limit) && (
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="secondary" disabled={page === 1} onClick={() => changePage(page - 1)}>{t("tasks.previousPage")}</Button>
+          <Button variant="secondary" disabled={offset + limit >= total} onClick={() => changePage(page + 1)}>{t("tasks.nextPage")}</Button>
+        </div>
+      )}
+      {editing.error && (
+        <div className="mt-4 space-y-2">
+          <ErrorNotice error={editing.error} onRetry={() => void editing.refetch()} />
+          <Button variant="secondary" onClick={closeTask}>{t("common.close")}</Button>
+        </div>
+      )}
+      <TaskEditor task={editing.data ?? null} onClose={closeTask} tz={tz} />
     </div>
   );
 }

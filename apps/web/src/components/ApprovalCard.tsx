@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { PendingAction } from "@talorys/shared";
 import { CheckCircle2, ShieldAlert, XCircle } from "lucide-react";
 import { Button } from "./ui";
-import { keys, useApiMutation } from "../hooks/queries";
+import { keys, taskDataKeys, useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
 
@@ -27,7 +27,7 @@ export function ApprovalCard({ action: initial }: { action: PendingAction }) {
         throw error;
       }),
     {
-      invalidate: [["conversation"], keys.tasks, ["notes"], ["memories"], keys.automations],
+      invalidate: [["conversation"], ...taskDataKeys, ["notes"], ["memories"], keys.automations],
       onSuccess: (r) => setAction(r.action),
     },
   );

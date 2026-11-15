@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { TASK_PRIORITIES, type Task, type TaskPriority, zonedTimeToUtc } from "@talorys/shared";
 import { ArrowUpRight, Trash2 } from "lucide-react";
 import { Button, ConfirmDialog, Dialog, Input, Label, Select, Textarea } from "./ui";
-import { keys, useApiMutation, useProjects } from "../hooks/queries";
+import { taskDataKeys, useApiMutation, useProjects } from "../hooks/queries";
 import { api } from "../lib/api";
 import { toLocalInput } from "../lib/utils";
 import { type MessageKey, useI18n } from "../lib/i18n";
@@ -52,14 +52,15 @@ export function TaskEditor({ task, onClose, tz }: { task: Task | null; onClose: 
           description: form.description,
           priority: form.priority,
           status: form.status,
-          due_at: localInputToIso(form.due, tz),
+          // Keep the original instant when the minute-only editor did not change it.
+          due_at: form.due === toLocalInput(task!.due_at, tz) ? undefined : localInputToIso(form.due, tz),
           project_id: form.project_id || null,
         },
       }),
-    { invalidate: [keys.tasks, keys.today], success: t("tasks.saved"), onSuccess: close },
+    { invalidate: taskDataKeys, success: t("tasks.saved"), onSuccess: close },
   );
   const remove = useApiMutation(() => api(`/tasks/${task!.id}`, { method: "DELETE" }), {
-    invalidate: [keys.tasks, keys.today],
+    invalidate: taskDataKeys,
     success: t("tasks.deleted"),
     onSuccess: () => {
       setConfirmDelete(false);

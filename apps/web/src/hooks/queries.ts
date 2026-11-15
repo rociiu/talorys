@@ -11,10 +11,13 @@ import type {
   Note,
   Notification,
   Project,
+  ProjectDetail,
   RemoteTokenInfo,
   SessionInfo,
   Settings,
   Task,
+  TaskCategory,
+  TaskCategoryPage,
   TodayOverview,
   UsageReport,
   WebSearchStatus,
@@ -35,6 +38,7 @@ export const keys = {
   memoryHistory: (id: string) => ["memories", "history", id] as const,
   notes: (q?: string) => ["notes", q ?? ""] as const,
   projects: ["projects"] as const,
+  projectDetails: ["project-details"] as const,
   automations: ["automations"] as const,
   notifications: ["notifications"] as const,
   usage: ["usage"] as const,
@@ -47,6 +51,8 @@ export const keys = {
   mcpTools: (id: string) => ["mcp", "tools", id] as const,
   webSearch: ["web-search"] as const,
 };
+
+export const taskDataKeys = [keys.tasks, keys.today, keys.projectDetails] as const;
 
 export function useSettings() {
   return useQuery({ queryKey: keys.settings, queryFn: () => api<{ settings: Settings }>("/settings").then((r) => r.settings), staleTime: 60_000 });
@@ -78,19 +84,29 @@ export function useToday() {
   return useQuery({ queryKey: keys.today, queryFn: () => api<TodayOverview>("/today"), refetchInterval: 60_000, refetchIntervalInBackground: false });
 }
 
-export function useTasks(projectId?: string) {
-  // Open and completed tasks are fetched separately so a long completed history can't push
-  // open tasks past the page limit.
+export function useTaskCategory(category: TaskCategory, projectId: string | null, limit: number, offset: number) {
+  const params = new URLSearchParams({ category, limit: String(limit), offset: String(offset) });
+  if (projectId) params.set("project_id", projectId);
   return useQuery({
-    queryKey: projectId ? [...keys.tasks, projectId] : keys.tasks,
-    queryFn: async () => {
-      const project = projectId ? `&project_id=${encodeURIComponent(projectId)}` : "";
-      const [open, completed] = await Promise.all([
-        api<{ tasks: Task[] }>(`/tasks?status=open&limit=500${project}`),
-        api<{ tasks: Task[] }>(`/tasks?view=completed&limit=200${project}`),
-      ]);
-      return [...open.tasks, ...completed.tasks];
-    },
+    queryKey: [...keys.tasks, "category", category, projectId, limit, offset],
+    queryFn: () => api<TaskCategoryPage>(`/tasks/categories?${params}`),
+    staleTime: 0,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useTask(id: string | null) {
+  return useQuery({
+    queryKey: [...keys.tasks, "detail", id],
+    queryFn: () => api<{ task: Task }>(`/tasks/${encodeURIComponent(id ?? "")}`).then((r) => r.task),
+    enabled: !!id,
+  });
+}
+
+export function useProjectTasks(id: string) {
+  return useQuery({
+    queryKey: [...keys.tasks, "project", id],
+    queryFn: () => api<{ tasks: Task[] }>(`/tasks?status=open&limit=500&project_id=${encodeURIComponent(id)}`).then((r) => r.tasks),
   });
 }
 
@@ -132,6 +148,10 @@ export function useNotes(q?: string) {
 
 export function useProjects() {
   return useQuery({ queryKey: keys.projects, queryFn: () => api<{ projects: Project[] }>("/projects").then((r) => r.projects) });
+}
+
+export function useProject(id: string) {
+  return useQuery({ queryKey: [...keys.projectDetails, id], queryFn: () => api<ProjectDetail>(`/projects/${encodeURIComponent(id)}`) });
 }
 
 export function useAutomations() {
