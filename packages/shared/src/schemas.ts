@@ -35,6 +35,17 @@ export interface Task {
   completed_at: string | null;
 }
 
+/** Open tasks partition into overdue (before now), today (now to next local midnight,
+ * plus undated work in progress), upcoming (at or after that midnight), and unscheduled
+ * (remaining undated work). `open` includes all four. */
+export const TASK_CATEGORIES = ["open", "today", "overdue", "upcoming", "unscheduled", "completed"] as const;
+export type TaskCategory = (typeof TASK_CATEGORIES)[number];
+
+export interface TaskCategoryPage {
+  tasks: Task[];
+  counts: Record<TaskCategory, number>;
+}
+
 export const MEMORY_STATUSES = ["active", "historical", "uncertain"] as const;
 export type MemoryStatus = (typeof MEMORY_STATUSES)[number];
 
@@ -93,6 +104,11 @@ export interface Project {
   status: (typeof PROJECT_STATUSES)[number];
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectDetail {
+  project: Project;
+  task_counts: { open: number; completed: number };
 }
 
 export interface Conversation {
@@ -244,6 +260,11 @@ export const taskListQuerySchema = z.object({
   project_id: id.optional(),
   q: z.string().max(200).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional().default(200),
+});
+
+export const taskCategoryQuerySchema = taskListQuerySchema.pick({ project_id: true, limit: true }).extend({
+  category: z.enum(TASK_CATEGORIES).default("open"),
+  offset: z.coerce.number().int().nonnegative().default(0),
 });
 
 export const memoryCreateSchema = z.object({

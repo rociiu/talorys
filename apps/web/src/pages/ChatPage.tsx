@@ -25,7 +25,7 @@ import { ChatUsage } from "../components/ChatUsage";
 import { Markdown } from "../components/Markdown";
 import { Button, ConfirmDialog, Dialog, Input, Spinner } from "../components/ui";
 import { Logo } from "../components/Logo";
-import { keys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
+import { keys, taskDataKeys, useApiMutation, useConversation, useConversations, useSettings, useTimezone } from "../hooks/queries";
 import { usePageTitle } from "../hooks/pageTitle";
 import { api, ApiError, streamChat } from "../lib/api";
 import { notifyChatFailure, notifyChatTurn } from "../lib/chatAlerts";
@@ -184,6 +184,9 @@ export function ChatPage() {
       if (isLatest()) abortRef.current = null;
       void qc.invalidateQueries({ queryKey: ["conversations"] });
       void qc.invalidateQueries({ queryKey: keys.usage });
+      if (saved) {
+        for (const queryKey of taskDataKeys) void qc.invalidateQueries({ queryKey });
+      }
       if (convId) void qc.invalidateQueries({ queryKey: keys.conversation(convId) });
       // Drop the transient bubble once persisted messages are back. An error may have no saved message, so it stays.
       setTimeout(() => update((s) => (s?.done && !s.error ? null : s)), 400);
@@ -264,7 +267,7 @@ export function ChatPage() {
           )}
         </div>
 
-        <Composer streaming={streamingHere || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} restoreRef={restoreDraft} />
+        <Composer key={new URLSearchParams(location.search).get("prompt") ?? ""} initialValue={new URLSearchParams(location.search).get("prompt") ?? ""} streaming={streamingHere || remoteStreaming} onSend={(t) => void send(t)} onStop={stop} autoFocus={showEmpty} restoreRef={restoreDraft} />
         <div role="status" className="sr-only">{announcement}</div>
       </section>
 
@@ -649,6 +652,7 @@ function Composer({
   onStop,
   autoFocus,
   restoreRef,
+  initialValue,
 }: {
   streaming: boolean;
   onSend: (t: string) => void;
@@ -656,8 +660,9 @@ function Composer({
   autoFocus?: boolean;
   /** Filled with a function that puts unsent text back, ahead of anything typed since. */
   restoreRef: RefObject<(text: string) => void>;
+  initialValue: string;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue);
   const ref = useRef<HTMLTextAreaElement>(null);
   restoreRef.current = (text) => {
     setValue((typed) => (typed.trim() ? `${text}\n\n${typed}` : text));

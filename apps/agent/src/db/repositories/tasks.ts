@@ -1,4 +1,4 @@
-import type { Task, TaskPriority, TaskStatus } from "@talorys/shared";
+import type { ProjectDetail, Task, TaskCategory, TaskCategoryPage, TaskPriority, TaskStatus } from "@talorys/shared";
 import { type Database, likePattern, newId, now } from "../database";
 import { NotFoundError } from "../../api/errors";
 
@@ -23,6 +23,26 @@ export interface TaskQuery {
 }
 
 const PRIORITY_ORDER = `CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END`;
+
+export interface TaskCategoryBounds {
+  now: string;
+  nextDay: string;
+}
+
+// Existing API clients and backups can supply ISO timestamps with offsets. Compare them in UTC.
+export const DUE = `coalesce(strftime('%Y-%m-%dT%H:%M:%fZ', due_at, '+0 seconds'), due_at)`;
+const REQUEST_BOUNDS = `CROSS JOIN (SELECT ? AS request_time, ? AS next_day)`;
+const OPEN = `status != 'done'`;
+const OVERDUE = `${DUE} < request_time`;
+const DUE_TODAY = `${DUE} >= request_time AND ${DUE} < next_day`;
+const CATEGORY_PREDICATES: Record<TaskCategory, string> = {
+  open: OPEN,
+  overdue: `${OPEN} AND ${OVERDUE}`,
+  today: `${OPEN} AND ((${DUE_TODAY}) OR (due_at IS NULL AND status = 'in_progress'))`,
+  upcoming: `${OPEN} AND ${DUE} >= next_day`,
+  unscheduled: `${OPEN} AND due_at IS NULL AND status != 'in_progress'`,
+  completed: `status = 'done'`,
+};
 
 export class TaskRepository {
   constructor(private readonly db: Database) {}
@@ -73,6 +93,48 @@ export class TaskRepository {
       ...params,
       query.limit ?? 200,
     );
+  }
+
+  listCategory(category: TaskCategory, bounds: TaskCategoryBounds, limit: number, projectId?: string, offset = 0): Task[] {
+    const order = category === "completed"
+      ? `completed_at DESC, tal_tasks.rowid DESC`
+      : `due_at IS NULL, ${DUE}, created_at, ${PRIORITY_ORDER}, tal_tasks.rowid`;
+    return this.db.all<Task>(
+      `SELECT tal_tasks.* FROM tal_tasks ${REQUEST_BOUNDS}
+       WHERE ${CATEGORY_PREDICATES[category]} ${projectId ? "AND project_id = ?" : ""}
+       ORDER BY ${order} LIMIT ? OFFSET ?`,
+      bounds.now, bounds.nextDay, ...(projectId ? [projectId] : []), limit, offset,
+    );
+  }
+
+  focus(bounds: TaskCategoryBounds, limit: number): Task[] {
+    return this.db.all<Task>(
+      `SELECT tal_tasks.* FROM tal_tasks ${REQUEST_BOUNDS}
+       WHERE ${OPEN}
+       ORDER BY CASE WHEN due_at IS NULL THEN 3 WHEN ${OVERDUE} THEN 0 WHEN ${DUE_TODAY} THEN 1 ELSE 2 END,
+         ${PRIORITY_ORDER}, ${DUE}, status = 'in_progress' DESC, created_at, tal_tasks.rowid
+       LIMIT ?`,
+      bounds.now, bounds.nextDay, limit,
+    );
+  }
+
+  counts(bounds: TaskCategoryBounds, projectId?: string): TaskCategoryPage["counts"] {
+    // An aggregate without GROUP BY always returns one row, including for an empty project.
+    const columns = Object.entries(CATEGORY_PREDICATES).map(([category, predicate]) =>
+      `coalesce(sum(CASE WHEN ${predicate} THEN 1 ELSE 0 END), 0) AS ${category}`,
+    );
+    return this.db.one<TaskCategoryPage["counts"]>(
+      `SELECT ${columns.join(", ")} FROM tal_tasks ${REQUEST_BOUNDS} ${projectId ? "WHERE project_id = ?" : ""}`,
+      bounds.now, bounds.nextDay, ...(projectId ? [projectId] : []),
+    )!;
+  }
+
+  projectCounts(projectId: string): ProjectDetail["task_counts"] {
+    return this.db.one<ProjectDetail["task_counts"]>(
+      `SELECT count(*) FILTER (WHERE ${OPEN}) AS open, count(*) FILTER (WHERE status = 'done') AS completed
+       FROM tal_tasks WHERE project_id = ?`,
+      projectId,
+    )!;
   }
 
   get(id: string): Task | null {

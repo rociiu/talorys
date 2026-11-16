@@ -1,4 +1,4 @@
-export const TALORYS_VERSION = "0.1.8";
+export const TALORYS_VERSION = "0.2.0";
 
 /** Stable identity of the single owner's agent inside the private DO namespace. */
 export const AGENT_INSTANCE_NAME = "personal-agent";

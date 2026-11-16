@@ -4,6 +4,8 @@ test("chat usage popover supports keyboard, dismissal and settings @mobile", asy
   await page.goto("/");
   await page.getByPlaceholder("Owner password").fill(process.env.TALORYS_DEV_PASSWORD || "talorys-dev-password");
   await page.getByRole("button", { name: "Unlock" }).click();
+  await expect(page.getByRole("link", { name: "Ask Talorys", exact: true })).toBeVisible();
+  await page.goto("/chat");
   const trigger = page.getByRole("button", { name: "AI usage", exact: true });
   await trigger.focus();
   await page.keyboard.press("Enter");

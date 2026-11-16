@@ -32,6 +32,8 @@
   tables are prefixed `tal_` and never touch the SDK's `cf_agents_*` tables.
 - **Migrations**: `db/migrations.ts` — versioned, append-only, each applied in a
   transaction with its version bump. Run lazily on first use after every deploy.
+  An additive column left behind by an interrupted earlier upgrade is recognized
+  and preserved, allowing the remaining statements and version bump to complete.
 - **Full-text search**: FTS5 external-content indexes for memories and notes,
   kept in sync with triggers. Tasks and conversations use escaped `LIKE`.
 - **Scheduling**: each enabled automation owns exactly one pending one-shot SDK
@@ -47,6 +49,29 @@
   Memories come from keyword recall (`agent/memory.ts`) or, when enabled,
   semantic recall (`semantic/`), then are labelled current / unsure / past and
   kept within a token budget of 20% of the context limit (max 1,500 tokens).
+
+## Today overview
+
+`GET /api/today` is served by `services/today.ts` from the existing task, project,
+settings and automation repositories. It performs no model inference and writes
+no user data. The response uses the shared `TodayOverview` schema in
+`packages/shared/src/today.ts` and contains exact SQL task counts plus bounded
+detail lists: three focus tasks, five overdue tasks, eight tasks due today, five
+upcoming tasks, three active projects and four enabled automations. This keeps
+page loads predictable without reading conversation history or an entire table.
+
+The owner's configured timezone determines the greeting, local date, task buckets
+and displayed automation occurrences. Recurrence and daylight-saving handling use
+the existing shared scheduler; Today does not create or fire schedules. Focus
+sorting is deterministic: urgency bucket, explicit priority, due time,
+in-progress status, then creation time. Project activity reports open, overdue
+and due-soon task counts rather than inferred completion percentages.
+
+Suggested next steps are deterministic intents. Review links use existing task
+and project filters; planning links pre-fill Chat without sending a message. Any
+resulting plan still uses the existing task-plan review and confirmation flow.
+The dashboard and all its task actions remain available when Workers AI is
+unavailable or its daily budget is exhausted.
 
 ## Memory history
 

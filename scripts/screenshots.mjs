@@ -89,7 +89,9 @@ try {
     await page.goto("/");
     await page.getByPlaceholder("Owner password").fill(PASSWORD);
     await page.getByRole("button", { name: "Unlock" }).click();
-    await page.getByText("What would you like to do today?").waitFor();
+    await page.getByRole("link", { name: "Ask Talorys", exact: true }).waitFor();
+    const dismiss = page.getByRole("region", { name: "Welcome to your personal assistant" }).getByRole("button", { name: "Dismiss", exact: true });
+    if (await dismiss.isVisible()) await dismiss.click();
   };
 
   const desktop = { width: 1280, height: 800 };
@@ -101,8 +103,13 @@ try {
   await seed(ctx.request);
   await ctx.close();
 
+  await shoot("light", desktop, "today", async (p) => {
+    await login(p);
+    await p.getByText("Call the plumber about the kitchen sink").first().waitFor();
+  });
   await shoot("light", desktop, "chat", async (p) => {
     await login(p);
+    await p.goto("/chat");
     await p.getByRole("textbox", { name: "Message", exact: true }).fill("add task prepare slides for Monday");
     await p.keyboard.press("Enter");
     await p.getByText('Added the task "prepare slides for Monday".').waitFor();
@@ -110,7 +117,7 @@ try {
   await shoot("light", desktop, "tasks", async (p) => {
     await login(p);
     await p.goto("/tasks");
-    await p.getByText("Call the plumber about the kitchen sink").waitFor();
+    await p.getByText("Call the plumber about the kitchen sink").first().waitFor();
   });
   await shoot("dark", desktop, "memory", async (p) => {
     await login(p);
@@ -124,8 +131,7 @@ try {
   });
   await shoot("dark", { width: 390, height: 844 }, "mobile", async (p) => {
     await login(p);
-    await p.goto("/tasks");
-    await p.getByText("Call the plumber about the kitchen sink").waitFor();
+    await p.getByText("Call the plumber about the kitchen sink").first().waitFor();
   });
   await browser.close();
   console.log(`Screenshots written to ${out}`);

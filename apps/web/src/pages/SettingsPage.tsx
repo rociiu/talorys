@@ -98,8 +98,12 @@ function useSaveSettings() {
   type Patch = Partial<Omit<Settings, "limits" | "memoryHistory">> & { limits?: Partial<Limits>; memoryHistory?: Partial<MemoryHistorySettings> };
   return useApiMutation((patch: Patch) => api<{ settings: Settings }>("/settings", { method: "PATCH", body: patch }), {
     success: "Settings saved",
-    onSuccess: (r) => {
+    onSuccess: (r, patch) => {
       qc.setQueryData(keys.settings, r.settings);
+      if (patch.timezone !== undefined) {
+        void qc.invalidateQueries({ queryKey: keys.tasks });
+        void qc.invalidateQueries({ queryKey: keys.today });
+      }
       void qc.invalidateQueries({ queryKey: ["session"] });
       void qc.invalidateQueries({ queryKey: keys.automations });
       void qc.invalidateQueries({ queryKey: keys.update });

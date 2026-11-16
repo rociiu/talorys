@@ -6,6 +6,8 @@ async function login(page: Page) {
   await page.goto("/");
   await page.getByPlaceholder("Owner password").fill(PASSWORD);
   await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", { name: "Ask Talorys", exact: true })).toBeVisible();
+  await page.goto("/chat");
   await expect(page.getByRole("textbox", { name: "Message", exact: true })).toBeVisible();
 }
 

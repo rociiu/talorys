@@ -368,4 +368,26 @@ describe("database migrations", () => {
       expect(db.all(`SELECT name FROM sqlite_master WHERE name = 'tal_tmp_test'`)).toHaveLength(0);
     });
   });
+
+  it("recovers when an interrupted additive migration already created a column", async () => {
+    await inAgent((a) => {
+      const db = a.services.db;
+      const before = schemaVersion(db);
+      expect(() =>
+        db.transaction(() => {
+          db.run(`CREATE TABLE tal_tmp_recovery (id TEXT PRIMARY KEY, value TEXT)`);
+          db.run(`INSERT INTO tal_tmp_recovery VALUES ('kept', 'owner data')`);
+          db.run(`ALTER TABLE tal_tmp_recovery ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`);
+          expect(migrate(db, [{ version: 999, name: "recover", statements: [
+            `ALTER TABLE tal_tmp_recovery ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`,
+            `ALTER TABLE tal_tmp_recovery ADD COLUMN valid_from TEXT`,
+          ] }])).toBe(999);
+          expect(db.one(`SELECT * FROM tal_tmp_recovery WHERE id = 'kept'`)).toMatchObject({ value: "owner data", status: "active", valid_from: null });
+          throw new Error("roll back migration recovery fixture");
+        }),
+      ).toThrow("roll back migration recovery fixture");
+      expect(schemaVersion(db)).toBe(before);
+      expect(db.all(`SELECT name FROM sqlite_master WHERE name = 'tal_tmp_recovery'`)).toHaveLength(0);
+    });
+  });
 });

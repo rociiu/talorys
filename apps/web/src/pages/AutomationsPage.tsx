@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { type Automation, type AutomationKind, type AutomationRun, type ScheduleSpec, describeSchedule, getZonedParts, scheduleSpecSchema, upcomingRuns } from "@talorys/shared";
 import { AlarmClock, Bell, Bot, CalendarClock, ChevronDown, History, ListChecks, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { Badge, Button, Card, ConfirmDialog, Dialog, EmptyState, ErrorNotice, Input, Label, PageHeader, Select, Spinner, Switch, Textarea } from "../components/ui";
@@ -18,19 +19,34 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function AutomationsPage() {
   const i18n = useI18n();
   const { data, isLoading, error, refetch } = useAutomations();
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<Automation | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("new") === "1";
+  const editing = data?.automations.find((a) => a.id === searchParams.get("edit")) ?? null;
   const [deleting, setDeleting] = useState<Automation | null>(null);
   const [history, setHistory] = useState<Automation | null>(null);
   const [runFilter, setRunFilter] = useState<RunFilter>("all");
   const tz = data?.timezone ?? "UTC";
 
+  const openForm = (id?: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("new");
+    next.delete("edit");
+    next.set(id ? "edit" : "new", id ?? "1");
+    setSearchParams(next);
+  };
+  const closeForm = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("new");
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  };
+
   const toggle = useApiMutation(
     (a: Automation) => api(`/automations/${a.id}`, { method: "PATCH", body: { enabled: !a.enabled } }),
-    { invalidate: [keys.automations] },
+    { invalidate: [keys.automations, keys.today] },
   );
   const remove = useApiMutation((id: string) => api(`/automations/${id}`, { method: "DELETE" }), {
-    invalidate: [keys.automations],
+    invalidate: [keys.automations, keys.today],
     success: "Schedule deleted",
     onSuccess: () => setDeleting(null),
   });
@@ -103,7 +119,7 @@ export default function AutomationsPage() {
           {a.status !== "completed" && (
             <Switch checked={a.enabled} onChange={() => toggle.mutate(a)} label={a.enabled ? `Pause ${a.name}` : `Resume ${a.name}`} />
           )}
-          <Button variant="ghost" size="icon" onClick={() => setEditing(a)} aria-label={`Edit ${a.name}`}>
+          <Button variant="ghost" size="icon" onClick={() => openForm(a.id)} aria-label={`Edit ${a.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setDeleting(a)} aria-label={`Delete ${a.name}`}>
@@ -120,7 +136,7 @@ export default function AutomationsPage() {
         title="Automations"
         description={<>Reminders and routines run inside your Cloudflare account, even when this page is closed. Times use {tz}.</>}
         actions={
-          <Button onClick={() => setCreating(true)}>
+          <Button onClick={() => openForm()}>
             <Plus className="h-4 w-4" /> New
           </Button>
         }
@@ -136,7 +152,7 @@ export default function AutomationsPage() {
         <EmptyState
           icon={<CalendarClock className="h-9 w-9" />}
           title="No automations yet"
-          action={<Button variant="outline" onClick={() => setCreating(true)}>Create a reminder</Button>}
+          action={<Button variant="outline" onClick={() => openForm()}>Create a reminder</Button>}
         >
           Try asking in chat: “Remind me tomorrow at 9 AM to exercise” or “Every Friday, review my unfinished tasks.”
         </EmptyState>
@@ -194,7 +210,7 @@ export default function AutomationsPage() {
         </div>
       )}
 
-      <AutomationForm key={editing?.id ?? "new"} open={creating || !!editing} onClose={() => (editing ? setEditing(null) : setCreating(false))} tz={tz} automation={editing} />
+      <AutomationForm key={editing?.id ?? "new"} open={creating || !!editing} onClose={closeForm} tz={tz} automation={editing} />
       <RunHistoryDialog key={history?.id ?? "none"} automation={history} tz={tz} onClose={() => setHistory(null)} />
       <ConfirmDialog
         open={!!deleting}
@@ -392,7 +408,7 @@ function AutomationForm({ open, onClose, tz, automation }: { open: boolean; onCl
       return api(`/automations/${automation.id}`, { method: "PATCH", body: { name: finalName, message, schedule, ...revive } });
     },
     {
-      invalidate: [keys.automations],
+      invalidate: [keys.automations, keys.today],
       success: automation ? "Saved" : "Scheduled",
       onSuccess: () => {
         if (!automation) reset();

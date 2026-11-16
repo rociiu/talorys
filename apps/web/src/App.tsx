@@ -8,8 +8,10 @@ import { Spinner, ErrorNotice } from "./components/ui";
 import { Logo } from "./components/Logo";
 import { useI18n } from "./lib/i18n";
 
+const TodayPage = lazy(() => import("./pages/TodayPage"));
 const MemoryPage = lazy(() => import("./pages/MemoryPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const NotesPage = lazy(() => import("./pages/NotesPage"));
 const AutomationsPage = lazy(() => import("./pages/AutomationsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -24,20 +26,13 @@ export function App() {
   const { session, loading, error, refresh } = useSession();
 
   if (loading) {
-    return (
-      <FullScreen>
-        <Logo className="h-10 w-10" />
-        <Spinner />
-      </FullScreen>
-    );
+    return <FullScreen><Logo className="h-10 w-10" /><Spinner /></FullScreen>;
   }
   if (error || !session) {
     return (
       <FullScreen>
         <Logo className="h-10 w-10" />
-        <div className="w-full max-w-sm">
-          <ErrorNotice error={error ?? new Error(t("common.unreachable"))} onRetry={() => void refresh()} />
-        </div>
+        <div className="w-full max-w-sm"><ErrorNotice error={error ?? new Error(t("common.unreachable"))} onRetry={() => void refresh()} /></div>
       </FullScreen>
     );
   }
@@ -46,30 +41,22 @@ export function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/chat" replace />} />
+        <Route index element={<Navigate to="/today" replace />} />
+        <Route path="today" element={<Lazy><TodayPage /></Lazy>} />
         <Route path="chat/:conversationId?" element={<ChatPage />} />
         <Route path="memory" element={<Lazy><MemoryPage /></Lazy>} />
         <Route path="tasks" element={<Lazy><TasksPage /></Lazy>} />
+        <Route path="projects/:projectId?" element={<Lazy><ProjectsPage /></Lazy>} />
         <Route path="notes/:noteId?" element={<Lazy><NotesPage /></Lazy>} />
         <Route path="automations" element={<Lazy><AutomationsPage /></Lazy>} />
         <Route path="settings" element={<Lazy><SettingsPage /></Lazy>} />
         <Route path="settings/mcp-oauth" element={<Lazy><McpOAuthCallback /></Lazy>} />
-        <Route path="*" element={<Navigate to="/chat" replace />} />
+        <Route path="*" element={<Navigate to="/today" replace />} />
       </Route>
     </Routes>
   );
 }
 
 function Lazy({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center p-16">
-          <Spinner />
-        </div>
-      }
-    >
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="flex justify-center p-16"><Spinner /></div>}>{children}</Suspense>;
 }

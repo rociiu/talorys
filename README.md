@@ -25,11 +25,12 @@ Or install it with [Appflare](https://appflare.dev), which deploys it as a
 
 ## 1. What Talorys is
 
+- **Today** — a personal daily overview with your focus tasks, overdue and upcoming work, project activity, reminders and deterministic next-step suggestions. It is the first page you see, uses no AI, and links directly to the relevant task, project, automation or chat plan.
 - **A private assistant** — chat with streaming responses, Markdown and tool activity indicators.
 - **Memory** — durable personal facts and preferences you can view, edit and delete. Only the most relevant memories are sent to the model on each turn.
 - **Semantic recall (optional)** — finds memories by meaning as well as keyword, lists them newest first with their saved date, and lets the agent find tasks, notes and automations by meaning. Off by default; turn it on with the **Semantic memory recall** switch near the bottom of Settings → AI (its other settings appear once it is on), or install with `--semantic`. See [docs/semantic-recall.md](docs/semantic-recall.md).
 - **Memory history** — facts that change over time: when you say you sold your car, Talorys asks you whether the old one is now a past fact, and with the optional AI check a confident answer does it for you. Unclear conflicts also wait for your review. See [docs/memory-history.md](docs/memory-history.md).
-- **Tasks, notes and projects** — full CRUD in the UI, and from chat ("Add a task to review my project tomorrow"). Chat task due dates reject impossible calendar dates, including timestamps with explicit UTC offsets.
+- **Tasks, notes and projects** — full CRUD in the UI, and from chat ("Add a task to review my project tomorrow"). Project pages bring related work together with actionable task counts instead of estimated percentages. Chat task due dates reject impossible calendar dates, including timestamps with explicit UTC offsets.
 - **AI task planning** — describe a goal ("Plan the tasks to launch my iOS app next month") and Talorys proposes a plan as an interactive card in chat. Review, edit or remove tasks, pick a project, then confirm: nothing is created until you do, and confirming creates everything at once, exactly once.
 - **Automations** — one-time and recurring reminders, daily task digests and optional AI routines, delivered to an in-app notification center. They run on Durable Object alarms, so nothing has to stay online.
 - **Push notifications** — reminders, digests and routines also arrive as system notifications on the phones and computers you turn them on for, even when Talorys is closed (Settings → General). Uses standard Web Push, encrypted end to end; on iPhone and iPad, add Talorys to the Home Screen first.
@@ -37,15 +38,17 @@ Or install it with [Appflare](https://appflare.dev), which deploys it as a
 - **Remote MCP servers (optional)** — connect remote [MCP](https://modelcontextprotocol.io) servers in Settings → Integrations (no auth, a bearer token, or OAuth sign-in) and choose which of their tools Talorys may use. Tools start off, and calls that may change something wait for your approval. Not used by scheduled routines. See [docs/mcp.md](docs/mcp.md).
 - **Web search (optional)** — let Talorys look things up on the web in chat with [Tavily](https://tavily.com) or [Exa](https://exa.ai), using your own API key (both have free monthly allowances). Off by default; by default each query waits for your approval. Only the query is sent, and Talorys never opens pages. See [docs/web-search.md](docs/web-search.md).
 - **Single-user by design** — no signup, no accounts, no teams. The installer sets the owner password.
-- **Works without AI** — tasks, notes, memories and reminders keep working if Workers AI is unavailable or your free quota is used up.
+- **Works without AI** — Today, tasks, notes, memories and reminders keep working if Workers AI is unavailable or your free quota is used up.
 
 ### Screenshots
 
-| Chat with tool activity | Tasks |
+| Today | Chat with tool activity |
 | --- | --- |
-| ![Chat](docs/screenshots/chat.png) | ![Tasks](docs/screenshots/tasks.png) |
-| **Memory (dark mode)** | **Automations** |
-| ![Memory](docs/screenshots/memory.png) | ![Automations](docs/screenshots/automations.png) |
+| ![Today](docs/screenshots/today.png) | ![Chat](docs/screenshots/chat.png) |
+| **Tasks** | **Memory (dark mode)** |
+| ![Tasks](docs/screenshots/tasks.png) | ![Memory](docs/screenshots/memory.png) |
+| **Automations** | |
+| ![Automations](docs/screenshots/automations.png) | |
 
 <p align="center"><img src="docs/screenshots/mobile.png" alt="Mobile" width="260"> &nbsp; <img src="docs/screenshots/login.png" alt="Login" width="520"></p>
 
@@ -129,7 +132,7 @@ See [docs/deployment.md](docs/deployment.md).
 
 ## 5. Access
 
-Open the URL the installer prints, enter your owner password, and start chatting.
+Open the URL the installer prints and enter your owner password. Today shows what needs attention; use Chat whenever you want help or want to describe a plan.
 Sign in from any number of devices — they are all the same owner. Manage
 sessions under **Settings → Security**.
 
