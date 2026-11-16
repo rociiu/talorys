@@ -110,7 +110,11 @@ async function activeRegistration(): Promise<ServiceWorkerRegistration> {
 }
 
 function exception(error: unknown): { name: string; message: string } {
-  return error instanceof Error ? { name: error.name, message: error.message } : { name: "UnknownError", message: String(error) };
+  const original = error instanceof Error ? { name: error.name, message: error.message } : { name: "UnknownError", message: String(error) };
+  return {
+    ...original,
+    message: original.message.replace(/https?:\/\/\S+/gi, "[redacted URL]").replace(/\bBearer\s+\S+/gi, "Bearer [redacted]"),
+  };
 }
 
 function registrationError(stage: PushRegistrationStage, error: unknown, state: Omit<PushRegistrationDiagnostics, "stage" | "exceptionName" | "exceptionMessage">): PushRegistrationError {
@@ -201,9 +205,45 @@ export async function disablePush(): Promise<PushStatus> {
     return status;
   }
   const status = await api<PushStatus>("/push/unsubscribe", { method: "POST", body: { endpoint: sub.endpoint } });
-  await sub.unsubscribe();
+  let unsubscribed = false;
+  try {
+    unsubscribed = await sub.unsubscribe();
+  } catch (error) {
+    throw new Error("Talorys removed this device, but the browser could not remove its push subscription. Retry to finish turning notifications off.", { cause: error });
+  }
+  if (!unsubscribed) throw new Error("Talorys removed this device, but the browser could not remove its push subscription. Retry to finish turning notifications off.");
   remember(null);
   return status;
+}
+
+export interface PushConfirmation {
+  subscription: PushSubscription | null;
+  device: PushDevice | null;
+  status: PushStatus | null;
+}
+
+/** Confirms the current browser subscription with the backend instead of trusting a stored device id. */
+export async function confirmPushRegistration(publicKey: string): Promise<PushConfirmation> {
+  const subscription = await currentSubscription();
+  if (!subscription) {
+    remember(null);
+    return { subscription: null, device: null, status: null };
+  }
+  const existingKey = subscription.options.applicationServerKey;
+  if (!existingKey || !sameKey(existingKey, keyBytes(publicKey))) {
+    remember(null);
+    return { subscription, device: null, status: null };
+  }
+  const result = await api<{ device: PushDevice | null; status: PushStatus }>("/push/subscriptions/current", {
+    method: "POST",
+    body: { endpoint: subscription.endpoint },
+  });
+  remember(result.device?.id ?? null);
+  return { ...result, subscription };
+}
+
+export function forgetPushDevice() {
+  remember(null);
 }
 
 function sameKey(a: ArrayBuffer, b: Uint8Array): boolean {

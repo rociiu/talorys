@@ -1,11 +1,18 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PushStatus } from "@talorys/shared";
+import type { PushDevice, PushStatus } from "@talorys/shared";
 import { Send, Trash2 } from "lucide-react";
-import { Badge, Button, Card, ErrorNotice, Switch } from "./ui";
+import { Badge, Button, Card, ErrorNotice, Spinner, Switch } from "./ui";
 import { useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
-import { currentSubscription, disablePush, enablePush, pushBlocker, PushRegistrationError, thisDeviceId } from "../lib/push";
+import {
+  confirmPushRegistration,
+  disablePush,
+  enablePush,
+  forgetPushDevice,
+  pushBlocker,
+  PushRegistrationError,
+} from "../lib/push";
 import { relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
 
@@ -78,66 +85,168 @@ function DiagnosticDetails({ error }: { error: PushRegistrationError }) {
   );
 }
 
-function usePushMutations() {
+type ToggleVariables = { on: boolean; publicKey: string };
+type ToggleResult = { on: boolean; status: PushStatus; device?: PushDevice };
+type FailureAction = "check" | "enable" | "disable";
+type PushFailure = { error: unknown; action: FailureAction };
+let retainedFailure: PushFailure | null = null;
+const failureListeners = new Set<() => void>();
+
+function storeFailure(next: PushFailure | null) {
+  retainedFailure = next;
+  for (const listener of failureListeners) listener();
+}
+
+function usePushMutations(publicKey: string) {
   const qc = useQueryClient();
   const setStatus = (s: PushStatus) => qc.setQueryData(KEY, s);
   const [browserSubscription, setBrowserSubscription] = useState<boolean | null>(null);
-  const [failure, setFailure] = useState<{ error: unknown; on: boolean } | null>(null);
+  const [confirmedDeviceId, setConfirmedDeviceId] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [failure, setFailureState] = useState<PushFailure | null>(retainedFailure);
+  const generation = useRef(0);
+
+  const reconcile = async ({ newAttempt = false, reportFailure = true } = {}) => {
+    const ownGeneration = ++generation.current;
+    if (newAttempt) storeFailure(null);
+    setChecking(true);
+    try {
+      const result = await confirmPushRegistration(publicKey);
+      if (generation.current !== ownGeneration) return;
+      setBrowserSubscription(!!result.subscription);
+      setConfirmedDeviceId(result.device?.id ?? null);
+      if (result.status) setStatus(result.status);
+    } catch (error) {
+      if (reportFailure) {
+        const checkError = new Error(`Talorys could not confirm this browser's push registration: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
+        storeFailure({ error: checkError, action: "check" });
+      }
+      if (generation.current === ownGeneration) {
+        setBrowserSubscription(null);
+        setConfirmedDeviceId(null);
+      }
+    } finally {
+      if (generation.current === ownGeneration) setChecking(false);
+    }
+  };
+
   useEffect(() => {
-    void currentSubscription().then((s) => setBrowserSubscription(!!s), () => setBrowserSubscription(false));
+    const listener = () => setFailureState(retainedFailure);
+    failureListeners.add(listener);
+    void reconcile();
+    return () => {
+      failureListeners.delete(listener);
+      generation.current++;
+    };
   }, []);
-  const toggle = useApiMutation(
-    async (v: { on: boolean; publicKey: string }) => {
-      setFailure(null);
+
+  const toggle = useApiMutation<ToggleVariables, ToggleResult>(
+    async (v) => {
+      generation.current++;
+      setChecking(false);
+      storeFailure(null);
       try {
-        return v.on ? (await enablePush(v.publicKey)).status : disablePush();
+        if (v.on) {
+          const result = await enablePush(v.publicKey);
+          return { on: true, ...result };
+        }
+        return { on: false, status: await disablePush() };
       } catch (error) {
         if (v.on && error instanceof PushRegistrationError && error.diagnostics.stage === "backend") setBrowserSubscription(true);
-        setFailure({ error, on: v.on });
+        storeFailure({ error, action: v.on ? "enable" : "disable" });
+        if (!v.on) void reconcile({ reportFailure: false });
         throw error;
       }
     },
     {
-      quiet: true,
-      success: (s) => (s.devices.some((d) => d.id === thisDeviceId()) ? "Notifications turned on for this device" : "Notifications turned off for this device"),
-      onSuccess: (s, v) => { setStatus(s); setBrowserSubscription(v.on); },
+      success: (result) => result.on ? "Notifications turned on for this device" : "Notifications turned off for this device",
+      onSuccess: (result) => {
+        setStatus(result.status);
+        setBrowserSubscription(result.on);
+        setConfirmedDeviceId(result.on ? result.device!.id : null);
+        if (!result.on) forgetPushDevice();
+      },
     },
   );
   const remove = useApiMutation((id: string) => api<PushStatus>(`/push/subscriptions/${id}`, { method: "DELETE" }), {
     success: "Device removed",
-    onSuccess: setStatus,
+    onSuccess: (next, id) => {
+      setStatus(next);
+      if (id === confirmedDeviceId) {
+        setConfirmedDeviceId(null);
+        forgetPushDevice();
+      }
+    },
   });
   const test = useApiMutation(() => api<{ result: { sent: number; gone: number; failed: number }; status: PushStatus }>("/push/test", { method: "POST" }), {
     success: (r) => (r.result.sent > 0 ? `Test sent to ${r.result.sent} device(s)` : "No device could be reached"),
-    onSuccess: (r) => setStatus(r.status),
+    onSuccess: (r) => {
+      setStatus(r.status);
+      if (confirmedDeviceId && !r.status.devices.some((device) => device.id === confirmedDeviceId)) {
+        setConfirmedDeviceId(null);
+        forgetPushDevice();
+      }
+    },
   });
-  return { browserSubscription, failure, toggle, remove, test };
+  return {
+    browserSubscription,
+    checking,
+    confirmedDeviceId,
+    failure,
+    dismissFailure: () => storeFailure(null),
+    reconcile,
+    toggle,
+    remove,
+    test,
+  };
 }
+
+const OPERATION_TEXT = {
+  checking: "Checking current registration",
+  disabled: "Off",
+  enabling: "Turning on…",
+  enabled: "On",
+  disabling: "Turning off…",
+  failed: "Action failed",
+} as const;
 
 function PushControls({ status: s }: { status: PushStatus }) {
   const i18n = useI18n();
-  const { browserSubscription, failure, toggle, remove, test } = usePushMutations();
+  const { browserSubscription, checking, confirmedDeviceId, failure, dismissFailure, reconcile, toggle, remove, test } = usePushMutations(s.public_key!);
   const blocker = pushBlocker();
-  const current = thisDeviceId();
-  const registered = !!current && s.devices.some((d) => d.id === current);
+  const registered = !!confirmedDeviceId && s.devices.some((d) => d.id === confirmedDeviceId);
   const enabled = browserSubscription === true && registered;
+  const busy = checking || toggle.isPending;
+  const operation = toggle.isPending ? (toggle.variables.on ? "enabling" : "disabling")
+    : failure ? "failed" : checking ? "checking" : enabled ? "enabled" : "disabled";
+  const start = (on: boolean) => {
+    if (!busy) toggle.mutate({ on, publicKey: s.public_key! });
+  };
   return (
     <>
       <Row label="This device" hint={blocker ? BLOCKER_TEXT[blocker] : "Reminders, digests and routines also arrive as system notifications, even when Talorys is closed."}>
-        <Switch
-          checked={enabled && !blocker}
-          onChange={(on) => toggle.mutate({ on, publicKey: s.public_key! })}
-          label="Push notifications on this device"
-          disabled={!!blocker || browserSubscription === null || toggle.isPending}
-        />
+        <div className="flex items-center gap-2">
+          {(operation === "checking" || operation === "enabling" || operation === "disabling") && <Spinner className="h-4 w-4" />}
+          <Badge tone={operation === "enabled" ? "success" : operation === "failed" ? "danger" : "neutral"}>{OPERATION_TEXT[operation]}</Badge>
+          <Switch
+            checked={enabled && !blocker}
+            onChange={start}
+            label="Push notifications on this device"
+            disabled={!!blocker || browserSubscription === null || busy}
+          />
+          <span className="sr-only" role="status" aria-live="polite">{OPERATION_TEXT[operation]}</span>
+        </div>
       </Row>
       {failure && (
         <div className="px-5 py-4">
           <ErrorNotice
             error={failure.error}
             onRetry={() => {
-              if (!toggle.isPending) toggle.mutate({ on: failure.on, publicKey: s.public_key! });
+              if (busy) return;
+              if (failure.action === "check") void reconcile({ newAttempt: true });
+              else start(failure.action === "enable");
             }}
+            onDismiss={dismissFailure}
           />
           {failure.error instanceof PushRegistrationError && <DiagnosticDetails error={failure.error} />}
         </div>
@@ -145,7 +254,7 @@ function PushControls({ status: s }: { status: PushStatus }) {
       {s.devices.map((d) => (
         <Row key={d.id} label={d.label} hint={`${d.service} · added ${relativeTime(d.created_at, i18n)}${d.failures ? ` · ${d.failures} failed send(s)` : ""}`}>
           <div className="flex items-center gap-2">
-            {d.id === current && <Badge tone="accent">This device</Badge>}
+            {d.id === confirmedDeviceId && <Badge tone="accent">This device</Badge>}
             <Button variant="ghost" aria-label={`Remove ${d.label}`} onClick={() => remove.mutate(d.id)} disabled={remove.isPending}>
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -36,6 +36,14 @@ pushRoutes.post("/push/unsubscribe", async (c) => {
   return c.json(s.push.status());
 });
 
+pushRoutes.post("/push/subscriptions/current", async (c) => {
+  const s = c.env.agent.services;
+  const input = await body(c, pushUnsubscribeSchema, 8 * 1024);
+  const problem = endpointProblem(input.endpoint);
+  if (problem) throw new ValidationError(problem);
+  return c.json({ device: s.push.subscriptions.byEndpoint(input.endpoint), status: s.push.status() });
+});
+
 pushRoutes.delete("/push/subscriptions/:id", (c) => {
   const s = c.env.agent.services;
   if (!s.push.subscriptions.remove(c.req.param("id"))) throw new NotFoundError("Device not found.");

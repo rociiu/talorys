@@ -46,6 +46,9 @@ describe("push API", () => {
     const browser = await fakeBrowser();
     const res = await c.call("/api/push/subscriptions", { method: "POST", body: browser.json, headers: { "x-talorys-request": "0" } });
     expect(res.status).toBe(403);
+    const currentWithoutCsrf = await c.call("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint }, headers: { "x-talorys-request": "0" } });
+    expect(currentWithoutCsrf.status).toBe(403);
+    expect((await anon.call("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint } })).status).toBe(401);
     expect((await c.json("/api/push")).devices).toEqual([]);
   });
 
@@ -69,6 +72,15 @@ describe("push API", () => {
     const again = await c.json("/api/push/subscriptions", { method: "POST", body: browser.json });
     expect(again.device.id).toBe(first.device.id);
     expect(again.status.devices).toHaveLength(1);
+
+    const current = await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint } });
+    expect(current.device.id).toBe(first.device.id);
+    expect(current.status.devices).toHaveLength(1);
+    expect(JSON.stringify(current)).not.toContain(browser.endpoint);
+    expect(JSON.stringify(current)).not.toContain(browser.json.keys.p256dh);
+    expect(JSON.stringify(current)).not.toContain(browser.json.keys.auth);
+    const missing = await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: "https://fcm.googleapis.com/fcm/send/missing" } });
+    expect(missing.device).toBeNull();
 
     const other = await fakeBrowser("https://updates.push.services.mozilla.com/wpush/v2/xyz");
     const second = await c.json("/api/push/subscriptions", { method: "POST", body: other.json });

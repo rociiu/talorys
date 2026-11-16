@@ -60,6 +60,11 @@ export class PushSubscriptionRepository {
     return this.db.run(`DELETE FROM tal_push_subscriptions WHERE id = ?`, id).changes > 0;
   }
 
+  byEndpoint(endpoint: string): PushDevice | null {
+    const row = this.db.one<{ id: string }>(`SELECT id FROM tal_push_subscriptions WHERE endpoint = ?`, endpoint);
+    return row ? this.devices().find((device) => device.id === row.id) ?? null : null;
+  }
+
   removeByEndpoint(endpoint: string): boolean {
     return this.db.run(`DELETE FROM tal_push_subscriptions WHERE endpoint = ?`, endpoint).changes > 0;
   }

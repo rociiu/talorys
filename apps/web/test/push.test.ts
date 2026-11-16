@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enablePush, PushRegistrationError } from "../src/lib/push";
+import { confirmPushRegistration, enablePush, PushRegistrationError } from "../src/lib/push";
 
 const PUBLIC_KEY = Buffer.from([4, ...new Array(64).fill(1)]).toString("base64url");
 const OTHER_KEY = Buffer.from([4, ...new Array(64).fill(2)]).toString("base64url");
@@ -293,5 +293,53 @@ describe("push registration", () => {
     await expect(disablePush()).rejects.toThrow("Unavailable");
     expect(removeDeviceId).not.toHaveBeenCalled();
     expect(unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it("returns backend confirmation even when localStorage writes fail", async () => {
+    vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => { throw new DOMException("Storage denied", "SecurityError"); }, removeItem: removeDeviceId });
+    await expect(enablePush(PUBLIC_KEY)).resolves.toEqual({ device, status });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("confirms a reloaded browser subscription by endpoint without trusting the stored device ID", async () => {
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY)));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ device, status }), { status: 200, headers: { "content-type": "application/json" } }));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device, status });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]![0]).toBe("/api/push/subscriptions/current");
+    expect(JSON.parse(fetcher.mock.calls[0]![1]?.body as string)).toEqual({ endpoint: subscriptionJson.endpoint });
+    expect(subscribe).not.toHaveBeenCalled();
+  });
+
+  it("does not show a stale stored device as registered after backend deletion", async () => {
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY)));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ device: null, status: { ...status, devices: [] } }), { status: 200, headers: { "content-type": "application/json" } }));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device: null });
+    expect(removeDeviceId).toHaveBeenCalledWith("talorys.pushDevice");
+  });
+
+  it("clears a missing local device ID when no browser subscription remains", async () => {
+    getSubscription.mockResolvedValue(null);
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toEqual({ subscription: null, device: null, status: null });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(removeDeviceId).toHaveBeenCalledWith("talorys.pushDevice");
+  });
+
+  it("requires manual re-registration after a VAPID rotation without destroying the old subscription", async () => {
+    const unsubscribe = vi.fn(async () => true);
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(OTHER_KEY), unsubscribe));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device: null });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it("keeps the browser subscription and remembered ID after a partial disable failure", async () => {
+    const unsubscribe = vi.fn(async () => false);
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY), unsubscribe));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ ...status, devices: [] }), { status: 200, headers: { "content-type": "application/json" } }));
+    const { disablePush } = await import("../src/lib/push");
+    await expect(disablePush()).rejects.toThrow("Talorys removed this device, but the browser could not remove its push subscription");
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(removeDeviceId).not.toHaveBeenCalled();
   });
 });

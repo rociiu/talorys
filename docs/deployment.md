@@ -109,6 +109,55 @@ is the contact push services see. It defaults to the app's own URL as recorded
 when each device subscribed. Set it with `npx wrangler secret put VAPID_SUBJECT`;
 a plain variable would be dropped when an update regenerates the Worker config.
 
+### Verify a deployment on real Chrome
+
+Mocked `PushManager` tests cannot prove connectivity to Google's push service.
+After deploying the Worker and frontend from the same release, verify both
+Windows Chrome and physical Android Chrome over HTTPS:
+
+1. Sign in and open **Settings → General → Push notifications**. In Chrome's
+   site settings, set Notifications to **Ask** for the Talorys origin. Confirm
+   `/sw.js` loads, and in `chrome://serviceworker-internals` or DevTools confirm
+   the root-scope worker is activated.
+2. Turn on **Push notifications on this device**. The status should progress
+   through **Turning on…** to **On** only after the browser grants permission
+   and `POST /api/push/subscriptions` succeeds. The device list should gain one
+   device marked **This device**, not a duplicate on repeated attempts.
+3. Reload the page. The status should check the existing browser subscription
+   and return to **On**. Remove that device from another session and reload:
+   the switch must return to **Off** even though Chrome retains its browser
+   subscription. Turning it on must reuse that subscription.
+4. Use **Send a test**, including once with Talorys closed. Confirm a system
+   notification arrives and its click opens the same-origin Talorys app.
+5. Turn the switch off. Both the device row and browser subscription should be
+   removed. Re-enable and repeat the test notification.
+6. In DevTools, block the subscription request or make it fail once. A visible
+   **backend** error must remain until dismissed, and **Retry** must make one
+   new request; there must be no automatic retry loop. Also test denied
+   notification permission and confirm the site-settings guidance appears.
+7. To check the storage regression, deny storage writes in the test profile
+   (or temporarily throw from `Storage.prototype.setItem` in DevTools), then
+   register. The current session must still show **On** after backend success;
+   after restoring storage, reload must reconcile to the same state.
+
+On Android, use production Chrome with Google services and network access
+available. If Chrome reports `Registration failed - push service error`, check
+Google Play services, restricted data/battery settings, VPN/firewall policy,
+and ordinary connectivity before treating it as a Talorys backend failure.
+On Windows, similarly check Chrome background operation and enterprise policy.
+
+Cloudflare Web Analytics is independent of registration. With the existing
+`script-src 'self'` policy, Cloudflare's optional injected beacon may report a
+CSP violation while push still works; do not relax the application CSP to hide
+that message. Test with the analytics injection temporarily disabled if the
+extra console messages make diagnosis unclear. Never include subscription
+endpoints, keys, cookies, or session tokens in bug reports.
+
+Test VAPID rotation only on a disposable staging installation: after rotating
+keys, the old browser subscription must not be shown as confirmed; one manual
+attempt should replace it and register the new endpoint without exceeding the
+device limit. Existing production keys should not be rotated for this test.
+
 ## Idempotency and recovery
 
 - The manifest records the installation id; re-runs reuse the same names.
