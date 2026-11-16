@@ -5,7 +5,7 @@ import { Send, Trash2 } from "lucide-react";
 import { Badge, Button, Card, ErrorNotice, Switch } from "./ui";
 import { useApiMutation } from "../hooks/queries";
 import { api } from "../lib/api";
-import { currentSubscription, disablePush, enablePush, pushBlocker, thisDeviceId } from "../lib/push";
+import { currentSubscription, disablePush, enablePush, pushBlocker, PushRegistrationError, thisDeviceId } from "../lib/push";
 import { relativeTime } from "../lib/utils";
 import { useI18n } from "../lib/i18n";
 
@@ -53,16 +53,52 @@ export function PushNotificationsCard() {
   );
 }
 
+function DiagnosticDetails({ error }: { error: PushRegistrationError }) {
+  const d = error.diagnostics;
+  const entries = [
+    ["Stage", d.stage],
+    ["Browser error", d.exceptionName ? `${d.exceptionName}: ${d.exceptionMessage}` : "None"],
+    ["Notification permission", d.permission],
+    ["Service worker active", d.serviceWorkerActive ? "Yes" : "No"],
+    ["Existing subscription", d.existingSubscription ? "Yes" : "No"],
+    ["Backend request attempted", d.backendAttempted ? "Yes" : "No"],
+  ];
+  return (
+    <details className="mt-2 text-xs text-fg-subtle">
+      <summary className="cursor-pointer">Diagnostic details</summary>
+      <dl className="mt-2 space-y-1">
+        {entries.map(([label, value]) => (
+          <div key={label} className="flex gap-2">
+            <dt className="font-medium">{label}:</dt>
+            <dd className="break-words">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+}
+
 function usePushMutations() {
   const qc = useQueryClient();
   const setStatus = (s: PushStatus) => qc.setQueryData(KEY, s);
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [failure, setFailure] = useState<{ error: unknown; on: boolean } | null>(null);
   useEffect(() => {
     void currentSubscription().then((s) => setSubscribed(!!s), () => setSubscribed(false));
   }, []);
   const toggle = useApiMutation(
-    async (v: { on: boolean; publicKey: string }) => (v.on ? (await enablePush(v.publicKey)).status : disablePush()),
+    async (v: { on: boolean; publicKey: string }) => {
+      setFailure(null);
+      try {
+        return v.on ? (await enablePush(v.publicKey)).status : disablePush();
+      } catch (error) {
+        if (v.on) setSubscribed(false);
+        setFailure({ error, on: v.on });
+        throw error;
+      }
+    },
     {
+      quiet: true,
       success: (s) => (s.devices.some((d) => d.id === thisDeviceId()) ? "Notifications turned on for this device" : "Notifications turned off for this device"),
       onSuccess: (s, v) => { setStatus(s); setSubscribed(v.on); },
     },
@@ -75,12 +111,12 @@ function usePushMutations() {
     success: (r) => (r.result.sent > 0 ? `Test sent to ${r.result.sent} device(s)` : "No device could be reached"),
     onSuccess: (r) => setStatus(r.status),
   });
-  return { subscribed, toggle, remove, test };
+  return { subscribed, failure, toggle, remove, test };
 }
 
 function PushControls({ status: s }: { status: PushStatus }) {
   const i18n = useI18n();
-  const { subscribed, toggle, remove, test } = usePushMutations();
+  const { subscribed, failure, toggle, remove, test } = usePushMutations();
   const blocker = pushBlocker();
   const current = thisDeviceId();
   return (
@@ -93,6 +129,17 @@ function PushControls({ status: s }: { status: PushStatus }) {
           disabled={!!blocker || subscribed === null || toggle.isPending}
         />
       </Row>
+      {failure && (
+        <div className="px-5 py-4">
+          <ErrorNotice
+            error={failure.error}
+            onRetry={() => {
+              if (!toggle.isPending) toggle.mutate({ on: failure.on, publicKey: s.public_key! });
+            }}
+          />
+          {failure.error instanceof PushRegistrationError && <DiagnosticDetails error={failure.error} />}
+        </div>
+      )}
       {s.devices.map((d) => (
         <Row key={d.id} label={d.label} hint={`${d.service} · added ${relativeTime(d.created_at, i18n)}${d.failures ? ` · ${d.failures} failed send(s)` : ""}`}>
           <div className="flex items-center gap-2">

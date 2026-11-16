@@ -66,3 +66,57 @@ test.describe("Push notifications", () => {
     expect(results).toEqual(["/tasks?x=1#a", "/", "/", "/", "/", "/", "/", "/"]);
   });
 });
+
+
+test.describe("Push registration browser flow", () => {
+  test("keeps the switch off after Android Chrome's push service error and retries only manually @mobile", async ({ page }) => {
+    let backendRequests = 0;
+    await page.route("**/api/push/subscriptions", async (route) => {
+      backendRequests++;
+      await route.continue();
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { pushSubscribeAttempts: number };
+      w.pushSubscribeAttempts = 0;
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const registration = {
+        active: { state: "activated" },
+        pushManager: {
+          getSubscription: async () => null,
+          subscribe: async () => {
+            w.pushSubscribeAttempts++;
+            throw new DOMException("Registration failed - push service error", "AbortError");
+          },
+        },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    });
+
+    await login(page);
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+    await toggle.click();
+
+    await expect(page.getByRole("alert")).toContainText("Chrome could not register with its push service");
+    await expect(page.getByRole("alert")).toContainText("Google services and network connectivity");
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByText("Notifications turned on for this device")).toHaveCount(0);
+    await page.getByText("Diagnostic details").click();
+    await expect(page.getByText("AbortError: Registration failed - push service error", { exact: true })).toBeVisible();
+    await expect(page.getByText("Backend request attempted:")).toBeVisible();
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(1);
+    expect(backendRequests).toBe(0);
+
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(2);
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByText("Notifications turned on for this device")).toHaveCount(0);
+    expect(backendRequests).toBe(0);
+  });
+});
