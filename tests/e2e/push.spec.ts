@@ -66,3 +66,151 @@ test.describe("Push notifications", () => {
     expect(results).toEqual(["/tasks?x=1#a", "/", "/", "/", "/", "/", "/", "/"]);
   });
 });
+
+
+test.describe("Push registration browser flow", () => {
+  test("keeps the switch off after Android Chrome's push service error and retries only manually @mobile", async ({ page }) => {
+    let backendRequests = 0;
+    await page.route("**/api/push/subscriptions", async (route) => {
+      backendRequests++;
+      await route.continue();
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { pushSubscribeAttempts: number };
+      w.pushSubscribeAttempts = 0;
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const registration = {
+        active: { state: "activated" },
+        pushManager: {
+          getSubscription: async () => null,
+          subscribe: async () => {
+            w.pushSubscribeAttempts++;
+            throw new DOMException("Registration failed - push service error", "AbortError");
+          },
+        },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    });
+
+    await login(page);
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+    await toggle.click();
+
+    await expect(page.getByRole("alert")).toContainText("Chrome could not register with its push service");
+    await expect(page.getByRole("alert")).toContainText("Google services and network connectivity");
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByText("Notifications turned on for this device")).toHaveCount(0);
+    await page.getByText("Diagnostic details").click();
+    await expect(page.getByText("AbortError: Registration failed - push service error", { exact: true })).toBeVisible();
+    await expect(page.getByText("Backend request attempted:")).toBeVisible();
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(1);
+    expect(backendRequests).toBe(0);
+
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(2);
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByText("Notifications turned on for this device")).toHaveCount(0);
+    expect(backendRequests).toBe(0);
+  });
+});
+
+
+test.describe("Push registration persistence", () => {
+  test("requires backend confirmation across reloads and reuses the browser subscription @mobile", async ({ page }) => {
+    await login(page);
+    const initial = await (await page.request.get("/api/push")).json() as {
+      public_key: string;
+      devices: { id: string }[];
+    };
+    for (const device of initial.devices) await page.request.delete(`/api/push/subscriptions/${device.id}`, { headers: CSRF });
+
+    await page.addInitScript((publicKey) => {
+      const w = window as unknown as { pushSubscribeAttempts: number; pushUnsubscribeAttempts: number };
+      w.pushSubscribeAttempts = 0;
+      w.pushUnsubscribeAttempts = 0;
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const base64 = publicKey.replace(/-/g, "+").replace(/_/g, "/");
+      const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
+      const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+      const endpoint = `https://fcm.googleapis.com/fcm/send/persistence-${Date.now()}`;
+      const subscription = {
+        endpoint,
+        options: { userVisibleOnly: true, applicationServerKey },
+        toJSON: () => ({ endpoint, keys: { p256dh: publicKey, auth: "AAAAAAAAAAAAAAAAAAAAAA" } }),
+        unsubscribe: async () => {
+          w.pushUnsubscribeAttempts++;
+          current = null;
+          return true;
+        },
+      };
+      let current: typeof subscription | null = subscription;
+      const registration = {
+        active: { state: "activated" },
+        pushManager: {
+          getSubscription: async () => current,
+          subscribe: async () => {
+            w.pushSubscribeAttempts++;
+            current = subscription;
+            return subscription;
+          },
+        },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    }, initial.public_key);
+
+    let failBackend = true;
+    await page.route("**/api/push/subscriptions", async (route) => {
+      if (failBackend && route.request().method() === "POST") {
+        await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: { message: "Registration unavailable" } }) });
+      } else {
+        await route.continue();
+      }
+    });
+    await page.reload();
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+
+    await toggle.click();
+    await expect(page.getByRole("alert")).toContainText("The browser subscribed, but Talorys could not register this device");
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(0);
+
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+    failBackend = false;
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(0);
+    expect(await page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(0);
+
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    const registered = await (await page.request.get("/api/push")).json() as { devices: { id: string }[] };
+    expect(registered.devices).toHaveLength(1);
+    await page.request.delete(`/api/push/subscriptions/${registered.devices[0]!.id}`, { headers: CSRF });
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(await page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(1);
+    const afterDisable = await (await page.request.get("/api/push")).json() as { devices: { id: string }[] };
+    expect(afterDisable.devices).toEqual([]);
+  });
+});
