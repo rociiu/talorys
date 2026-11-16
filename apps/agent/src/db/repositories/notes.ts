@@ -1,7 +1,7 @@
 import type { Note, Project } from "@talorys/shared";
 import { type Database, ftsQuery, likePattern, newId, now } from "../database";
 import { NotFoundError } from "../../api/errors";
-import { stripUndefined } from "./tasks";
+import { DUE, stripUndefined } from "./tasks";
 
 export class NoteRepository {
   constructor(private readonly db: Database) {}
@@ -92,14 +92,17 @@ export class ProjectRepository {
     return this.db.all<import("@talorys/shared").TodayProject>(
       `SELECT p.*,
         (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done') AS open_tasks,
-        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at < ?) AS overdue_tasks,
-        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at >= ? AND t.due_at < ?) AS due_soon_tasks,
-        (SELECT min(t.due_at) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at IS NOT NULL) AS next_due_at,
+        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND ${DUE} < ?) AS overdue_tasks,
+        (SELECT count(*) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND ${DUE} >= ? AND ${DUE} < ?) AS due_soon_tasks,
+        (SELECT t.due_at FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at IS NOT NULL
+          ORDER BY ${DUE}, t.due_at LIMIT 1) AS next_due_at,
         max(p.updated_at,
           coalesce((SELECT max(t.updated_at) FROM tal_tasks t WHERE t.project_id = p.id), ''),
           coalesce((SELECT max(n.updated_at) FROM tal_notes n WHERE n.project_id = p.id), '')) AS last_activity_at
        FROM tal_projects p WHERE p.status = 'active'
-       ORDER BY open_tasks = 0, overdue_tasks DESC, next_due_at IS NULL, next_due_at ASC, last_activity_at DESC
+       ORDER BY open_tasks = 0, overdue_tasks DESC, next_due_at IS NULL,
+         (SELECT min(${DUE}) FROM tal_tasks t WHERE t.project_id = p.id AND t.status != 'done' AND t.due_at IS NOT NULL) ASC,
+         last_activity_at DESC
        LIMIT ?`,
       nowIso, nowIso, soonEnd, limit,
     );

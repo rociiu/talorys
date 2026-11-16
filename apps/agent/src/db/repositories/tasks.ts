@@ -30,7 +30,7 @@ export interface TaskCategoryBounds {
 }
 
 // Existing API clients and backups can supply ISO timestamps with offsets. Compare them in UTC.
-const DUE = `coalesce(strftime('%Y-%m-%dT%H:%M:%fZ', due_at, '+0 seconds'), due_at)`;
+export const DUE = `coalesce(strftime('%Y-%m-%dT%H:%M:%fZ', due_at, '+0 seconds'), due_at)`;
 const REQUEST_BOUNDS = `CROSS JOIN (SELECT ? AS request_time, ? AS next_day)`;
 const OPEN = `status != 'done'`;
 const OVERDUE = `${DUE} < request_time`;

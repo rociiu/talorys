@@ -138,19 +138,24 @@ it.each([
     const timezone = s.settings.get().timezone;
     const at = new Date(start);
     s.settings.update({ timezone: "America/New_York" });
-    const last = s.tasks.create({ title: "Last millisecond of the day", due_at: new Date(Date.parse(end) - 1).toISOString() });
-    const first = s.tasks.create({ title: "Next local midnight", due_at: end });
-    const offset = s.tasks.create({ title: "Same midnight with an explicit offset", due_at: `${end.slice(0, 10)}T01:00:00-0${hours === 23 ? 3 : 4}:00` });
+    const project = s.projects.create({ name: `DST dashboard ${start}` });
+    const last = s.tasks.create({ title: "Last millisecond of the day", project_id: project.id, due_at: new Date(Date.parse(end) - 1).toISOString() });
+    const first = s.tasks.create({ title: "Next local midnight", project_id: project.id, due_at: end });
+    const offset = s.tasks.create({ title: "Same midnight with an explicit offset", project_id: project.id, due_at: `${end.slice(0, 10)}T01:00:00-0${hours === 23 ? 3 : 4}:00` });
     try {
       expect(localDayBounds("America/New_York", at)).toEqual({ start, end });
       expect(Date.parse(end) - at.getTime()).toBe(hours * 3600_000);
-      expect(buildToday(s, at).counts).toEqual({ open: 3, today: 1, overdue: 0, upcoming: 2 });
+      const initial = buildToday(s, at);
+      expect(initial.counts).toEqual({ open: 3, today: 1, overdue: 0, upcoming: 2 });
+      expect(initial.projects.find((p) => p.id === project.id)).toMatchObject({ overdue_tasks: 0, due_soon_tasks: 3, next_due_at: last.due_at });
       const after = buildToday(s, new Date(end));
       expect(after.counts).toEqual({ open: 3, today: 2, overdue: 1, upcoming: 0 });
       expect(after.tasks.overdue.map((t) => t.id)).toEqual([last.id]);
       expect(after.tasks.today.map((t) => t.id)).toEqual([first.id, offset.id]);
+      expect(after.projects.find((p) => p.id === project.id)).toMatchObject({ overdue_tasks: 1, due_soon_tasks: 2, next_due_at: last.due_at });
     } finally {
       for (const t of [last, first, offset]) s.tasks.delete(t.id);
+      s.projects.delete(project.id);
       s.settings.update({ timezone });
     }
   });
