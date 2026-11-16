@@ -62,24 +62,49 @@ function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+const ACTIVATION_TIMEOUT_MS = 15_000;
+
 async function activeRegistration(): Promise<ServiceWorkerRegistration> {
   const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  if (registration.active) return registration;
-  const worker = registration.installing ?? registration.waiting;
-  if (!worker) throw new Error("The service worker registration has no worker to activate.");
+  if (registration.active?.state === "activated") return registration;
   await new Promise<void>((resolve, reject) => {
-    const cleanup = () => worker.removeEventListener("statechange", onStateChange);
-    const onStateChange = () => {
-      if (registration.active) {
-        cleanup();
-        resolve();
-      } else if (worker.state === "redundant") {
-        cleanup();
-        reject(new Error("The Talorys service worker became redundant before activation."));
+    const workers = new Set<ServiceWorker>();
+    let settled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+    const onStateChange = () => check();
+    const onUpdate = () => check();
+    const cleanup = () => {
+      clearTimeout(timeout);
+      registration.removeEventListener("updatefound", onUpdate);
+      for (const worker of workers) worker.removeEventListener("statechange", onStateChange);
+    };
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve();
+    };
+    const check = () => {
+      if (settled) return;
+      const candidates = [registration.active, registration.installing, registration.waiting].filter((worker): worker is ServiceWorker => !!worker);
+      for (const worker of candidates) {
+        if (!workers.has(worker)) {
+          workers.add(worker);
+          worker.addEventListener("statechange", onStateChange);
+        }
+      }
+      if (registration.active?.state === "activated") {
+        finish();
+      } else if (candidates.length === 0) {
+        finish(new Error("The service worker registration has no worker to activate."));
+      } else if (candidates.every((worker) => worker.state === "redundant")) {
+        finish(new Error("The Talorys service worker became redundant before activation."));
       }
     };
-    worker.addEventListener("statechange", onStateChange);
-    onStateChange();
+    registration.addEventListener("updatefound", onUpdate);
+    timeout = setTimeout(() => finish(new Error("The Talorys service worker did not activate within 15 seconds. Try again.")), ACTIVATION_TIMEOUT_MS);
+    check();
   });
   return registration;
 }
@@ -148,7 +173,12 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
       await current.unsubscribe();
       current = null;
     }
-    subscription = current ?? (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey }));
+    if (current) {
+      subscription = current;
+    } else {
+      subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+      remember(null);
+    }
   } catch (error) {
     throw registrationError("browser-subscription", error, state);
   }
@@ -165,10 +195,14 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
 
 export async function disablePush(): Promise<PushStatus> {
   const sub = await currentSubscription();
-  remember(null);
-  if (!sub) return api<PushStatus>("/push");
+  if (!sub) {
+    const status = await api<PushStatus>("/push");
+    remember(null);
+    return status;
+  }
   const status = await api<PushStatus>("/push/unsubscribe", { method: "POST", body: { endpoint: sub.endpoint } });
   await sub.unsubscribe();
+  remember(null);
   return status;
 }
 

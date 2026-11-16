@@ -81,10 +81,10 @@ function DiagnosticDetails({ error }: { error: PushRegistrationError }) {
 function usePushMutations() {
   const qc = useQueryClient();
   const setStatus = (s: PushStatus) => qc.setQueryData(KEY, s);
-  const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [browserSubscription, setBrowserSubscription] = useState<boolean | null>(null);
   const [failure, setFailure] = useState<{ error: unknown; on: boolean } | null>(null);
   useEffect(() => {
-    void currentSubscription().then((s) => setSubscribed(!!s), () => setSubscribed(false));
+    void currentSubscription().then((s) => setBrowserSubscription(!!s), () => setBrowserSubscription(false));
   }, []);
   const toggle = useApiMutation(
     async (v: { on: boolean; publicKey: string }) => {
@@ -92,7 +92,7 @@ function usePushMutations() {
       try {
         return v.on ? (await enablePush(v.publicKey)).status : disablePush();
       } catch (error) {
-        if (v.on) setSubscribed(false);
+        if (v.on && error instanceof PushRegistrationError && error.diagnostics.stage === "backend") setBrowserSubscription(true);
         setFailure({ error, on: v.on });
         throw error;
       }
@@ -100,7 +100,7 @@ function usePushMutations() {
     {
       quiet: true,
       success: (s) => (s.devices.some((d) => d.id === thisDeviceId()) ? "Notifications turned on for this device" : "Notifications turned off for this device"),
-      onSuccess: (s, v) => { setStatus(s); setSubscribed(v.on); },
+      onSuccess: (s, v) => { setStatus(s); setBrowserSubscription(v.on); },
     },
   );
   const remove = useApiMutation((id: string) => api<PushStatus>(`/push/subscriptions/${id}`, { method: "DELETE" }), {
@@ -111,22 +111,24 @@ function usePushMutations() {
     success: (r) => (r.result.sent > 0 ? `Test sent to ${r.result.sent} device(s)` : "No device could be reached"),
     onSuccess: (r) => setStatus(r.status),
   });
-  return { subscribed, failure, toggle, remove, test };
+  return { browserSubscription, failure, toggle, remove, test };
 }
 
 function PushControls({ status: s }: { status: PushStatus }) {
   const i18n = useI18n();
-  const { subscribed, failure, toggle, remove, test } = usePushMutations();
+  const { browserSubscription, failure, toggle, remove, test } = usePushMutations();
   const blocker = pushBlocker();
   const current = thisDeviceId();
+  const registered = !!current && s.devices.some((d) => d.id === current);
+  const enabled = browserSubscription === true && registered;
   return (
     <>
       <Row label="This device" hint={blocker ? BLOCKER_TEXT[blocker] : "Reminders, digests and routines also arrive as system notifications, even when Talorys is closed."}>
         <Switch
-          checked={subscribed === true && !blocker}
+          checked={enabled && !blocker}
           onChange={(on) => toggle.mutate({ on, publicKey: s.public_key! })}
           label="Push notifications on this device"
-          disabled={!!blocker || subscribed === null || toggle.isPending}
+          disabled={!!blocker || browserSubscription === null || toggle.isPending}
         />
       </Row>
       {failure && (
