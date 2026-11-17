@@ -349,3 +349,72 @@ test.describe("Push Content Security Policy", () => {
     expect(violations).toEqual([]);
   });
 });
+
+
+test.describe("Push reconciliation races", () => {
+  test("ignores a failed reconciliation from a previous mount after newer confirmation @mobile", async ({ page }) => {
+    await login(page);
+    const initial = await (await page.request.get("/api/push")).json() as { public_key: string; devices: { id: string }[] };
+    for (const device of initial.devices) await page.request.delete(`/api/push/subscriptions/${device.id}`, { headers: CSRF });
+    const endpoint = "https://fcm.googleapis.com/fcm/send/reconciliation-race";
+    const added = await page.request.post("/api/push/subscriptions", {
+      headers: CSRF,
+      data: { endpoint, keys: { p256dh: initial.public_key, auth: "AAAAAAAAAAAAAAAAAAAAAA" }, label: "Race device" },
+    });
+    expect(added.status()).toBe(200);
+
+    await page.addInitScript(({ publicKey, endpoint }) => {
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const base64 = publicKey.replace(/-/g, "+").replace(/_/g, "/");
+      const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
+      const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+      const subscription = {
+        endpoint,
+        options: { userVisibleOnly: true, applicationServerKey },
+        toJSON: () => ({ endpoint, keys: { p256dh: publicKey, auth: "AAAAAAAAAAAAAAAAAAAAAA" } }),
+        unsubscribe: async () => true,
+      };
+      const registration = {
+        active: { state: "activated" },
+        pushManager: { getSubscription: async () => subscription, subscribe: async () => subscription },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    }, { publicKey: initial.public_key, endpoint });
+
+    let requests = 0;
+    let firstFinished = 0;
+    let releaseFirst: () => void = () => {};
+    const firstResponse = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    await page.route("**/api/push/subscriptions/current", async (route) => {
+      requests++;
+      if (requests === 1) {
+        await firstResponse;
+        await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: { message: "Stale failure" } }) });
+        firstFinished++;
+      } else {
+        await route.continue();
+      }
+    });
+
+    await page.reload();
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    // StrictMode starts a second initial effect while the first request remains pending.
+    await expect.poll(() => requests).toBeGreaterThanOrEqual(2);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    const beforeRemount = requests;
+    await page.getByRole("tab", { name: "About" }).click();
+    await page.getByRole("tab", { name: "General" }).click();
+    await expect.poll(() => requests).toBeGreaterThan(beforeRemount);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+
+    releaseFirst();
+    await expect.poll(() => firstFinished).toBe(1);
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(page.getByText(/Stale failure/)).toHaveCount(0);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+  });
+});

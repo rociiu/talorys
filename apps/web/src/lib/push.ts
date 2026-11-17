@@ -169,11 +169,13 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
   }
 
   let subscription: PushSubscription;
+  let replacedEndpoint: string | null = null;
   try {
     let current = await registration.pushManager.getSubscription();
     state.existingSubscription = !!current;
     const existingKey = current?.options.applicationServerKey;
     if (current && (!existingKey || !sameKey(existingKey, applicationServerKey))) {
+      replacedEndpoint = current.endpoint;
       await current.unsubscribe();
       current = null;
     }
@@ -189,7 +191,10 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
 
   state.backendAttempted = true;
   try {
-    const result = await api<{ device: PushDevice; status: PushStatus }>("/push/subscriptions", { method: "POST", body: subscription.toJSON() });
+    const input = subscription.toJSON();
+    const result = replacedEndpoint
+      ? await api<{ device: PushDevice; status: PushStatus }>("/push/subscriptions/replace", { method: "POST", body: { ...input, old_endpoint: replacedEndpoint } })
+      : await api<{ device: PushDevice; status: PushStatus }>("/push/subscriptions", { method: "POST", body: input });
     remember(result.device.id);
     return result;
   } catch (error) {

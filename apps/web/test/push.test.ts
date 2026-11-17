@@ -112,6 +112,12 @@ describe("push registration", () => {
     await enablePush(PUBLIC_KEY);
     expect(unsubscribe).toHaveBeenCalledTimes(1);
     expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]![0]).toBe("/api/push/subscriptions/replace");
+    expect(JSON.parse(fetcher.mock.calls[0]![1]?.body as string)).toMatchObject({
+      ...subscriptionJson,
+      old_endpoint: subscriptionJson.endpoint,
+    });
   });
 
   it("rejects an invalid VAPID key before changing an existing subscription", async () => {

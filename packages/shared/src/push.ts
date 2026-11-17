@@ -33,3 +33,7 @@ export const pushSubscribeSchema = z.object({
 });
 
 export const pushUnsubscribeSchema = z.object({ endpoint: z.string().url().max(2048) });
+
+export const pushReplaceSubscriptionSchema = pushSubscribeSchema.extend({
+  old_endpoint: z.string().url().max(2048),
+});

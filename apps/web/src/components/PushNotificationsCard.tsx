@@ -117,14 +117,13 @@ function usePushMutations(publicKey: string) {
       setConfirmedDeviceId(result.device?.id ?? null);
       if (result.status) setStatus(result.status);
     } catch (error) {
+      if (generation.current !== ownGeneration) return;
       if (reportFailure) {
         const checkError = new Error(`Talorys could not confirm this browser's push registration: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
         storeFailure({ error: checkError, action: "check" });
       }
-      if (generation.current === ownGeneration) {
-        setBrowserSubscription(null);
-        setConfirmedDeviceId(null);
-      }
+      setBrowserSubscription(null);
+      setConfirmedDeviceId(null);
     } finally {
       if (generation.current === ownGeneration) setChecking(false);
     }

@@ -117,6 +117,41 @@ describe("push API", () => {
     expect((await c.json("/api/push")).devices).toHaveLength(MAX_PUSH_DEVICES);
   });
 
+  it(`atomically replaces a rotated endpoint at ${MAX_PUSH_DEVICES} devices without bypassing the limit`, async () => {
+    const c = await loggedIn();
+    const browsers = [];
+    let replaced: any;
+    for (let i = 0; i < MAX_PUSH_DEVICES; i++) {
+      const browser = await fakeBrowser();
+      browsers.push(browser);
+      const result = await c.json("/api/push/subscriptions", { method: "POST", body: browser.json });
+      if (i === 0) replaced = result.device;
+    }
+
+    const rotated = await fakeBrowser();
+    const response = await c.call("/api/push/subscriptions/replace", {
+      method: "POST",
+      body: { ...rotated.json, old_endpoint: browsers[0]!.endpoint },
+    });
+    expect(response.status).toBe(200);
+    const result = await response.json() as any;
+    expect(result.device.id).toBe(replaced.id);
+    expect(result.status.devices).toHaveLength(MAX_PUSH_DEVICES);
+    expect(JSON.stringify(result)).not.toContain(rotated.endpoint);
+    expect(JSON.stringify(result)).not.toContain(rotated.json.keys.auth);
+    expect((await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browsers[0]!.endpoint } })).device).toBeNull();
+    expect((await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: rotated.endpoint } })).device.id).toBe(replaced.id);
+
+    const unknownOldEndpoint = await fakeBrowser();
+    const additional = await fakeBrowser();
+    const over = await c.call("/api/push/subscriptions/replace", {
+      method: "POST",
+      body: { ...additional.json, old_endpoint: unknownOldEndpoint.endpoint },
+    });
+    expect(over.status).toBe(400);
+    expect((await c.json("/api/push")).devices).toHaveLength(MAX_PUSH_DEVICES);
+  });
+
   it("never puts push subscriptions in a backup", async () => {
     const c = await loggedIn();
     const browser = await fakeBrowser();
