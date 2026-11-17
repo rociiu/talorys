@@ -46,6 +46,9 @@ describe("push API", () => {
     const browser = await fakeBrowser();
     const res = await c.call("/api/push/subscriptions", { method: "POST", body: browser.json, headers: { "x-talorys-request": "0" } });
     expect(res.status).toBe(403);
+    const currentWithoutCsrf = await c.call("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint }, headers: { "x-talorys-request": "0" } });
+    expect(currentWithoutCsrf.status).toBe(403);
+    expect((await anon.call("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint } })).status).toBe(401);
     expect((await c.json("/api/push")).devices).toEqual([]);
   });
 
@@ -69,6 +72,15 @@ describe("push API", () => {
     const again = await c.json("/api/push/subscriptions", { method: "POST", body: browser.json });
     expect(again.device.id).toBe(first.device.id);
     expect(again.status.devices).toHaveLength(1);
+
+    const current = await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browser.endpoint } });
+    expect(current.device.id).toBe(first.device.id);
+    expect(current.status.devices).toHaveLength(1);
+    expect(JSON.stringify(current)).not.toContain(browser.endpoint);
+    expect(JSON.stringify(current)).not.toContain(browser.json.keys.p256dh);
+    expect(JSON.stringify(current)).not.toContain(browser.json.keys.auth);
+    const missing = await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: "https://fcm.googleapis.com/fcm/send/missing" } });
+    expect(missing.device).toBeNull();
 
     const other = await fakeBrowser("https://updates.push.services.mozilla.com/wpush/v2/xyz");
     const second = await c.json("/api/push/subscriptions", { method: "POST", body: other.json });
@@ -101,6 +113,41 @@ describe("push API", () => {
       expect(res.status).toBe(200);
     }
     const over = await c.call("/api/push/subscriptions", { method: "POST", body: (await fakeBrowser()).json });
+    expect(over.status).toBe(400);
+    expect((await c.json("/api/push")).devices).toHaveLength(MAX_PUSH_DEVICES);
+  });
+
+  it(`atomically replaces a rotated endpoint at ${MAX_PUSH_DEVICES} devices without bypassing the limit`, async () => {
+    const c = await loggedIn();
+    const browsers = [];
+    let replaced: any;
+    for (let i = 0; i < MAX_PUSH_DEVICES; i++) {
+      const browser = await fakeBrowser();
+      browsers.push(browser);
+      const result = await c.json("/api/push/subscriptions", { method: "POST", body: browser.json });
+      if (i === 0) replaced = result.device;
+    }
+
+    const rotated = await fakeBrowser();
+    const response = await c.call("/api/push/subscriptions/replace", {
+      method: "POST",
+      body: { ...rotated.json, old_endpoint: browsers[0]!.endpoint },
+    });
+    expect(response.status).toBe(200);
+    const result = await response.json() as any;
+    expect(result.device.id).toBe(replaced.id);
+    expect(result.status.devices).toHaveLength(MAX_PUSH_DEVICES);
+    expect(JSON.stringify(result)).not.toContain(rotated.endpoint);
+    expect(JSON.stringify(result)).not.toContain(rotated.json.keys.auth);
+    expect((await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: browsers[0]!.endpoint } })).device).toBeNull();
+    expect((await c.json("/api/push/subscriptions/current", { method: "POST", body: { endpoint: rotated.endpoint } })).device.id).toBe(replaced.id);
+
+    const unknownOldEndpoint = await fakeBrowser();
+    const additional = await fakeBrowser();
+    const over = await c.call("/api/push/subscriptions/replace", {
+      method: "POST",
+      body: { ...additional.json, old_endpoint: unknownOldEndpoint.endpoint },
+    });
     expect(over.status).toBe(400);
     expect((await c.json("/api/push")).devices).toHaveLength(MAX_PUSH_DEVICES);
   });

@@ -109,6 +109,10 @@ test.describe("Push registration browser flow", () => {
     await page.getByText("Diagnostic details").click();
     await expect(page.getByText("AbortError: Registration failed - push service error", { exact: true })).toBeVisible();
     await expect(page.getByText("Backend request attempted:")).toBeVisible();
+
+    await page.getByRole("tab", { name: "About" }).click();
+    await page.getByRole("tab", { name: "General" }).click();
+    await expect(page.getByRole("alert")).toContainText("Chrome could not register with its push service");
     await page.waitForTimeout(400);
     expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(1);
     expect(backendRequests).toBe(0);
@@ -132,22 +136,27 @@ test.describe("Push registration persistence", () => {
     for (const device of initial.devices) await page.request.delete(`/api/push/subscriptions/${device.id}`, { headers: CSRF });
 
     await page.addInitScript((publicKey) => {
-      const w = window as unknown as { pushSubscribeAttempts: number; pushUnsubscribeAttempts: number };
+      const w = window as unknown as { pushSubscribeAttempts: number; pushUnsubscribeAttempts: number; failPushUnsubscribe: boolean };
       w.pushSubscribeAttempts = 0;
       w.pushUnsubscribeAttempts = 0;
+      w.failPushUnsubscribe = false;
       Object.defineProperty(window, "Notification", {
         value: { permission: "granted", requestPermission: async () => "granted" },
       });
       const base64 = publicKey.replace(/-/g, "+").replace(/_/g, "/");
       const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
       const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
-      const endpoint = `https://fcm.googleapis.com/fcm/send/persistence-${Date.now()}`;
+      const endpoint = "https://fcm.googleapis.com/fcm/send/persistence";
       const subscription = {
         endpoint,
         options: { userVisibleOnly: true, applicationServerKey },
         toJSON: () => ({ endpoint, keys: { p256dh: publicKey, auth: "AAAAAAAAAAAAAAAAAAAAAA" } }),
         unsubscribe: async () => {
           w.pushUnsubscribeAttempts++;
+          if (w.failPushUnsubscribe) {
+            w.failPushUnsubscribe = false;
+            return false;
+          }
           current = null;
           return true;
         },
@@ -191,6 +200,10 @@ test.describe("Push registration persistence", () => {
     await expect(toggle).toHaveAttribute("aria-checked", "false");
     await expect(toggle).toBeEnabled();
     failBackend = false;
+    await page.evaluate(() => {
+      Storage.prototype.setItem = () => { throw new DOMException("Storage denied", "SecurityError"); };
+      Storage.prototype.removeItem = () => { throw new DOMException("Storage denied", "SecurityError"); };
+    });
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-checked", "true");
     expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(0);
@@ -207,10 +220,201 @@ test.describe("Push registration persistence", () => {
 
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await page.evaluate(() => {
+      (window as unknown as { failPushUnsubscribe: boolean }).failPushUnsubscribe = true;
+    });
     await toggle.click();
+    await expect(page.getByRole("alert")).toContainText("Talorys removed this device, but the browser could not remove its push subscription");
     await expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(await page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(1);
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(2);
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
     const afterDisable = await (await page.request.get("/api/push")).json() as { devices: { id: string }[] };
     expect(afterDisable.devices).toEqual([]);
+  });
+});
+
+
+test.describe("Push registration operation states", () => {
+  test("prevents duplicate clicks and turns on after backend confirmation when storage is unavailable @mobile", async ({ page }) => {
+    await login(page);
+    const initial = await (await page.request.get("/api/push")).json() as { public_key: string; devices: { id: string }[] };
+    for (const device of initial.devices) await page.request.delete(`/api/push/subscriptions/${device.id}`, { headers: CSRF });
+
+    await page.addInitScript((publicKey) => {
+      const w = window as unknown as { pushSubscribeAttempts: number; resolvePushSubscription: (() => void) | null };
+      w.pushSubscribeAttempts = 0;
+      w.resolvePushSubscription = null;
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const base64 = publicKey.replace(/-/g, "+").replace(/_/g, "/");
+      const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
+      const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+      const endpoint = "https://fcm.googleapis.com/fcm/send/new-browser-subscription";
+      const subscription = {
+        endpoint,
+        options: { userVisibleOnly: true, applicationServerKey },
+        toJSON: () => ({ endpoint, keys: { p256dh: publicKey, auth: "AAAAAAAAAAAAAAAAAAAAAA" } }),
+        unsubscribe: async () => {
+          window.name = "";
+          current = null;
+          return true;
+        },
+      };
+      let current: typeof subscription | null = window.name === "push-active" ? subscription : null;
+      const registration = {
+        active: { state: "activated" },
+        pushManager: {
+          getSubscription: async () => current,
+          subscribe: async () => {
+            w.pushSubscribeAttempts++;
+            return new Promise<typeof subscription>((resolve) => {
+              w.resolvePushSubscription = () => {
+                current = subscription;
+                window.name = "push-active";
+                resolve(subscription);
+              };
+            });
+          },
+        },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    }, initial.public_key);
+
+    await page.reload();
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toBeEnabled();
+    await page.evaluate(() => {
+      Storage.prototype.setItem = () => { throw new DOMException("Storage denied", "SecurityError"); };
+      Storage.prototype.removeItem = () => { throw new DOMException("Storage denied", "SecurityError"); };
+    });
+
+    await toggle.click();
+    await expect(page.getByText("Turning on…", { exact: true }).first()).toBeVisible();
+    await expect(toggle).toBeDisabled();
+    await toggle.evaluate((element) => (element as HTMLButtonElement).click());
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(1);
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+
+    await page.evaluate(() => (window as unknown as { resolvePushSubscription: () => void }).resolvePushSubscription());
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByText("On", { exact: true }).first()).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { pushSubscribeAttempts: number }).pushSubscribeAttempts)).toBe(1);
+    const registered = await (await page.request.get("/api/push")).json() as { devices: { id: string }[] };
+    expect(registered.devices).toHaveLength(1);
+
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+  });
+});
+
+test.describe("Push Content Security Policy", () => {
+  test("runs the application and root service worker with script-src self", async ({ page }) => {
+    const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'";
+    const violations: string[] = [];
+    page.on("console", (message) => {
+      if (message.text().includes("Content Security Policy")) violations.push(message.text());
+    });
+    let vitePreamble = "";
+    await page.route("**/@test-vite-preamble", async (route) => {
+      await route.fulfill({ contentType: "text/javascript", body: vitePreamble });
+    });
+    await page.route("**/", async (route) => {
+      if (route.request().resourceType() !== "document") return route.continue();
+      const response = await route.fetch();
+      // Move Vite's development-only inline React preamble to a same-origin script for this CSP test.
+      const html = await response.text();
+      const preamble = html.match(/<script type="module">([\s\S]*?)<\/script>/);
+      vitePreamble = preamble?.[1] ?? "";
+      const body = html.replace(/<script type="module">[\s\S]*?<\/script>/, '<script type="module" src="/@test-vite-preamble"></script>');
+      await route.fulfill({ response, body, headers: { ...response.headers(), "content-security-policy": csp } });
+    });
+
+    await login(page);
+    const scope = await page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await navigator.serviceWorker.ready;
+      return registration.scope;
+    });
+    expect(scope).toBe("http://localhost:5173/");
+    const headers = await (await page.request.get("/_headers")).text();
+    expect(headers).toContain(`Content-Security-Policy: ${csp}`);
+    expect(headers).not.toContain("unsafe-eval");
+    expect(headers).not.toContain("static.cloudflareinsights.com");
+    expect(violations).toEqual([]);
+  });
+});
+
+
+test.describe("Push reconciliation races", () => {
+  test("ignores a failed reconciliation from a previous mount after newer confirmation @mobile", async ({ page }) => {
+    await login(page);
+    const initial = await (await page.request.get("/api/push")).json() as { public_key: string; devices: { id: string }[] };
+    for (const device of initial.devices) await page.request.delete(`/api/push/subscriptions/${device.id}`, { headers: CSRF });
+    const endpoint = "https://fcm.googleapis.com/fcm/send/reconciliation-race";
+    const added = await page.request.post("/api/push/subscriptions", {
+      headers: CSRF,
+      data: { endpoint, keys: { p256dh: initial.public_key, auth: "AAAAAAAAAAAAAAAAAAAAAA" }, label: "Race device" },
+    });
+    expect(added.status()).toBe(200);
+
+    await page.addInitScript(({ publicKey, endpoint }) => {
+      Object.defineProperty(window, "Notification", {
+        value: { permission: "granted", requestPermission: async () => "granted" },
+      });
+      const base64 = publicKey.replace(/-/g, "+").replace(/_/g, "/");
+      const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
+      const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+      const subscription = {
+        endpoint,
+        options: { userVisibleOnly: true, applicationServerKey },
+        toJSON: () => ({ endpoint, keys: { p256dh: publicKey, auth: "AAAAAAAAAAAAAAAAAAAAAA" } }),
+        unsubscribe: async () => true,
+      };
+      const registration = {
+        active: { state: "activated" },
+        pushManager: { getSubscription: async () => subscription, subscribe: async () => subscription },
+      };
+      navigator.serviceWorker.register = (async () => registration) as never;
+      navigator.serviceWorker.getRegistration = (async () => registration) as never;
+    }, { publicKey: initial.public_key, endpoint });
+
+    let requests = 0;
+    let firstFinished = 0;
+    let releaseFirst: () => void = () => {};
+    const firstResponse = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    await page.route("**/api/push/subscriptions/current", async (route) => {
+      requests++;
+      if (requests === 1) {
+        await firstResponse;
+        await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: { message: "Stale failure" } }) });
+        firstFinished++;
+      } else {
+        await route.continue();
+      }
+    });
+
+    await page.reload();
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const toggle = page.getByRole("switch", { name: "Push notifications on this device" });
+    // StrictMode starts a second initial effect while the first request remains pending.
+    await expect.poll(() => requests).toBeGreaterThanOrEqual(2);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    const beforeRemount = requests;
+    await page.getByRole("tab", { name: "About" }).click();
+    await page.getByRole("tab", { name: "General" }).click();
+    await expect.poll(() => requests).toBeGreaterThan(beforeRemount);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+
+    releaseFirst();
+    await expect.poll(() => firstFinished).toBe(1);
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(page.getByText(/Stale failure/)).toHaveCount(0);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 });

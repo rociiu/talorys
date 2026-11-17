@@ -2,6 +2,14 @@ import { MAX_PUSH_DEVICES, type PushDevice } from "@talorys/shared";
 import { type Database, newId, now } from "../db/database";
 import { ValidationError } from "../api/errors";
 
+export interface PushSubscriptionInput {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  label: string;
+  origin: string;
+}
+
 export interface PushSubscriptionRow {
   id: string;
   endpoint: string;
@@ -37,7 +45,7 @@ export class PushSubscriptionRepository {
   }
 
   /** Adds a device, or refreshes the keys of one already subscribed with the same endpoint. */
-  save(input: { endpoint: string; p256dh: string; auth: string; label: string; origin: string }): PushDevice {
+  save(input: PushSubscriptionInput): PushDevice {
     const existing = this.db.one<{ id: string }>(`SELECT id FROM tal_push_subscriptions WHERE endpoint = ?`, input.endpoint);
     const id = existing?.id ?? newId();
     if (existing) {
@@ -56,8 +64,31 @@ export class PushSubscriptionRepository {
     return this.devices().find((d) => d.id === id)!;
   }
 
+  /** Atomically replaces the old browser endpoint, including when the device list is full. */
+  replace(oldEndpoint: string, input: PushSubscriptionInput): PushDevice {
+    return this.db.transaction(() => {
+      const previous = this.db.one<{ id: string }>(`SELECT id FROM tal_push_subscriptions WHERE endpoint = ?`, oldEndpoint);
+      if (!previous) return this.save(input);
+      const current = this.db.one<{ id: string }>(`SELECT id FROM tal_push_subscriptions WHERE endpoint = ?`, input.endpoint);
+      const id = current?.id ?? previous.id;
+      if (current && current.id !== previous.id) {
+        this.db.run(`DELETE FROM tal_push_subscriptions WHERE id = ?`, previous.id);
+      }
+      this.db.run(
+        `UPDATE tal_push_subscriptions SET endpoint = ?, p256dh = ?, auth = ?, label = ?, origin = ?, failures = 0 WHERE id = ?`,
+        input.endpoint, input.p256dh, input.auth, input.label, input.origin, id,
+      );
+      return this.devices().find((device) => device.id === id)!;
+    });
+  }
+
   remove(id: string): boolean {
     return this.db.run(`DELETE FROM tal_push_subscriptions WHERE id = ?`, id).changes > 0;
+  }
+
+  byEndpoint(endpoint: string): PushDevice | null {
+    const row = this.db.one<{ id: string }>(`SELECT id FROM tal_push_subscriptions WHERE endpoint = ?`, endpoint);
+    return row ? this.devices().find((device) => device.id === row.id) ?? null : null;
   }
 
   removeByEndpoint(endpoint: string): boolean {

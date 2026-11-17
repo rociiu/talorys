@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enablePush, PushRegistrationError } from "../src/lib/push";
+import { confirmPushRegistration, enablePush, forgetPushDevice, PushRegistrationError } from "../src/lib/push";
 
 const PUBLIC_KEY = Buffer.from([4, ...new Array(64).fill(1)]).toString("base64url");
 const OTHER_KEY = Buffer.from([4, ...new Array(64).fill(2)]).toString("base64url");
@@ -15,11 +15,11 @@ const keyBuffer = (key: string) => {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 };
 
-function browserSubscription(key: ArrayBuffer | null, unsubscribe = vi.fn(async () => true)) {
+function browserSubscription(key: ArrayBuffer | null, unsubscribe = vi.fn(async () => true), endpoint = subscriptionJson.endpoint) {
   return {
-    endpoint: subscriptionJson.endpoint,
+    endpoint,
     options: { userVisibleOnly: true, applicationServerKey: key },
-    toJSON: () => subscriptionJson,
+    toJSON: () => ({ ...subscriptionJson, endpoint }),
     unsubscribe,
   } as unknown as PushSubscription;
 }
@@ -76,6 +76,12 @@ describe("push registration", () => {
     vi.stubGlobal("navigator", { serviceWorker: { register, getRegistration: async () => registration } });
     vi.stubGlobal("fetch", fetcher);
     vi.stubGlobal("localStorage", { getItem: () => null, setItem: vi.fn(), removeItem: removeDeviceId });
+    const session = new Map<string, string>();
+    vi.stubGlobal("sessionStorage", {
+      getItem: (key: string) => session.get(key) ?? null,
+      setItem: (key: string, value: string) => void session.set(key, value),
+      removeItem: (key: string) => void session.delete(key),
+    });
   });
 
   afterEach(() => {
@@ -112,6 +118,12 @@ describe("push registration", () => {
     await enablePush(PUBLIC_KEY);
     expect(unsubscribe).toHaveBeenCalledTimes(1);
     expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]![0]).toBe("/api/push/subscriptions/replace");
+    expect(JSON.parse(fetcher.mock.calls[0]![1]?.body as string)).toMatchObject({
+      ...subscriptionJson,
+      old_endpoint: subscriptionJson.endpoint,
+    });
   });
 
   it("rejects an invalid VAPID key before changing an existing subscription", async () => {
@@ -277,6 +289,46 @@ describe("push registration", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
+  it.each([{ mode: "memory" }, { mode: "reload" }])("retries VAPID replacement with the original endpoint using $mode state", async ({ mode }) => {
+    if (mode === "memory") {
+      vi.stubGlobal("sessionStorage", {
+        getItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+        setItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+        removeItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+      });
+    }
+    const oldEndpoint = "https://fcm.googleapis.com/fcm/send/old-vapid";
+    const newEndpoint = "https://fcm.googleapis.com/fcm/send/new-vapid";
+    const oldSubscription = browserSubscription(keyBuffer(OTHER_KEY), vi.fn(async () => true), oldEndpoint);
+    const newSubscription = browserSubscription(keyBuffer(PUBLIC_KEY), vi.fn(async () => true), newEndpoint);
+    getSubscription.mockResolvedValueOnce(oldSubscription);
+    subscribe.mockResolvedValue(newSubscription);
+    fetcher
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { message: "Temporary replacement failure" } }), { status: 500 }))
+      .mockResolvedValueOnce(successResponse());
+
+    const error = await registrationError();
+    expect(error.diagnostics.stage).toBe("backend");
+    getSubscription.mockResolvedValue(newSubscription);
+    let retry = enablePush;
+    if (mode === "reload") {
+      vi.resetModules();
+      retry = (await import("../src/lib/push")).enablePush;
+    }
+    await retry(PUBLIC_KEY);
+
+    expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls.map((call) => call[0])).toEqual([
+      "/api/push/subscriptions/replace",
+      "/api/push/subscriptions/replace",
+    ]);
+    for (const call of fetcher.mock.calls) {
+      expect(JSON.parse(call[1]?.body as string)).toMatchObject({ endpoint: newEndpoint, old_endpoint: oldEndpoint });
+    }
+    forgetPushDevice();
+  });
+
   it("classifies denied permission without registering a worker", async () => {
     requestPermission.mockResolvedValue("denied");
     const error = await registrationError();
@@ -293,5 +345,53 @@ describe("push registration", () => {
     await expect(disablePush()).rejects.toThrow("Unavailable");
     expect(removeDeviceId).not.toHaveBeenCalled();
     expect(unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it("returns backend confirmation even when localStorage writes fail", async () => {
+    vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => { throw new DOMException("Storage denied", "SecurityError"); }, removeItem: removeDeviceId });
+    await expect(enablePush(PUBLIC_KEY)).resolves.toEqual({ device, status });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("confirms a reloaded browser subscription by endpoint without trusting the stored device ID", async () => {
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY)));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ device, status }), { status: 200, headers: { "content-type": "application/json" } }));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device, status });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]![0]).toBe("/api/push/subscriptions/current");
+    expect(JSON.parse(fetcher.mock.calls[0]![1]?.body as string)).toEqual({ endpoint: subscriptionJson.endpoint });
+    expect(subscribe).not.toHaveBeenCalled();
+  });
+
+  it("does not show a stale stored device as registered after backend deletion", async () => {
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY)));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ device: null, status: { ...status, devices: [] } }), { status: 200, headers: { "content-type": "application/json" } }));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device: null });
+    expect(removeDeviceId).toHaveBeenCalledWith("talorys.pushDevice");
+  });
+
+  it("clears a missing local device ID when no browser subscription remains", async () => {
+    getSubscription.mockResolvedValue(null);
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toEqual({ subscription: null, device: null, status: null });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(removeDeviceId).toHaveBeenCalledWith("talorys.pushDevice");
+  });
+
+  it("requires manual re-registration after a VAPID rotation without destroying the old subscription", async () => {
+    const unsubscribe = vi.fn(async () => true);
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(OTHER_KEY), unsubscribe));
+    await expect(confirmPushRegistration(PUBLIC_KEY)).resolves.toMatchObject({ device: null });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it("keeps the browser subscription and remembered ID after a partial disable failure", async () => {
+    const unsubscribe = vi.fn(async () => false);
+    getSubscription.mockResolvedValue(browserSubscription(keyBuffer(PUBLIC_KEY), unsubscribe));
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ ...status, devices: [] }), { status: 200, headers: { "content-type": "application/json" } }));
+    const { disablePush } = await import("../src/lib/push");
+    await expect(disablePush()).rejects.toThrow("Talorys removed this device, but the browser could not remove its push subscription");
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(removeDeviceId).not.toHaveBeenCalled();
   });
 });

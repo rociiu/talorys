@@ -133,16 +133,25 @@ export function PageHeader({ title, description, actions }: { title: string; des
   );
 }
 
-export function ErrorNotice({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+export function ErrorNotice({ error, onRetry, onDismiss }: { error: unknown; onRetry?: () => void; onDismiss?: () => void }) {
   const { t } = useI18n();
   const message = error instanceof Error ? error.message : t("common.somethingWentWrong");
   return (
     <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
       <span>{message}</span>
-      {onRetry && (
-        <button type="button" className="shrink-0 font-medium underline underline-offset-2" onClick={onRetry}>
-          {t("common.retry")}
-        </button>
+      {(onRetry || onDismiss) && (
+        <div className="flex shrink-0 items-center gap-3">
+          {onRetry && (
+            <button type="button" className="font-medium underline underline-offset-2" onClick={onRetry}>
+              {t("common.retry")}
+            </button>
+          )}
+          {onDismiss && (
+            <button type="button" className="rounded p-0.5 hover:bg-danger/10" onClick={onDismiss} aria-label="Dismiss error">
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

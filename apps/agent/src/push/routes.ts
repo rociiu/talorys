@@ -1,4 +1,4 @@
-import { pushSubscribeSchema, pushUnsubscribeSchema } from "@talorys/shared";
+import { pushReplaceSubscriptionSchema, pushSubscribeSchema, pushUnsubscribeSchema } from "@talorys/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../api/app";
 import { AppError, NotFoundError, ValidationError } from "../api/errors";
@@ -28,12 +28,38 @@ pushRoutes.post("/push/subscriptions", async (c) => {
   return c.json({ device, status: s.push.status() });
 });
 
+pushRoutes.post("/push/subscriptions/replace", async (c) => {
+  const s = c.env.agent.services;
+  if (!s.push.configured()) throw new AppError("NOT_CONFIGURED", "Push notifications are not set up on this deployment yet.");
+  const input = await body(c, pushReplaceSubscriptionSchema, 8 * 1024);
+  const problem = endpointProblem(input.old_endpoint) ?? endpointProblem(input.endpoint);
+  if (problem) throw new ValidationError(problem);
+  const label = input.label || deviceLabel(c.req.header("user-agent") ?? "");
+  const device = s.push.subscriptions.replace(input.old_endpoint, {
+    endpoint: input.endpoint,
+    p256dh: input.keys.p256dh,
+    auth: input.keys.auth,
+    label,
+    origin: new URL(c.req.url).origin,
+  });
+  s.activity.record("push.subscribed", `Notifications turned on for ${label}`);
+  return c.json({ device, status: s.push.status() });
+});
+
 /** Called by a browser turning push off for itself, which only knows its own endpoint. */
 pushRoutes.post("/push/unsubscribe", async (c) => {
   const s = c.env.agent.services;
   const input = await body(c, pushUnsubscribeSchema, 8 * 1024);
   s.push.subscriptions.removeByEndpoint(input.endpoint);
   return c.json(s.push.status());
+});
+
+pushRoutes.post("/push/subscriptions/current", async (c) => {
+  const s = c.env.agent.services;
+  const input = await body(c, pushUnsubscribeSchema, 8 * 1024);
+  const problem = endpointProblem(input.endpoint);
+  if (problem) throw new ValidationError(problem);
+  return c.json({ device: s.push.subscriptions.byEndpoint(input.endpoint), status: s.push.status() });
 });
 
 pushRoutes.delete("/push/subscriptions/:id", (c) => {
