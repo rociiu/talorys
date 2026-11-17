@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { confirmPushRegistration, enablePush, PushRegistrationError } from "../src/lib/push";
+import { confirmPushRegistration, enablePush, forgetPushDevice, PushRegistrationError } from "../src/lib/push";
 
 const PUBLIC_KEY = Buffer.from([4, ...new Array(64).fill(1)]).toString("base64url");
 const OTHER_KEY = Buffer.from([4, ...new Array(64).fill(2)]).toString("base64url");
@@ -15,11 +15,11 @@ const keyBuffer = (key: string) => {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 };
 
-function browserSubscription(key: ArrayBuffer | null, unsubscribe = vi.fn(async () => true)) {
+function browserSubscription(key: ArrayBuffer | null, unsubscribe = vi.fn(async () => true), endpoint = subscriptionJson.endpoint) {
   return {
-    endpoint: subscriptionJson.endpoint,
+    endpoint,
     options: { userVisibleOnly: true, applicationServerKey: key },
-    toJSON: () => subscriptionJson,
+    toJSON: () => ({ ...subscriptionJson, endpoint }),
     unsubscribe,
   } as unknown as PushSubscription;
 }
@@ -76,6 +76,12 @@ describe("push registration", () => {
     vi.stubGlobal("navigator", { serviceWorker: { register, getRegistration: async () => registration } });
     vi.stubGlobal("fetch", fetcher);
     vi.stubGlobal("localStorage", { getItem: () => null, setItem: vi.fn(), removeItem: removeDeviceId });
+    const session = new Map<string, string>();
+    vi.stubGlobal("sessionStorage", {
+      getItem: (key: string) => session.get(key) ?? null,
+      setItem: (key: string, value: string) => void session.set(key, value),
+      removeItem: (key: string) => void session.delete(key),
+    });
   });
 
   afterEach(() => {
@@ -281,6 +287,46 @@ describe("push registration", () => {
     await enablePush(PUBLIC_KEY);
     expect(subscribe).toHaveBeenCalledTimes(1);
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([{ mode: "memory" }, { mode: "reload" }])("retries VAPID replacement with the original endpoint using $mode state", async ({ mode }) => {
+    if (mode === "memory") {
+      vi.stubGlobal("sessionStorage", {
+        getItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+        setItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+        removeItem: () => { throw new DOMException("Storage denied", "SecurityError"); },
+      });
+    }
+    const oldEndpoint = "https://fcm.googleapis.com/fcm/send/old-vapid";
+    const newEndpoint = "https://fcm.googleapis.com/fcm/send/new-vapid";
+    const oldSubscription = browserSubscription(keyBuffer(OTHER_KEY), vi.fn(async () => true), oldEndpoint);
+    const newSubscription = browserSubscription(keyBuffer(PUBLIC_KEY), vi.fn(async () => true), newEndpoint);
+    getSubscription.mockResolvedValueOnce(oldSubscription);
+    subscribe.mockResolvedValue(newSubscription);
+    fetcher
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { message: "Temporary replacement failure" } }), { status: 500 }))
+      .mockResolvedValueOnce(successResponse());
+
+    const error = await registrationError();
+    expect(error.diagnostics.stage).toBe("backend");
+    getSubscription.mockResolvedValue(newSubscription);
+    let retry = enablePush;
+    if (mode === "reload") {
+      vi.resetModules();
+      retry = (await import("../src/lib/push")).enablePush;
+    }
+    await retry(PUBLIC_KEY);
+
+    expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls.map((call) => call[0])).toEqual([
+      "/api/push/subscriptions/replace",
+      "/api/push/subscriptions/replace",
+    ]);
+    for (const call of fetcher.mock.calls) {
+      expect(JSON.parse(call[1]?.body as string)).toMatchObject({ endpoint: newEndpoint, old_endpoint: oldEndpoint });
+    }
+    forgetPushDevice();
   });
 
   it("classifies denied permission without registering a worker", async () => {

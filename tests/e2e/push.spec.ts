@@ -227,9 +227,9 @@ test.describe("Push registration persistence", () => {
     await expect(page.getByRole("alert")).toContainText("Talorys removed this device, but the browser could not remove its push subscription");
     await expect(toggle).toHaveAttribute("aria-checked", "false");
     await page.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(2);
     await expect(page.getByRole("alert")).toHaveCount(0);
     await expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(await page.evaluate(() => (window as unknown as { pushUnsubscribeAttempts: number }).pushUnsubscribeAttempts)).toBe(2);
     const afterDisable = await (await page.request.get("/api/push")).json() as { devices: { id: string }[] };
     expect(afterDisable.devices).toEqual([]);
   });

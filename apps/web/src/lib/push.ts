@@ -28,6 +28,8 @@ export class PushRegistrationError extends Error {
 }
 
 const DEVICE_KEY = "talorys.pushDevice";
+const REPLACEMENT_KEY = "talorys.pushReplacement";
+let pendingReplacementEndpoint: string | null = null;
 
 export function isIos(): boolean {
   return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -169,13 +171,16 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
   }
 
   let subscription: PushSubscription;
-  let replacedEndpoint: string | null = null;
+  let replacedEndpoint = replacementEndpoint();
   try {
     let current = await registration.pushManager.getSubscription();
     state.existingSubscription = !!current;
     const existingKey = current?.options.applicationServerKey;
     if (current && (!existingKey || !sameKey(existingKey, applicationServerKey))) {
-      replacedEndpoint = current.endpoint;
+      if (!replacedEndpoint) {
+        replacedEndpoint = current.endpoint;
+        rememberReplacement(replacedEndpoint);
+      }
       await current.unsubscribe();
       current = null;
     }
@@ -195,6 +200,7 @@ export async function enablePush(publicKey: string): Promise<{ device: PushDevic
     const result = replacedEndpoint
       ? await api<{ device: PushDevice; status: PushStatus }>("/push/subscriptions/replace", { method: "POST", body: { ...input, old_endpoint: replacedEndpoint } })
       : await api<{ device: PushDevice; status: PushStatus }>("/push/subscriptions", { method: "POST", body: input });
+    rememberReplacement(null);
     remember(result.device.id);
     return result;
   } catch (error) {
@@ -243,12 +249,35 @@ export async function confirmPushRegistration(publicKey: string): Promise<PushCo
     method: "POST",
     body: { endpoint: subscription.endpoint },
   });
+  if (result.device) rememberReplacement(null);
   remember(result.device?.id ?? null);
   return { ...result, subscription };
 }
 
 export function forgetPushDevice() {
+  rememberReplacement(null);
   remember(null);
+}
+
+function replacementEndpoint(): string | null {
+  if (pendingReplacementEndpoint) return pendingReplacementEndpoint;
+  try {
+    pendingReplacementEndpoint = sessionStorage.getItem(REPLACEMENT_KEY);
+  } catch {
+    return null;
+  }
+  return pendingReplacementEndpoint;
+}
+
+/** Keeps the old endpoint available for retry even after the browser has the new subscription. */
+function rememberReplacement(endpoint: string | null) {
+  pendingReplacementEndpoint = endpoint;
+  try {
+    if (endpoint) sessionStorage.setItem(REPLACEMENT_KEY, endpoint);
+    else sessionStorage.removeItem(REPLACEMENT_KEY);
+  } catch {
+    /* The in-memory value still supports manual retry when session storage is unavailable. */
+  }
 }
 
 function sameKey(a: ArrayBuffer, b: Uint8Array): boolean {
