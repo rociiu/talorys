@@ -2,6 +2,24 @@
 
 All notable changes to Talorys are listed here. Versions match the `create-talorys` package.
 
+## 0.3.0 — 2026-11-23
+
+### Added
+
+- **Simplified and Traditional Chinese** interface localization (#121)
+
+### Fixed
+
+- Web Push registration is more reliable across worker activation, browser restarts and subscription rotation, with backend-confirmed device state, persistent feedback and manual retry (#117, #120)
+
+### Changed
+
+- Updated Hono to 4.13.16 (#116)
+
+### Upgrading
+
+- No database migration or backup-format change. Run `npx create-talorys@latest update` as usual.
+
 ## 0.2.0 — 2026-11-15
 
 ### Added
