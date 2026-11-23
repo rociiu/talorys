@@ -200,7 +200,7 @@ export const ko = {
   "today.reviewTasks": "할 일 검토",
   "today.askForPlan": "계획 요청",
   "today.reviewProject": "프로젝트 검토",
-  "today.planPrompt": "{project} 프로젝트의 계획을 세워 주세요. 마감이 다가오는 할 일이 {count}개 있습니다. 기존 할 일을 먼저 검토하고 다음 단계를 제안해 주세요. 제가 확인하기 전까지는 아무것도 만들지 마세요.",
+  "today.planPrompt": { other: "{project} 프로젝트의 계획을 세워 주세요. 마감이 다가오는 할 일이 {count}개 있습니다. 기존 할 일을 먼저 검토하고 다음 단계를 제안해 주세요. 제가 확인하기 전까지는 아무것도 만들지 마세요." },
 
   "onboarding.title": "개인 AI 어시스턴트에 오신 것을 환영합니다",
   "onboarding.body": "Talorys는 할 일, 노트, 메모리와 일정을 내 Cloudflare 계정에 보관합니다. 다음과 같이 시작해 보세요.",

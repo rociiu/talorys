@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { format, formatMessage, translate } from "../src/lib/i18n/core";
 import { en } from "../src/lib/i18n/en";
+import { ko } from "../src/lib/i18n/ko";
+import { zhCN } from "../src/lib/i18n/zhCN";
+import { zhTW } from "../src/lib/i18n/zhTW";
+import { browserLanguage } from "../src/lib/i18n";
 import { formatDateTime, relativeTime } from "../src/lib/utils";
 
 describe("translate", () => {
@@ -30,6 +34,74 @@ describe("translate", () => {
     expect(translate("ko", "ko", "login.unlock")).toBe("잠금 해제");
     expect(translate("ko", "ko", "login.tryAgainIn", { seconds: 30 })).toBe("30초 뒤에 다시 시도");
     expect(translate("ko", "ko", "time.justNow")).toBe("방금");
+  });
+
+  it("returns Simplified and Traditional Chinese messages", () => {
+    expect(translate("zh-CN", "zh-CN", "login.unlock")).toBe("解锁");
+    expect(translate("zh-TW", "zh-TW", "login.unlock")).toBe("解鎖");
+    expect(translate("zh-CN", "zh-CN", "notifications.titleUnread", { count: 3 })).toBe("通知（3 条未读）");
+    expect(translate("zh-TW", "zh-TW", "notifications.titleUnread", { count: 3 })).toBe("通知（3 則未讀）");
+  });
+
+  it("uses the singular English plan prompt for one task", () => {
+    expect(translate("en", "en", "today.planPrompt", { project: "Launch", count: 1 })).toContain("1 task has an approaching deadline");
+    expect(translate("en", "en", "today.planPrompt", { project: "Launch", count: 2 })).toContain("2 tasks have approaching deadlines");
+  });
+});
+
+type Message = string | Record<string, string>;
+const dictionaries: Record<string, Record<string, Message>> = { ko, "zh-CN": zhCN, "zh-TW": zhTW };
+const english = en as unknown as Record<string, Message>;
+
+function texts(message: Message): string[] {
+  return typeof message === "string" ? [message] : Object.values(message);
+}
+
+function placeholders(message: Message): string[] {
+  return [...new Set(texts(message).flatMap((text) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]!)))].sort();
+}
+
+describe("translation dictionaries", () => {
+  it.each(Object.entries(dictionaries))("%s has every English key", (_, dictionary) => {
+    expect(Object.keys(dictionary).sort()).toEqual(Object.keys(en).sort());
+  });
+
+  it.each(Object.entries(dictionaries))("%s preserves placeholders and has no empty messages", (_, dictionary) => {
+    for (const [key, message] of Object.entries(dictionary)) {
+      expect(placeholders(message), key).toEqual(placeholders(english[key]!));
+      for (const text of texts(message)) expect(text, key).not.toBe("");
+    }
+  });
+});
+
+describe("browserLanguage", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    ["zh", "zh-CN"],
+    ["zh-CN", "zh-CN"],
+    ["zh-SG", "zh-CN"],
+    ["zh-Hans-CN", "zh-CN"],
+    ["zh-TW", "zh-TW"],
+    ["zh-HK", "zh-TW"],
+    ["zh-MO", "zh-TW"],
+    ["zh-Hant", "zh-TW"],
+    ["zh-Hant-HK", "zh-TW"],
+  ] as const)("maps %s to %s", (tag, language) => {
+    vi.stubGlobal("navigator", { languages: [tag], language: tag });
+    expect(browserLanguage()).toBe(language);
+  });
+
+  it("uses the first supported browser language", () => {
+    vi.stubGlobal("navigator", { languages: ["fr-FR", "zh-Hant-HK", "en-US"], language: "fr-FR" });
+    expect(browserLanguage()).toBe("zh-TW");
+  });
+
+  it("falls back to navigator.language and then English", () => {
+    vi.stubGlobal("navigator", { languages: [], language: "ko-KR" });
+    expect(browserLanguage()).toBe("ko");
+    vi.stubGlobal("navigator", { languages: ["fr-FR"], language: "fr-FR" });
+    expect(browserLanguage()).toBe("en");
   });
 });
 
