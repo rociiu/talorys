@@ -242,8 +242,8 @@ describe("settings, usage, export and import", () => {
     const c = await loggedIn();
     expect((await c.json("/api/settings")).settings.language).toBe("system");
     expect((await c.call("/api/settings", { method: "PATCH", body: { language: "xx" } })).status).toBe(400);
-    await c.json("/api/settings", { method: "PATCH", body: { language: "en" } });
-    expect(await c.json("/api/auth/session")).toMatchObject({ authenticated: true, language: "en" });
+    await c.json("/api/settings", { method: "PATCH", body: { language: "zh-TW" } });
+    expect(await c.json("/api/auth/session")).toMatchObject({ authenticated: true, language: "zh-TW" });
     expect((await client().json("/api/auth/session")).language).toBeUndefined();
     await c.json("/api/settings", { method: "PATCH", body: { language: "system" } });
   });

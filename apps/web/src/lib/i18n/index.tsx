@@ -6,7 +6,7 @@ export type { MessageKey } from "./core";
 export type LanguagePreference = "system" | Language;
 
 /** Each language's name in that language, as shown in the language picker. */
-export const LANGUAGE_NAMES: Record<Language, string> = { en: "English", ko: "한국어" };
+export const LANGUAGE_NAMES: Record<Language, string> = { en: "English", ko: "한국어", "zh-CN": "简体中文", "zh-TW": "繁體中文" };
 
 export interface I18n {
   /** What the owner picked in Settings. */
@@ -25,7 +25,11 @@ const KEY = "talorys.language";
 /** The first browser language we have messages for, else English. */
 export function browserLanguage(): Language {
   for (const tag of navigator.languages?.length ? navigator.languages : [navigator.language]) {
-    const base = tag?.toLowerCase().split("-")[0];
+    const normalized = tag?.toLowerCase();
+    const base = normalized?.split("-")[0];
+    if (base === "zh") {
+      return /(?:^|-)(?:hant|tw|hk|mo)(?:-|$)/.test(normalized) ? "zh-TW" : "zh-CN";
+    }
     if (isLanguage(base)) return base;
   }
   return "en";

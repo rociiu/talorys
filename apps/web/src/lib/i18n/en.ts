@@ -204,7 +204,10 @@ export const en = {
   "today.reviewTasks": "Review tasks",
   "today.askForPlan": "Ask for a plan",
   "today.reviewProject": "Review project",
-  "today.planPrompt": "Help me prepare a plan for {project}. {count} tasks have approaching deadlines. Review existing tasks first and propose next steps; do not create anything until I confirm.",
+  "today.planPrompt": {
+    one: "Help me prepare a plan for {project}. {count} task has an approaching deadline. Review existing tasks first and propose next steps; do not create anything until I confirm.",
+    other: "Help me prepare a plan for {project}. {count} tasks have approaching deadlines. Review existing tasks first and propose next steps; do not create anything until I confirm.",
+  },
 
   "onboarding.title": "Welcome to your personal assistant",
   "onboarding.body": "Talorys keeps your tasks, notes, memories and schedules in your own Cloudflare account. Here are a few useful ways to begin.",
