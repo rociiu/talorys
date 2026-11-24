@@ -284,7 +284,7 @@ test.describe("Talorys owner experience", () => {
     await page.getByRole("button", { name: "Preview" }).click();
     await expect(page.getByRole("checkbox")).toHaveCount(1);
     await page.getByRole("checkbox", { name: "Mark as done" }).click();
-    await page.getByRole("button", { name: "Write" }).click();
+    await page.getByRole("button", { name: "Write", exact: true }).click();
     await expect(editor).toHaveValue("    - [ ] code sample\n\n> - [x] quoted task");
   });
 
