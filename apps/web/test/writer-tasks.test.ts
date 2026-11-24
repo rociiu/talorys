@@ -29,4 +29,19 @@ describe("todos in fenced code blocks", () => {
     expect(toggleTaskLine(sample, 2)).toBe(sample);
     expect(toggleTaskLine(sample, 5).split("\n")[5]).toBe("- [x] after");
   });
+
+  it("ignores tasks in indented code without excluding nested list items", () => {
+    const sample = ["    - [ ] code sample", "", "- parent", "    - [ ] child"].join("\n");
+    expect(taskStats(sample)).toEqual({ done: 0, total: 1 });
+    expect(toggleTaskLine(sample, 0)).toBe(sample);
+    expect(toggleTaskLine(sample, 3).split("\n")[3]).toBe("    - [x] child");
+  });
+
+  it("counts and toggles tasks inside blockquotes", () => {
+    const sample = ["> - [ ] quoted", "> > - [x] nested", "- [ ] outside"].join("\n");
+    expect(taskStats(sample)).toEqual({ done: 1, total: 3 });
+    expect(toggleTaskLine(sample, 0).split("\n")[0]).toBe("> - [x] quoted");
+    expect(toggleTaskLine(sample, 1).split("\n")[1]).toBe("> > - [ ] nested");
+    expect(toggleTaskLine(sample, 2).split("\n")[2]).toBe("- [x] outside");
+  });
 });
