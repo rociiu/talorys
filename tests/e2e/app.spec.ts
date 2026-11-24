@@ -212,6 +212,44 @@ test.describe("Talorys owner experience", () => {
     await expect(page.getByRole("button", { name: /e2e Quick switch/ })).toBeVisible();
   });
 
+  test("note saves stay ordered when leaving during autosave", async ({ page }) => {
+    await login(page);
+    await page.getByRole("link", { name: "Notes" }).first().click();
+    await page.getByRole("button", { name: "New note" }).click();
+
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => (releaseFirst = resolve));
+    let firstStarted!: () => void;
+    const firstSave = new Promise<void>((resolve) => (firstStarted = resolve));
+    let secondSent!: () => void;
+    const secondSave = new Promise<void>((resolve) => (secondSent = resolve));
+    let patches = 0;
+    await page.route("**/api/notes/*", async (route) => {
+      if (route.request().method() !== "PATCH") return route.continue();
+      patches++;
+      if (patches === 1) {
+        firstStarted();
+        await firstGate;
+      } else if (patches === 2) {
+        secondSent();
+      }
+      await route.continue();
+    });
+
+    const title = page.getByLabel("Note title");
+    await title.fill("e2e Ordered save");
+    await firstSave;
+    await title.fill("e2e Ordered save latest");
+    await page.getByRole("button", { name: "New note" }).click();
+    await Promise.race([secondSave, page.waitForTimeout(250)]);
+    releaseFirst();
+
+    const latest = page.getByRole("button", { name: /e2e Ordered save latest/ });
+    await expect(latest).toBeVisible();
+    await latest.click();
+    await expect(page.getByLabel("Note title")).toHaveValue("e2e Ordered save latest");
+  });
+
   test("notes support todos that can be toggled", async ({ page }) => {
     await login(page);
     await page.getByRole("link", { name: "Notes" }).first().click();
@@ -226,12 +264,28 @@ test.describe("Talorys owner experience", () => {
     await expect(editor).toHaveValue("- [ ] buy milk\n- [ ] call mom");
     await page.keyboard.press("ControlOrMeta+Enter");
     await expect(editor).toHaveValue("- [ ] buy milk\n- [x] call mom");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Tab");
+    await expect(editor).not.toBeFocused();
     await page.screenshot({ path: "test-results/notes-writer.png" });
     await page.getByRole("button", { name: "Preview" }).click();
     await page.getByRole("checkbox", { name: "Mark as done" }).click();
     await expect(page.getByRole("checkbox", { name: "Mark as not done" })).toHaveCount(2);
     await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /e2e Errands.*2\/2/ })).toBeVisible();
+  });
+
+  test("note tasks follow Markdown code and blockquote semantics", async ({ page }) => {
+    await login(page);
+    await page.getByRole("link", { name: "Notes" }).first().click();
+    await page.getByRole("button", { name: "New note" }).click();
+    const editor = page.getByLabel("Note content");
+    await editor.fill("    - [ ] code sample\n\n> - [ ] quoted task");
+    await page.getByRole("button", { name: "Preview" }).click();
+    await expect(page.getByRole("checkbox")).toHaveCount(1);
+    await page.getByRole("checkbox", { name: "Mark as done" }).click();
+    await page.getByRole("button", { name: "Write", exact: true }).click();
+    await expect(editor).toHaveValue("    - [ ] code sample\n\n> - [x] quoted task");
   });
 
   test("automations can be scheduled, edited, paused and deleted", async ({ page }) => {

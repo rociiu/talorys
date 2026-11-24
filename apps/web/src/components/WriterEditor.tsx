@@ -1,4 +1,8 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react";
+import type { Nodes } from "mdast";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
 import { cn } from "../lib/utils";
 
 /**
@@ -16,43 +20,37 @@ export type WriterHandle = {
   insertTask: () => void;
 };
 
-const TASK_RE = /^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\](\s|$)/;
+const TASK_RE = /^((?:\s*>\s?)*\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\](\s|$)/;
 const LIST_RE = /^(\s*)([-*+]|(\d+)([.)]))(\s+)(\[[ xX]\]\s+)?/;
-// A fence is its own line: indent, then a run of ` or ~. A closer must use the
-// same character, be at least as long, and have nothing after it — so ```js
-// or ~~~ inside a ``` sample stays part of the sample.
-const FENCE_LINE = /^(\s*)(`{3,}|~{3,})(.*)$/;
+const markdown = unified().use(remarkParse).use(remarkGfm);
 
-/** For each line, whether it sits inside (or on the edge of) a fenced code block, which has no todos. */
-function fencedLines(lines: string[]): boolean[] {
-  let marker: { char: string; len: number } | null = null;
-  return lines.map((line) => {
-    const match = FENCE_LINE.exec(line);
-    const fence = match?.[2];
-    const rest = match?.[3] ?? "";
-    if (marker) {
-      const closes =
-        fence !== undefined &&
-        fence.charAt(0) === marker.char &&
-        fence.length >= marker.len &&
-        rest.trim() === "";
-      if (closes) marker = null;
-      return true;
+function markdownStructure(text: string) {
+  const tasks = new Map<number, boolean>();
+  const code = new Set<number>();
+  const visit = (node: Nodes) => {
+    if (node.type === "listItem" && typeof node.checked === "boolean" && node.position) {
+      tasks.set(node.position.start.line - 1, node.checked);
     }
-    if (fence !== undefined) {
-      marker = { char: fence.charAt(0), len: fence.length };
-      return true;
+    if (node.type === "code" && node.position) {
+      for (let line = node.position.start.line - 1; line < node.position.end.line; line++) code.add(line);
     }
-    return false;
-  });
+    if ("children" in node) {
+      node.children.forEach((child) => {
+        visit(child);
+      });
+    }
+  };
+  visit(markdown.parse(text));
+  return { tasks, code };
 }
 
 /** Flip the checkbox on a given 0-based line. Exported for the preview renderer. */
 export function toggleTaskLine(text: string, line: number): string {
+  if (!markdownStructure(text).tasks.has(line)) return text;
   const lines = text.split("\n");
   const cur = lines[line] ?? "";
   const m = TASK_RE.exec(cur);
-  if (!m || fencedLines(lines)[line]) return text;
+  if (!m) return text;
   const idx = (m[1] ?? "").length + 1;
   lines[line] = cur.slice(0, idx) + (m[2] === " " ? "x" : " ") + cur.slice(idx + 1);
   return lines.join("\n");
@@ -60,17 +58,11 @@ export function toggleTaskLine(text: string, line: number): string {
 
 export function taskStats(text: string): { done: number; total: number } {
   let done = 0;
-  let total = 0;
-  const lines = text.split("\n");
-  const fenced = fencedLines(lines);
-  for (const [i, line] of lines.entries()) {
-    const m = fenced[i] ? null : TASK_RE.exec(line);
-    if (m) {
-      total++;
-      if (m[2] !== " ") done++;
-    }
+  const tasks = markdownStructure(text).tasks;
+  for (const checked of tasks.values()) {
+    if (checked) done++;
   }
-  return { done, total };
+  return { done, total: tasks.size };
 }
 
 // ---------- highlighting ----------
@@ -99,14 +91,14 @@ function inline(text: string, keyBase: string): React.ReactNode[] {
   return out;
 }
 
-function highlightLine(line: string, inFence: boolean, key: string): React.ReactNode {
-  if (inFence) return <span className="w-code-block">{line}</span>;
+function highlightLine(line: string, inCode: boolean, isTask: boolean, key: string): React.ReactNode {
+  if (inCode) return <span className="w-code-block">{line}</span>;
   const h = /^(#{1,6}\s+)(.*)$/.exec(line);
   if (h) return <span className="w-heading"><span className="w-mark">{h[1]}</span>{inline(h[2] ?? "", key)}</span>;
   if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) return <span className="w-mark">{line}</span>;
   const q = /^(\s*>\s?)(.*)$/.exec(line);
   if (q) return <span className="w-quote"><span className="w-mark">{q[1]}</span>{inline(q[2] ?? "", key)}</span>;
-  const t = TASK_RE.exec(line);
+  const t = isTask ? TASK_RE.exec(line) : null;
   if (t) {
     const done = t[2] !== " ";
     const rest = line.slice(t[0].length);
@@ -146,9 +138,10 @@ type Props = {
 
 export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEditor({ value, onChange, focusMode, placeholder, ...rest }, ref) {
   const ta = useRef<HTMLTextAreaElement>(null);
+  const leaveOnTab = useRef(false);
   const [cursor, setCursor] = useState(0);
   const lines = useMemo(() => value.split("\n"), [value]);
-  const fenced = useMemo(() => fencedLines(lines), [lines]);
+  const structure = useMemo(() => markdownStructure(value), [value]);
   const cursorLine = useMemo(() => value.slice(0, cursor).split("\n").length - 1, [value, cursor]);
   const [focusA, focusB] = focusMode ? blockRange(lines, cursorLine) : [-1, -1];
 
@@ -174,10 +167,10 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
 
   const toggleTaskAt = (pos: number) => {
     const lineIndex = value.slice(0, pos).split("\n").length - 1;
-    if (fencedLines(value.split("\n"))[lineIndex]) return;
+    if (structure.code.has(lineIndex)) return;
     const [s, e] = lineBounds(pos);
     const line = value.slice(s, e);
-    const m = TASK_RE.exec(line);
+    const m = structure.tasks.has(lineIndex) ? TASK_RE.exec(line) : null;
     const keep = ta.current?.selectionStart ?? pos;
     if (m) {
       const i = s + (m[1] ?? "").length + 1;
@@ -204,6 +197,15 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const el = e.currentTarget;
     const { selectionStart: ss, selectionEnd: se } = el;
+    if (e.key === "Escape") {
+      leaveOnTab.current = true;
+      return;
+    }
+    if (e.key === "Tab" && leaveOnTab.current) {
+      leaveOnTab.current = false;
+      return;
+    }
+    leaveOnTab.current = false;
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
       toggleTaskAt(ss);
@@ -231,6 +233,8 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
     }
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && ss === se) {
       const [s, end] = lineBounds(ss);
+      const lineIndex = value.slice(0, ss).split("\n").length - 1;
+      if (structure.code.has(lineIndex)) return;
       const line = value.slice(s, end);
       const m = LIST_RE.exec(line);
       if (!m || ss < s + m[0].length) return;
@@ -250,6 +254,8 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
     const el = e.currentTarget;
     if (el.selectionStart !== el.selectionEnd) return;
     const pos = el.selectionStart;
+    const lineIndex = value.slice(0, pos).split("\n").length - 1;
+    if (!structure.tasks.has(lineIndex)) return;
     const [s, end] = lineBounds(pos);
     const m = TASK_RE.exec(value.slice(s, end));
     if (!m) return;
@@ -261,7 +267,7 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
     <div className={cn("writer relative grid", focusMode && "writer-focus")}>
       <div aria-hidden className="writer-layer pointer-events-none col-start-1 row-start-1">
         {lines.map((line, i) => {
-          const node = highlightLine(line, fenced[i] ?? false, `l${i}`);
+          const node = highlightLine(line, structure.code.has(i), structure.tasks.has(i), `l${i}`);
           const dim = focusMode && (i < focusA || i > focusB);
           return (
             <div key={i} className={cn("transition-opacity duration-200", dim && "opacity-25")}>
@@ -277,6 +283,7 @@ export const WriterEditor = forwardRef<WriterHandle, Props>(function WriterEdito
         {...rest}
         value={value}
         spellCheck
+        aria-description="Press Escape, then Tab to leave the editor"
         onChange={(e) => {
           onChange(e.target.value);
           setCursor(e.target.selectionStart);

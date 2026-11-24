@@ -162,8 +162,17 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const body = { title: savedTitle, content, project_id: projectId || null };
 
   const saveFailures = useRef(0);
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const queueSave = useCallback(
+    (nextBody: typeof body) => {
+      const request = saveQueue.current.catch(() => {}).then(() => api<{ note: Note }>(`/notes/${id}`, { method: "PATCH", body: nextBody }));
+      saveQueue.current = request;
+      return request;
+    },
+    [id],
+  );
   // Quiet: autosave retries by itself, so the failure is a status in the toolbar, not a toast per attempt.
-  const save = useApiMutation(() => api<{ note: Note }>(`/notes/${id}`, { method: "PATCH", body }), {
+  const save = useApiMutation(() => queueSave(body), {
     invalidate: [["notes"]],
     quiet: true,
     onError: () => {
@@ -183,11 +192,11 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
   useEffect(
     () => () => {
       if (!pending.current.dirty || deleted.current) return;
-      void api(`/notes/${id}`, { method: "PATCH", body: pending.current.body })
+      void queueSave(pending.current.body)
         .then(() => qc.invalidateQueries({ queryKey: ["notes"] }))
         .catch(() => {});
     },
-    [id, qc],
+    [id, qc, queueSave],
   );
 
   // Autosave shortly after typing stops.
@@ -216,7 +225,7 @@ function NoteEditor({ id, onBack }: { id: string; onBack: () => void }) {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        if (dirty) save.mutate(undefined);
+        if (dirty && !save.isPending) save.mutate(undefined);
       }
     };
     window.addEventListener("keydown", handler);
